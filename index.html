@@ -4,63 +4,87 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f1013">
-<title>ジンバル練習ラボ — スマホで忍者歩き・水平・パン・会場ウォーク</title>
+<title>ジンバル練習ラボ — 明日の神輿まつりに向けて</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0f1013;--panel:#17191e;--panel2:#1e2128;--line:#2b2f38;--text:#e9e7e2;--mute:#9aa0aa;--accent:#f5b83d;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--pink:#fb7185;--blue:#60a5fa}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:"Noto Sans JP",system-ui,sans-serif}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:"Noto Sans JP",system-ui,sans-serif;line-height:1.6}
 button{font:inherit;color:inherit;cursor:pointer}
-.view{display:none;min-height:100%;padding:calc(14px + env(safe-area-inset-top)) 16px calc(90px + env(safe-area-inset-bottom))}
+.view{display:none;padding:calc(14px + env(safe-area-inset-top)) 16px calc(92px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
 .view.on{display:block}
-h1{font-size:20px;margin:4px 0 2px;font-weight:900} h2{font-size:17px;margin:18px 0 8px}
-.mute{color:var(--mute);font-size:13px}
+h1{font-size:20px;margin:2px 0;font-weight:900} h2{font-size:16px;margin:20px 0 8px}
+.mute{color:var(--mute);font-size:12.5px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
-.menu{display:grid;gap:10px;margin-top:12px}
-.menu button{display:flex;gap:12px;align-items:center;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-.menu .ic{font-size:26px;width:44px;height:44px;display:grid;place-items:center;background:var(--panel2);border-radius:12px;flex:0 0 auto}
-.menu b{display:block;font-size:15px} .menu span{font-size:12.5px;color:var(--mute)}
 .big{display:block;width:100%;font-size:16px;font-weight:900;padding:14px;border-radius:12px;border:0;background:var(--accent);color:#111}
-.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-weight:700;padding:10px 14px;border-radius:10px}
-.pill{display:inline-block;font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px;background:var(--panel2);border:1px solid var(--line)}
+.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-weight:700;padding:9px 13px;border-radius:10px}
+.count{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-top:6px}
+.count b{font-size:22px;color:var(--pink);font-variant-numeric:tabular-nums}
+.why{background:#151b25;border:1px solid #26344a;border-radius:12px;padding:12px 14px;font-size:13.5px;margin-top:10px}
+.why b{color:#93c5fd}
+.plan{display:grid;gap:8px;margin-top:8px}
+.drill{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+.drill .no{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:var(--panel2);border:1px solid var(--line)}
+.drill.done .no{background:var(--good);color:#111;border-color:var(--good)}
+.drill b{font-size:15px;display:block}.drill small{display:block;color:var(--mute);font-size:12px;line-height:1.45}
+.drill .scene{display:inline-block;font-size:10.5px;font-weight:900;color:#111;background:var(--pink);border-radius:4px;padding:0 5px;margin-right:4px}
+.badge{font-size:20px;font-weight:900;min-width:34px;text-align:center}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--panel2);border:1px solid var(--line)}
 #tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(15,16,19,.97);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:30}
-#tabbar button{flex:1;background:none;border:0;padding:10px 0 8px;font-size:11px;color:var(--mute)}
+#tabbar button{flex:1;background:none;border:0;padding:9px 0 7px;font-size:11px;color:var(--mute)}
 #tabbar button i{display:block;font-style:normal;font-size:20px}
 #tabbar button.on{color:var(--accent)}
-/* drill */
-#drill{position:fixed;inset:0;display:none;z-index:40;background:#000;overflow:hidden}
-#drill.on{display:block}
-#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
-.hud{position:absolute;inset:0;pointer-events:none}
-.top{position:absolute;left:0;right:0;top:0;padding:calc(10px + env(safe-area-inset-top)) 12px 8px;display:flex;align-items:center;gap:8px;pointer-events:auto;background:linear-gradient(#000c,#0000)}
-.top b{font-size:15px;flex:1}
-#horizon{position:absolute;left:10%;right:10%;top:50%;height:0;border-top:3px solid var(--good);transform-origin:50% 50%}
-#horizonRef{position:absolute;left:4%;right:4%;top:50%;height:0;border-top:1px dashed #fff6}
-#zbar{position:absolute;right:14px;top:22%;bottom:30%;width:26px;border-radius:13px;background:#0008;border:1px solid #fff3;overflow:hidden}
-#zbar .g{position:absolute;left:0;right:0;top:40%;bottom:40%;background:#34d39944}
-#zbar .y1{position:absolute;left:0;right:0;top:25%;height:15%;background:#fbbf2426}#zbar .y2{position:absolute;left:0;right:0;bottom:25%;height:15%;background:#fbbf2426}
+.toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.toggle input{width:20px;height:20px;accent-color:var(--accent)}
+select{font:inherit;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+/* brief */
+#brief{position:fixed;inset:0;z-index:45;background:var(--bg);overflow:auto;display:none;padding:calc(14px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}
+#brief.on{display:block}
+#brief .inner{max-width:640px;margin:0 auto}
+.steps{counter-reset:s;padding:0;margin:8px 0;list-style:none}
+.steps li{counter-increment:s;position:relative;padding:6px 0 6px 34px;font-size:14px;border-bottom:1px solid var(--line)}
+.steps li::before{content:counter(s);position:absolute;left:0;top:6px;width:24px;height:24px;border-radius:50%;background:var(--panel2);display:grid;place-items:center;font-size:12px;font-weight:900}
+table.m{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px} table.m td,table.m th{border-bottom:1px solid var(--line);padding:7px 4px;text-align:left;vertical-align:top} table.m th{color:var(--mute);font-weight:500}
+/* run */
+#run{position:fixed;inset:0;z-index:50;background:#000;display:none;overflow:hidden}
+#run.on{display:block}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45}
+.rtop{position:absolute;left:0;right:0;top:0;padding:calc(10px + env(safe-area-inset-top)) 12px 8px;display:flex;gap:8px;align-items:center;background:linear-gradient(#000d,#0000)}
+.rtop b{flex:1;font-size:15px}
+#phases{position:absolute;left:12px;right:12px;top:calc(58px + env(safe-area-inset-top));display:flex;gap:4px}
+#phases div{flex:1;height:6px;border-radius:3px;background:#ffffff26;overflow:hidden}
+#phases div i{display:block;height:100%;width:0;background:var(--accent)}
+#phaseName{position:absolute;left:0;right:0;top:calc(80px + env(safe-area-inset-top));text-align:center;font-size:26px;font-weight:900;text-shadow:0 2px 10px #000;padding:0 14px}
+#phaseSub{position:absolute;left:0;right:0;top:calc(122px + env(safe-area-inset-top));text-align:center;font-size:14px;color:#fffc;padding:0 18px;text-shadow:0 2px 8px #000}
+#phaseCount{position:absolute;left:0;right:0;top:40%;text-align:center;font-size:84px;font-weight:900;color:#fff2;font-variant-numeric:tabular-nums}
+.gauge{position:absolute;left:16px;right:16px;bottom:calc(150px + env(safe-area-inset-bottom));display:none}
+.gauge.on{display:block}
+.gauge .lab{display:flex;justify-content:space-between;font-size:12px;color:#fffc;margin-bottom:4px;font-weight:700}
+.bar{position:relative;height:18px;border-radius:9px;background:#ffffff1a;border:1px solid #fff3;overflow:hidden}
+.bar .zone{position:absolute;top:0;bottom:0;background:#34d39940}
+.bar .needle{position:absolute;top:-2px;bottom:-2px;width:5px;border-radius:3px;background:#fff;left:0}
+#zcol{position:absolute;right:14px;top:30%;bottom:calc(220px + env(safe-area-inset-bottom));width:26px;border-radius:13px;background:#0008;border:1px solid #fff3;overflow:hidden;display:none}
+#zcol.on{display:block}
+#zcol .g{position:absolute;left:0;right:0;top:40%;bottom:40%;background:#34d39944}
 #zdot{position:absolute;left:3px;right:3px;height:8px;border-radius:4px;background:#fff;top:50%;margin-top:-4px}
-#zlab{position:absolute;right:6px;top:calc(22% - 22px);font-size:11px;color:#fffc;font-weight:700}
-#panGauge{position:absolute;left:12px;right:52px;bottom:calc(110px + env(safe-area-inset-bottom));height:14px;border-radius:7px;background:#0008;border:1px solid #fff3}
-#panGauge .band{position:absolute;top:0;bottom:0;background:#34d39944}
-#panNeedle{position:absolute;top:-4px;bottom:-4px;width:4px;border-radius:2px;background:#fff;left:50%}
-#panLab{position:absolute;left:12px;bottom:calc(128px + env(safe-area-inset-bottom));font-size:11px;color:#fffc;font-weight:700}
-.stats{position:absolute;left:12px;top:calc(56px + env(safe-area-inset-top));font-size:12px;line-height:1.6;background:#0009;border-radius:10px;padding:8px 10px;font-variant-numeric:tabular-nums}
-.stats b{font-size:15px}
-#graph{position:absolute;left:12px;right:52px;bottom:calc(150px + env(safe-area-inset-bottom));height:70px;background:#0007;border-radius:8px}
-.bottom{position:absolute;left:0;right:0;bottom:0;padding:10px 12px calc(14px + env(safe-area-inset-bottom));display:flex;gap:8px;pointer-events:auto;background:linear-gradient(#0000,#000c)}
-.bottom .big{flex:1}
-#coach{position:absolute;left:12px;right:52px;top:42%;text-align:center;font-weight:900;font-size:20px;text-shadow:0 2px 8px #000;pointer-events:none}
+#graph{position:absolute;left:14px;right:52px;bottom:calc(210px + env(safe-area-inset-bottom));height:64px;background:#0007;border-radius:8px;display:none}
+#graph.on{display:block}
+.rbottom{position:absolute;left:0;right:0;bottom:0;padding:10px 12px calc(14px + env(safe-area-inset-bottom));display:flex;gap:8px;background:linear-gradient(#0000,#000d)}
+.rbottom .big{flex:1}
+#live{position:absolute;left:14px;bottom:calc(96px + env(safe-area-inset-bottom));font-size:12px;color:#fffc;font-variant-numeric:tabular-nums}
 /* result */
 #result{position:fixed;inset:0;display:none;z-index:60;background:#000c;align-items:flex-end;justify-content:center}
 #result.on{display:flex}
-#result .sheet{width:100%;max-width:560px;background:var(--panel);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+#result .sheet{width:100%;max-width:640px;background:var(--panel);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
 .grade{font-size:56px;font-weight:900;line-height:1}
-.mrow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
-.mrow b{font-variant-numeric:tabular-nums}
-.tip{background:#1b2230;border:1px solid #2c3a52;border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:12px}
-/* walk */
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;gap:10px}
+.mrow b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.mrow small{display:block;color:var(--mute);font-size:11.5px}
+.ok{color:var(--good)} .mid{color:var(--warn)} .ng{color:var(--bad)}
+.tip{background:#1b2230;border:1px solid #2c3a52;border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:10px}
+/* walk (会場ウォーク) */
 #walk{position:fixed;inset:0;display:none;z-index:40;background:#000}
 #walk.on{display:block}
 #wcanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
@@ -73,8 +97,9 @@ h1{font-size:20px;margin:4px 0 2px;font-weight:900} h2{font-size:17px;margin:18p
 #holdWalk{flex:1;min-width:120px;padding:14px;border-radius:12px;border:2px solid var(--accent);background:#f5b83d22;font-weight:900;font-size:15px;user-select:none;-webkit-user-select:none;touch-action:none}
 #wstats{position:absolute;right:10px;top:calc(56px + env(safe-area-inset-top));font-size:11.5px;line-height:1.55;background:#0009;border-radius:10px;padding:7px 9px;text-align:right;font-variant-numeric:tabular-nums}
 #wcoach{position:absolute;left:0;right:0;top:20%;text-align:center;font-weight:900;font-size:16px;text-shadow:0 2px 8px #000;pointer-events:none}
+.top{position:absolute;left:0;right:0;top:0;padding:calc(10px + env(safe-area-inset-top)) 12px 8px;display:flex;align-items:center;gap:8px;background:linear-gradient(#000c,#0000)}
+.top b{font-size:15px;flex:1}
 table.h{width:100%;border-collapse:collapse;font-size:12.5px} table.h td,table.h th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left} table.h th{color:var(--mute);font-weight:500}
-.warnbox{background:#2a1d14;border:1px solid #5a3a1d;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:10px}
 a{color:var(--accent)}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
@@ -84,88 +109,94 @@ a{color:var(--accent)}
 <!-- ================= HOME ================= -->
 <section class="view on" id="v-home">
   <h1>ジンバル練習ラボ</h1>
-  <div class="mute">スマホをジンバル代わりに持って、揺れ・傾き・パンを数値で練習します。明日（11/14）の囲町いけばな神輿まつりに向けて。</div>
+  <div class="count"><span class="mute">囲町いけばな神輿まつり（11/14 13:00）まで</span><b id="countdown">--</b></div>
+
+  <div class="why">
+    <b>この練習の目的</b><br>
+    ジンバルは<b>手の傾き</b>はほぼ消してくれますが、<b>体の動き</b>は消せません。上下の揺れ・歩き出しと止まりのガクッ・向きを変えるときのムラ・録画前後の静止。ここを、スマホをジンバルの持ち手に見立てて数値で練習します。<br>
+    <span class="mute">※ 傾き（水平）はRS 5のPFモードが自動で直すので、ここでは練習しません。</span>
+  </div>
+
   <div class="card" id="sensorCard">
-    <b>① 最初にセンサーを有効にする</b>
-    <div class="mute" style="margin:6px 0 10px">スマホの傾き・揺れセンサーを使います。iPhoneでは許可のダイアログが出るので「許可」を押してください。</div>
+    <div class="row" style="justify-content:space-between"><b>センサー</b><span class="chip" id="sensorChip">未設定</span></div>
+    <div class="mute" style="margin:6px 0 10px" id="sensorStatus">最初に1回だけ有効にします。iPhoneは「許可」を押してください。</div>
     <button class="big" id="bSensor">センサーを有効にする</button>
-    <div class="mute" id="sensorStatus" style="margin-top:8px"></div>
   </div>
-  <h2>練習メニュー</h2>
-  <div class="menu">
-    <button data-drill="ninja"><span class="ic">🥷</span><span><b>忍者歩き（上下の揺れ）</b><span>RS 5のZ軸インジケーターと同じ考え方。緑のゾーンを保って歩く</span></span></button>
-    <button data-drill="level"><span class="ic">📐</span><span><b>水平キープ</b><span>スマホを傾けずに歩く・向きを変える。地平線を真っすぐに</span></span></button>
-    <button data-drill="pan"><span class="ic">↔️</span><span><b>なめらかパン</b><span>一定の速さで90°向きを変える。速さのムラを測る</span></span></button>
-    <button data-drill="test"><span class="ic">🏁</span><span><b>10m総合テスト</b><span>忍者歩き＋水平を同時に採点。公園や廊下で</span></span></button>
-    <button data-go="walk"><span class="ic">🏮</span><span><b>会場ウォーク（3D）</b><span>明日の巡行ルートを、スマホをジンバルにして歩く。神輿を画面に収め続けられるか</span></span></button>
-  </div>
-  <h2>持ち方</h2>
-  <div class="card" style="font-size:13.5px;line-height:1.7">
-    ・スマホを<b>縦向き</b>にして、画面を自分に向け、ジンバルのグリップを握る位置（胸の前）で両手で持つ<br>
-    ・肘を体に寄せる。本番と同じ姿勢で<br>
-    ・スタート直後の2秒は「基準」を取るので、静かに止まっていてください<br>
-    ・<b>周りの安全を最優先</b>。画面ばかり見ずに、足元と前を見て歩く
-  </div>
-  <h2>リンク</h2>
+
+  <h2>今日の練習プラン（約20分）</h2>
+  <div class="mute">上から順に。各メニューは30秒前後、2〜3回ずつ。合格ラインを超えたら次へ。</div>
+  <div class="plan" id="plan"></div>
+
+  <h2>持ち方（全メニュー共通）</h2>
   <div class="card" style="font-size:13.5px">
-    <a href="training.html">📘 3Dトレーニング（バランス・モード・カメラワーク・明日の本番プラン）</a>
+    ・スマホを<b>縦向き</b>にして画面を自分に向け、ジンバルのグリップと同じ胸の前の高さで<b>両手</b>で持つ<br>
+    ・肘を体に寄せる。本番の構えと同じ姿勢で<br>
+    ・本番の重さ（約2.8kg）に近づけたい人は、2Lのペットボトルをスマホと一緒に持つ<br>
+    ・音声で合図するので、<b>画面を見ずに前と足元を見て</b>歩いてください
   </div>
-  <div class="mute" style="margin-top:14px">数値はスマホのセンサーからの推定で、機種や持ち方で変わります。絶対値よりも「前回より良くなったか」を見てください。</div>
+  <div class="card" style="font-size:13.5px">
+    <a href="training.html">📘 3Dトレーニング（祭りの通し再生・ショットリスト）</a>
+  </div>
 </section>
 
 <!-- ================= HISTORY ================= -->
 <section class="view" id="v-hist">
   <h1>記録</h1>
-  <div class="mute">この端末に保存されます。</div>
+  <div class="mute">この端末に保存されます。同じメニューで数値が下がっていけば上達しています。</div>
   <div class="card"><table class="h" id="histTable"></table></div>
   <button class="ghost" id="bClear">記録を消す</button>
 </section>
 
-<!-- ================= HELP ================= -->
+<!-- ================= SETTINGS / HELP ================= -->
 <section class="view" id="v-help">
-  <h1>使い方とヒント</h1>
-  <div class="card" style="font-size:13.5px;line-height:1.75">
-    <b>スコアの意味</b><br>
-    ・<b>上下の揺れ</b>：歩くたびにスマホが上下する量（cm、推定）。1cm未満なら上出来<br>
-    ・<b>水平のずれ</b>：スタート時からの傾き（°）。平均2°未満が目標<br>
-    ・<b>パンのムラ</b>：向きを変える速さのばらつき（%）。小さいほどなめらか<br>
-    ・<b>画面に収めた割合</b>（会場ウォーク）：神輿が画面中央の枠に入っていた時間の割合
+  <h1>設定とヒント</h1>
+  <div class="card">
+    <div class="toggle"><span>音声で合図する</span><input type="checkbox" id="optVoice" checked></div>
+    <div class="toggle"><span>歩くテンポの合図音（メトロノーム）</span><input type="checkbox" id="optMetro" checked></div>
+    <div class="toggle"><span>テンポ</span><select id="optBpm"><option>80</option><option selected>90</option><option>100</option><option>110</option></select></div>
+    <div class="toggle"><span>カメラ映像を背景に表示</span><input type="checkbox" id="optCam"></div>
   </div>
-  <div class="card" style="font-size:13.5px;line-height:1.75">
-    <b>家でできる練習</b><br>
-    ・廊下を往復：忍者歩き → 10m総合テスト<br>
-    ・その場で足踏み：会場ウォークで「足踏みで進む」をオンに<br>
-    ・椅子に座って：なめらかパンだけを繰り返す<br><br>
-    <b>公園でできる練習</b><br>
-    ・木を被写体にして、横移動しながら水平キープ<br>
-    ・ベンチの周りを回り込み（オービット）しながら水平キープ<br>
-    ・階段の上り下りで忍者歩き（いちばん揺れやすい）
+  <div class="card" style="font-size:13.5px">
+    <b>数値の読み方</b><br>
+    ・<b>上下の揺れ</b>：歩くたびに持ち手が上下する量（cm）。本番の映像の揺れにほぼそのまま出ます<br>
+    ・<b>静止のブレ</b>：止まっているときの微小な動き。録画の最初と最後の2秒がきれいかどうか<br>
+    ・<b>歩き出し・止まりの衝撃</b>：前後方向の急な加速。映像では「ガクッ」と見えます<br>
+    ・<b>パンのムラ</b>：向きを変える速さのばらつき。本番はジンバルが少し和らげますが、ムラは残ります<br><br>
+    数値はスマホのセンサーからの推定です。機種で絶対値が変わるので、<b>前回の自分との比較</b>で見てください。
   </div>
-  <div class="warnbox">センサーが反応しないとき：iPhoneは「設定 → Safari → モーションと画面の向きのアクセス」をオン。どちらの機種も https のページで開く必要があります。</div>
+  <div class="card" style="font-size:13.5px">
+    <b>場所別のおすすめ</b><br>
+    ・家：廊下で「1カットの型」「忍者歩き」。座って「なめらかパン」<br>
+    ・公園：木を目印に「被写体を見ながら歩く」。ベンチの横で「ロー→ブーム」<br>
+    ・センサーが反応しないとき：iPhoneは 設定 → Safari → モーションと画面の向きのアクセス をオン
+  </div>
 </section>
 
 <nav id="tabbar">
   <button data-tab="home" class="on"><i>🏠</i>練習</button>
   <button data-tab="walkTab"><i>🏮</i>会場ウォーク</button>
   <button data-tab="hist"><i>📈</i>記録</button>
-  <button data-tab="help"><i>❔</i>ヒント</button>
+  <button data-tab="help"><i>⚙️</i>設定</button>
 </nav>
 
-<!-- ================= DRILL ================= -->
-<div id="drill">
+<!-- ================= BRIEF ================= -->
+<div id="brief"><div class="inner" id="briefInner"></div></div>
+
+<!-- ================= RUN ================= -->
+<div id="run">
   <video id="video" playsinline muted autoplay></video>
-  <div class="hud">
-    <div id="horizonRef"></div><div id="horizon"></div>
-    <div id="zlab">上下</div>
-    <div id="zbar"><div class="y1"></div><div class="y2"></div><div class="g"></div><div id="zdot"></div></div>
-    <canvas id="graph"></canvas>
-    <div id="panLab">パンの速さ</div>
-    <div id="panGauge"><div class="band"></div><div id="panNeedle"></div></div>
-    <div class="stats" id="dstats"></div>
-    <div id="coach"></div>
-  </div>
-  <div class="top"><button class="ghost" id="bBack">✕</button><b id="dTitle"></b><button class="ghost" id="bCam">📷 映像</button></div>
-  <div class="bottom"><button class="big" id="bStart">スタート</button></div>
+  <div class="rtop"><button class="ghost" id="rBack">✕</button><b id="rTitle"></b></div>
+  <div id="phases"></div>
+  <div id="phaseName"></div>
+  <div id="phaseSub"></div>
+  <div id="phaseCount"></div>
+  <canvas id="graph"></canvas>
+  <div id="zcol"><div class="g"></div><div id="zdot"></div></div>
+  <div class="gauge" id="gStill"><div class="lab"><span>静止のブレ</span><span>小さいほど良い</span></div><div class="bar"><div class="zone" style="left:0;width:30%"></div><div class="needle" id="nStill"></div></div></div>
+  <div class="gauge" id="gPan"><div class="lab"><span>向きを変える速さ</span><span>緑の中で一定に</span></div><div class="bar"><div class="zone" style="left:16%;width:26%"></div><div class="needle" id="nPan"></div></div></div>
+  <div class="gauge" id="gRise"><div class="lab"><span>持ち上げの加速</span><span>小さく一定に</span></div><div class="bar"><div class="zone" style="left:40%;width:20%"></div><div class="needle" id="nRise"></div></div></div>
+  <div id="live"></div>
+  <div class="rbottom"><button class="big" id="rStart">スタート</button></div>
 </div>
 
 <!-- ================= WALK ================= -->
@@ -177,14 +208,8 @@ a{color:var(--accent)}
   <div id="wcoach"></div>
   <div class="top"><button class="ghost" id="wBack">✕</button><b>会場ウォーク</b><button class="ghost" id="wRec">● 計測</button></div>
   <div id="wctl">
-    <div class="row">
-      <div class="seg" id="wMode"></div>
-      <div class="seg" id="wSpeed"></div>
-    </div>
-    <div class="row">
-      <div class="seg" id="wJump"></div>
-      <label class="mute" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="wStep" checked>足踏みで進む</label>
-    </div>
+    <div class="row"><div class="seg" id="wMode"></div><div class="seg" id="wSpeed"></div></div>
+    <div class="row"><div class="seg" id="wJump"></div><label class="mute" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="wStep" checked>足踏みで進む</label></div>
     <div class="row"><button id="holdWalk">押している間 歩く</button><button class="ghost" id="wZoom">24mm</button></div>
   </div>
 </div>
@@ -197,123 +222,218 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), D=Math.PI/180;
 
 /* ============== SENSORS ============== */
-const S={ok:false,motion:false,orient:false, gUp:{x:0,y:1,z:0}, av:0, v:0, z:0, vm:0, x:0, xm:0, roll:0, roll0:null, yawRate:0, lastT:0, steps:0, lastStep:0, stepPeak:false, ori:null, listeners:new Set(), hz:0, n:0, t0:0};
+// 重力込みの加速度だけで計算（線形加速度を出さない機種があるため）。
+const S={ok:false,motion:false,orient:false,gUp:{x:0,y:1,z:0},av:0,ah:0,lin:{x:0,y:0,z:0},gyro:0,yawRate:0,v:0,vm:0,x:0,xm:0,z:0,glp:null,lastT:0,steps:0,lastStep:0,stepPeak:false,ori:null,listeners:new Set(),n:0,t0:0,hz:0};
 function onMotion(e){
   const now=performance.now(); const dt=S.lastT?Math.min(.05,(now-S.lastT)/1000):.016; S.lastT=now; S.n++; if(!S.t0)S.t0=now; S.hz=S.n/((now-S.t0)/1000+1e-3);
-  const ig=e.accelerationIncludingGravity, a=e.acceleration, rr=e.rotationRate;
-  if(!ig||ig.x==null) return; S.motion=true;
-  // 重力込みの加速度だけで計算する（「重力を除いた加速度」を出さない機種があるため）
-  // 重力の向き＝重力込み加速度のローパス。上下の加速度＝その向きへの射影 − 重力の大きさ
-  { const k=1-Math.exp(-dt/.45); if(!S.glp){ S.glp={x:ig.x,y:ig.y,z:ig.z}; } S.glp.x+=(ig.x-S.glp.x)*k; S.glp.y+=(ig.y-S.glp.y)*k; S.glp.z+=(ig.z-S.glp.z)*k; }
-  const gl=Math.hypot(S.glp.x,S.glp.y,S.glp.z)||9.81; const ux=S.glp.x/gl, uy=S.glp.y/gl, uz=S.glp.z/gl;
-  S.gUp={x:ux,y:uy,z:uz};
-  let av=(ig.x*ux+ig.y*uy+ig.z*uz)-gl;
-  S.src=(a&&a.x!=null)?'both':'ig';
-  S.av=av;
-  // leaky double integration -> vertical displacement (m)
-  { const al=1-Math.exp(-dt/.6); S.v=S.v*.985+av*dt; S.vm=(S.vm||0)+(S.v-S.vm)*al; const vh=S.v-S.vm; S.x=(S.x||0)*.985+vh*dt; S.xm=(S.xm||0)+(S.x-S.xm)*al; S.z=S.x-S.xm; if(!isFinite(S.z)){ S.v=S.vm=S.x=S.xm=S.z=0; } }
-  // roll relative to device "up" axis in screen plane
-  { const sg=uy<0?-1:1; S.roll=Math.atan2(ux*sg,uy*sg)/D; }
-  if(rr&&rr.alpha!=null){ S.yawRate=(rr.beta*ux+rr.gamma*uy+rr.alpha*uz); }
-  // steps: peaks of vertical acceleration
+  const ig=e.accelerationIncludingGravity, rr=e.rotationRate; if(!ig||ig.x==null) return; S.motion=true;
+  { const k=1-Math.exp(-dt/.45); if(!S.glp) S.glp={x:ig.x,y:ig.y,z:ig.z}; S.glp.x+=(ig.x-S.glp.x)*k; S.glp.y+=(ig.y-S.glp.y)*k; S.glp.z+=(ig.z-S.glp.z)*k; }
+  const gl=Math.hypot(S.glp.x,S.glp.y,S.glp.z)||9.81; const ux=S.glp.x/gl, uy=S.glp.y/gl, uz=S.glp.z/gl; S.gUp={x:ux,y:uy,z:uz};
+  const lx=ig.x-S.glp.x, ly=ig.y-S.glp.y, lz=ig.z-S.glp.z; S.lin={x:lx,y:ly,z:lz};
+  const av=lx*ux+ly*uy+lz*uz; S.av=av;                                     // 上下の加速度
+  S.ah=Math.sqrt(Math.max(0,lx*lx+ly*ly+lz*lz-av*av));                     // 水平方向の加速度の大きさ
+  { const al=1-Math.exp(-dt/.6); S.v=S.v*.985+av*dt; S.vm+=(S.v-S.vm)*al; const vh=S.v-S.vm; S.x=S.x*.985+vh*dt; S.xm+=(S.x-S.xm)*al; S.z=S.x-S.xm; if(!isFinite(S.z)){ S.v=S.vm=S.x=S.xm=S.z=0; } }
+  if(rr&&rr.alpha!=null){ S.yawRate=rr.beta*ux+rr.gamma*uy+rr.alpha*uz; S.gyro=Math.hypot(rr.alpha,rr.beta,rr.gamma); }
   if(av>1.1&&!S.stepPeak&&now-S.lastStep>280){ S.stepPeak=true; S.lastStep=now; S.steps++; S.listeners.forEach(f=>f('step')); }
   if(av<.2) S.stepPeak=false;
+  if(RUN.active) RUN.sample(now,dt);
 }
 function onOrient(e){ if(e.alpha==null&&e.beta==null)return; S.orient=true; S.ori={a:e.alpha||0,b:e.beta||0,g:e.gamma||0}; }
 async function enableSensors(){
   const st=$('#sensorStatus');
   try{
-    if(!window.isSecureContext){ st.textContent='このページは https で開く必要があります。'; return false; }
+    if(!window.isSecureContext){ st.textContent='https のページで開いてください。'; return false; }
     if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
       const r=await DeviceMotionEvent.requestPermission(); if(r!=='granted'){ st.textContent='許可されませんでした。設定 → Safari → モーションと画面の向きのアクセス をオンにして再読み込みしてください。'; return false; }
       if(typeof DeviceOrientationEvent.requestPermission==='function'){ try{ await DeviceOrientationEvent.requestPermission(); }catch(e){} }
     }
-    window.addEventListener('devicemotion',onMotion); window.addEventListener('deviceorientation',onOrient);
-    S.ok=true; st.textContent='確認中…';
-    setTimeout(()=>{ st.innerHTML=S.motion?`<span style="color:var(--good)">センサーOK（約${Math.round(S.hz)}回/秒）</span>`:'センサーの値が来ていません。PCでは使えません（会場ウォークはPCでもマウスで操作できます）。'; $('#bSensor').textContent=S.motion?'有効になっています ✓':'もう一度試す'; },1200);
+    if(!S.ok){ window.addEventListener('devicemotion',onMotion); window.addEventListener('deviceorientation',onOrient); }
+    S.ok=true; st.textContent='確認中…'; unlockAudio();
+    setTimeout(()=>{ if(S.motion){ st.innerHTML=`<span class="ok">センサーOK（約${Math.round(S.hz)}回/秒）</span>`; $('#sensorChip').textContent='OK'; $('#sensorChip').style.color='var(--good)'; $('#bSensor').style.display='none'; }
+      else { st.textContent='センサーの値が届いていません。PCでは練習メニューは使えません（会場ウォークはマウスで操作できます）。'; $('#bSensor').textContent='もう一度試す'; } },1200);
     wakeLock(); return true;
   }catch(e){ st.textContent='エラー：'+e.message; return false; }
 }
 let wl=null; async function wakeLock(){ try{ wl=await navigator.wakeLock?.request('screen'); }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&S.ok) wakeLock(); });
 $('#bSensor').onclick=enableSensors;
-const wrap=a=>{ a=(a+540)%360-180; return a; };
-function relRoll(ref){ const g=S.gUp; return wrap((Math.atan2(g.x,g.y)-Math.atan2(ref.x,ref.y))/D); }
 
-/* ============== NAV ============== */
-function tab(name){ $$('.view').forEach(v=>v.classList.remove('on')); $$('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
-  if(name==='walkTab'){ openWalk(); $$('#tabbar button')[0].classList.add('on'); $$('#tabbar button')[1].classList.remove('on'); $('#v-home').classList.add('on'); return; }
-  $('#v-'+name).classList.add('on'); if(name==='hist') renderHist(); }
-$$('#tabbar button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
-$$('[data-drill]').forEach(b=>b.onclick=()=>openDrill(b.dataset.drill));
-$$('[data-go="walk"]').forEach(b=>b.onclick=()=>openWalk());
+/* ============== AUDIO（音声・合図音） ============== */
+let actx=null; function unlockAudio(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); }catch(e){} }
+function beep(f=880,d=.08,v=.25){ if(!actx)return; const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=f; g.gain.value=v; o.connect(g); g.connect(actx.destination); const t=actx.currentTime; g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.001,t+d); o.start(t); o.stop(t+d+.02); }
+function say(t){ if(!$('#optVoice').checked){ beep(660,.12); return; } try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='ja-JP'; u.rate=1.1; speechSynthesis.speak(u); }catch(e){ beep(660,.12); } }
+
+/* ============== OPTIONS（端末に保存） ============== */
+const OK='gimbalLabOpt';
+try{ const o=JSON.parse(localStorage.getItem(OK)||'{}'); for(const k in o){ const el=$('#'+k); if(!el)continue; if(el.type==='checkbox') el.checked=o[k]; else el.value=o[k]; } }catch(e){}
+['optVoice','optMetro','optBpm','optCam'].forEach(id=>$('#'+id).addEventListener('change',()=>{ const o={}; ['optVoice','optMetro','optBpm','optCam'].forEach(k=>{ const el=$('#'+k); o[k]=el.type==='checkbox'?el.checked:el.value; }); try{ localStorage.setItem(OK,JSON.stringify(o)); }catch(e){} }));
+
+/* ============== COUNTDOWN ============== */
+function tick(){ const t=new Date('2026-11-14T13:00:00+09:00')-new Date(); const el=$('#countdown'); if(t<=0){ el.textContent='本番中・終了'; return; } const h=Math.floor(t/3600e3), m=Math.floor(t%3600e3/60e3); el.textContent=`${h}時間${m}分`; }
+tick(); setInterval(tick,30e3);
+
+/* ============== DRILLS（目的から設計） ============== */
+// kind: hold=静止 / walk=前進 / back=後ろ歩き / pan=向きを変える / aim=被写体を見ながら歩く / low=低く構える / rise=持ち上げる
+const DRILLS=[
+ {id:'cut',title:'1カットの型（止める→歩く→止める）',time:'30秒×3回',scene:'すべての場面',
+  why:'編集でつながる映像は「最初と最後に2秒止まっている」。しかも歩き出しと止まりがガクッとすると使えない。明日撮る全カットの基本の型です。',
+  how:['合図で録画開始の構え。2秒ぴたっと止める','「歩いて」で、ゆっくり歩き出す（最初の1歩を小さく）','忍者歩きで8秒','「止まって」で、2歩かけて減速して止まり、2秒キープ'],
+  phases:[['hold',3,'構えて、止める','録画開始。2秒ぴたっと'],['walk',8,'ゆっくり歩き出して','最初の1歩を小さく'],['hold',4,'なめらかに止まって','2歩かけて減速、2秒キープ']],
+  metrics:['still','startstop','bob']},
+ {id:'ninja',title:'忍者歩き（上下の揺れ）',time:'25秒×3回',scene:'巡行の並走',
+  why:'ジンバルは上下の揺れを消せません。巡行の30分、並走カットの質はほぼこれで決まります。メトロノームのテンポで、ゆっくり一定に。',
+  how:['ひざを軽く曲げて重心を低く','かかと → つま先の順に転がすように着地','歩幅は小さく、合図音に合わせて一定のテンポで','上半身は水平に滑らせるイメージ'],
+  phases:[['hold',3,'構えて','ひざを軽く曲げる'],['walk',20,'忍者歩き','合図音に合わせてゆっくり'],['hold',2,'止まって','']],
+  metrics:['bob','steps']},
+ {id:'pan',title:'なめらかパン（腰から回る）',time:'25秒×3回',scene:'挨拶・お見送り・広場',
+  why:'向きを変える速さにムラがあると、ジンバルが追従しても映像がカクつきます。腕ではなく腰から、一定の速さで。動き始めと止まる前はゆっくり。',
+  how:['正面で2秒止める','「右へ」で、6秒かけて90°右へ（腰から回る）','2秒止める','「左へ」で、6秒かけて正面に戻る','2秒止める'],
+  phases:[['hold',2,'正面で止める',''],['pan',6,'右へ90°','6秒かけて一定の速さで'],['hold',2,'止める',''],['pan',6,'左へ戻す','同じ速さで'],['hold',2,'止める','']],
+  metrics:['panEven','panEase','panAngle']},
+ {id:'aim',title:'被写体を見ながら歩く（並走・回り込み）',time:'25秒×3回',scene:'巡行の並走・神輿づくり',
+  why:'神輿を画面の中心に置いたまま、横を歩いたり回り込んだりする練習。向きの変化をなめらかに、上下の揺れも抑える。',
+  how:['木や柱など目印を1つ決める（神輿の代わり）','目印の斜め前から歩き始め、スマホを目印に向け続けたまま横を通り過ぎる','体は進行方向、腕と腰で目印を追う','合図で止まる'],
+  phases:[['hold',3,'目印に向けて構える',''],['aim',16,'目印を見たまま歩く','画面の中心から外さない'],['hold',2,'止まって','']],
+  metrics:['aimSmooth','bob']},
+ {id:'boom',title:'ロー → ブーム（出発の瞬間）',time:'20秒×3回',scene:'14:25 出発の持ち上げ',
+  why:'神輿が持ち上がる瞬間に合わせて、低い位置から一定の速さでカメラを上げる。速さにムラがあると、映像が「ふわっ・ガクッ」となります。',
+  how:['しゃがんで低く構え、2秒止める','「上げて」で、4秒かけて胸の高さまで一定の速さで上げる','上で2秒止める'],
+  phases:[['hold',3,'低く構えて止める','しゃがんで腰を落とす'],['rise',4,'ゆっくり上げて','4秒かけて一定の速さで'],['hold',3,'上で止める','2秒キープ']],
+  metrics:['riseEven','still']},
+ {id:'back',title:'後ろ歩き（プルバック）※任意',time:'20秒×2回',scene:'出発直後の正面カット',
+  why:'神輿の正面を撮るときの後ろ歩き。短く、安全に。明日は歩道側の斜め前から数歩だけ。',
+  how:['必ず後ろに障害物がない場所で','歩幅をさらに小さく、つま先から着地','合図で止まる'],
+  phases:[['hold',3,'構えて','後ろの安全を確認'],['back',10,'ゆっくり後ろへ','つま先から小さく'],['hold',2,'止まって','']],
+  metrics:['bob','still']},
+];
+const MET={ // 名前・単位・目安（ok, mid）・小さいほど良いか
+ still:{name:'静止のブレ',unit:'',sub:'止めている間の微小な動き（合成値）',ok:1,mid:2,lowGood:true,fmt:v=>v.toFixed(2)},
+ startstop:{name:'歩き出し・止まりの衝撃',unit:'m/s²',sub:'前後方向の加速のピーク',ok:1.2,mid:2.0,lowGood:true,fmt:v=>v.toFixed(2)},
+ bob:{name:'上下の揺れ',unit:'cm',sub:'歩いている間（RMS）',ok:.9,mid:1.5,lowGood:true,fmt:v=>v.toFixed(2)},
+ steps:{name:'歩数',unit:'歩',sub:'合図音のテンポと比べる',info:true,fmt:v=>String(v)},
+ panEven:{name:'パンの速さのムラ',unit:'%',sub:'動いている間の速さのばらつき',ok:30,mid:45,lowGood:true,fmt:v=>v.toFixed(0)},
+ panEase:{name:'動き始めと止まりのやわらかさ',unit:'',sub:'最初と最後の速さ ÷ 中盤の速さ（小さいほどやわらか）',ok:.65,mid:.9,lowGood:true,fmt:v=>v.toFixed(2)},
+ panAngle:{name:'回した角度',unit:'°',sub:'目標 90°',info:true,fmt:v=>v.toFixed(0)},
+ aimSmooth:{name:'向きの変化のなめらかさ',unit:'°/s²',sub:'向きを変える速さの急な変化（小さいほど良い）',ok:60,mid:110,lowGood:true,fmt:v=>v.toFixed(0)},
+ riseEven:{name:'持ち上げの加速のムラ',unit:'m/s²',sub:'上げている間の上下加速度のばらつき',ok:.45,mid:.8,lowGood:true,fmt:v=>v.toFixed(2)},
+};
+const BK='gimbalLabBest';
+const loadBest=()=>{ try{ return JSON.parse(localStorage.getItem(BK)||'{}'); }catch(e){ return {}; } };
+function renderPlan(){ const best=loadBest(); $('#plan').innerHTML=DRILLS.map((d,i)=>{ const b=best[d.id]; return `<button class="drill ${b&&'SAB'.includes(b)?'done':''}" data-d="${d.id}"><span class="no">${i+1}</span><span><b>${d.title}</b><small><span class="scene">${d.scene}</span>${d.time}</small></span><span class="badge" style="color:${b?gradeColor(b):'var(--mute)'}">${b||'—'}</span></button>`; }).join('')+
+  `<button class="drill" id="planWalk"><span class="no">${DRILLS.length+1}</span><span><b>会場ウォーク（本番の予行）</b><small><span class="scene">巡行ルート</span>神輿を枠の中に入れ続けて歩く</small></span><span class="badge">🏮</span></button>`;
+  $$('#plan [data-d]').forEach(b=>b.onclick=()=>openBrief(b.dataset.d)); $('#planWalk').onclick=()=>openWalk(); }
+const gradeColor=g=>({S:'var(--good)',A:'var(--good)',B:'var(--warn)',C:'var(--bad)',D:'var(--bad)'}[g]||'var(--mute)');
+function openBrief(id){ const d=DRILLS.find(x=>x.id===id);
+  $('#briefInner').innerHTML=`<div class="row" style="justify-content:space-between"><button class="ghost" id="bfBack">← 戻る</button><span class="chip">${d.time}</span></div>
+   <h1 style="margin-top:12px">${d.title}</h1><div class="mute">本番で使う場面：<b style="color:var(--pink)">${d.scene}</b></div>
+   <div class="why"><b>なぜ練習するのか</b><br>${d.why}</div>
+   <h2>やり方</h2><ol class="steps">${d.how.map(h=>`<li>${h}</li>`).join('')}</ol>
+   <h2>測るもの と 合格ライン（目安）</h2><table class="m"><tr><th>指標</th><th>合格</th></tr>${d.metrics.filter(k=>!MET[k].info).map(k=>`<tr><td>${MET[k].name}<br><span class="mute">${MET[k].sub}</span></td><td>${MET[k].lowGood?'≦ ':''}${MET[k].ok} ${MET[k].unit}</td></tr>`).join('')}</table>
+   <div class="mute" style="margin-top:8px">音声の合図に従って動きます。画面は見なくて大丈夫です。</div>
+   <button class="big" style="margin-top:16px" id="bfGo">準備OK</button>`;
+  $('#brief').classList.add('on'); $('#brief').scrollTop=0; $('#bfBack').onclick=()=>$('#brief').classList.remove('on'); $('#bfGo').onclick=()=>{ $('#brief').classList.remove('on'); openRun(id); }; }
+
+/* ============== RUN ENGINE ============== */
+const RUN={active:false,d:null,pi:-1,t0:0,pt0:0,data:[],timer:0};
+const gcv=$('#graph'), gctx=gcv.getContext('2d'); let gbuf=[];
+function openRun(id){ if(!S.ok){ enableSensors().then(ok=>{ if(ok) openRun(id); }); return; }
+  const d=DRILLS.find(x=>x.id===id); RUN.d=d; RUN.active=false; $('#run').classList.add('on'); $('#rTitle').textContent=d.title;
+  $('#phases').innerHTML=d.phases.map(()=>'<div><i></i></div>').join(''); $('#phaseName').textContent='スタートを押してください'; $('#phaseSub').textContent='押したら構えて、合図を待つ'; $('#phaseCount').textContent='';
+  $('#rStart').textContent='スタート'; showGauges(null); if($('#optCam').checked) startCam(); loopRun(); }
+$('#rBack').onclick=()=>{ stopRun(false); $('#run').classList.remove('on'); stopCam(); };
+$('#rStart').onclick=()=>{ unlockAudio(); if(RUN.active) stopRun(false); else startRun(); };
+function startRun(){ RUN.active=true; RUN.data=[]; RUN.stepCount=0; gbuf=[]; RUN.pi=-1; RUN.t0=performance.now(); S.v=S.vm=S.x=S.xm=S.z=0; $('#rStart').textContent='中止'; nextPhase(); }
+function nextPhase(){ const d=RUN.d; RUN.pi++; if(RUN.pi>=d.phases.length){ stopRun(true); return; }
+  const [kind,dur,name,sub]=d.phases[RUN.pi]; RUN.pt0=performance.now(); $('#phaseName').textContent=name; $('#phaseSub').textContent=sub; say(name); showGauges(kind);
+  clearTimeout(RUN.timer); RUN.timer=setTimeout(nextPhase,dur*1000*(window.__fast||1)); }
+function stopRun(done){ clearTimeout(RUN.timer); const was=RUN.active; RUN.active=false; $('#rStart').textContent='もう一度'; if(was&&done){ say('おつかれさま'); finishRun(); } else if(was){ $('#phaseName').textContent='中止しました'; $('#phaseSub').textContent=''; } }
+RUN.sample=(now,dt)=>{ const ph=RUN.d.phases[RUN.pi]; if(!ph)return; RUN.data.push({pi:RUN.pi,kind:ph[0],t:(now-RUN.pt0)/1000,dur:ph[1],z:S.z*100,av:S.av,ah:S.ah,lin:Math.hypot(S.lin.x,S.lin.y,S.lin.z),gyro:S.gyro,yaw:S.yawRate,dt}); };
+let metroLast=0;
+function loopRun(){ if(!$('#run').classList.contains('on'))return; requestAnimationFrame(loopRun); const now=performance.now();
+  const d=RUN.d; const ph=RUN.active?d.phases[RUN.pi]:null;
+  $$('#phases i').forEach((el,i)=>{ el.style.width=!RUN.active?'0%':i<RUN.pi?'100%':i>RUN.pi?'0%':Math.min(100,(now-RUN.pt0)/(ph[1]*10))+'%'; });
+  $('#phaseCount').textContent=ph?Math.max(0,Math.ceil(ph[1]-(now-RUN.pt0)/1000)):'';
+  // metronome on walking phases
+  if(ph&&['walk','back','aim'].includes(ph[0])&&$('#optMetro').checked){ const iv=60000/(+$('#optBpm').value); if(now-metroLast>iv){ metroLast=now; beep(1200,.04,.18); } }
+  const zcm=S.z*100; $('#zdot').style.top=(50-clamp(zcm/4,-1,1)*50)+'%'; $('#zdot').style.background=Math.abs(zcm)<.9?'#34d399':Math.abs(zcm)<1.5?'#fbbf24':'#f87171';
+  const still=S.gyro/4+Math.hypot(S.lin.x,S.lin.y,S.lin.z)/.15; $('#nStill').style.left=clamp(still/10,0,1)*97+'%';
+  $('#nPan').style.left=clamp(Math.abs(S.yawRate)/60,0,1)*97+'%';
+  $('#nRise').style.left=clamp(.5+S.av/4,0,1)*97+'%';
+  gbuf.push(zcm); if(gbuf.length>200)gbuf.shift(); if(gcv.classList.contains('on')) drawGraph();
+  $('#live').textContent=`上下 ${zcm.toFixed(1)}cm ／ 水平加速 ${S.ah.toFixed(2)} ／ 回転 ${S.yawRate.toFixed(0)}°/s`; }
+function showGauges(kind){ const w=['walk','back','aim'].includes(kind); $('#zcol').classList.toggle('on',w); gcv.classList.toggle('on',w); $('#gStill').classList.toggle('on',kind==='hold'||kind==='low'); $('#gPan').classList.toggle('on',kind==='pan'||kind==='aim'); $('#gRise').classList.toggle('on',kind==='rise'); }
+function drawGraph(){ const W=gcv.width=gcv.clientWidth*devicePixelRatio, H=gcv.height=gcv.clientHeight*devicePixelRatio; gctx.clearRect(0,0,W,H);
+  gctx.fillStyle='#34d39922'; gctx.fillRect(0,H/2-H*.225,W,H*.45); gctx.strokeStyle='#fff'; gctx.lineWidth=2*devicePixelRatio; gctx.beginPath();
+  gbuf.forEach((v,i)=>{ const x=W*i/200, y=H/2-clamp(v/4,-1,1)*H/2; i?gctx.lineTo(x,y):gctx.moveTo(x,y); }); gctx.stroke(); }
+let stream=null; async function startCam(){ try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); $('#video').srcObject=stream; }catch(e){} }
+function stopCam(){ if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; $('#video').srcObject=null; } }
+
+/* ============== 採点 ============== */
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0, sd=a=>{ const m=mean(a); return Math.sqrt(mean(a.map(v=>(v-m)**2))); }, rms=a=>Math.sqrt(mean(a.map(v=>v*v)));
+function stats(arr){ if(!arr.length) arr=[0]; const m=mean(arr); return {m,sd:sd(arr),rms:rms(arr),max:Math.max(...arr.map(Math.abs))}; }
+function grade(score){ return score>=90?'S':score>=75?'A':score>=55?'B':score>=35?'C':'D'; }
+function computeMetrics(d,data){
+  const R={}; const by=k=>data.filter(s=>s.kind===k);
+  const holds=data.filter(s=>s.kind==='hold'&&s.t>.6&&s.t<s.dur-.2); // 合図直後と終わり際は除く
+  if(d.metrics.includes('still')){ const h=d.id==='cut'?data.filter(s=>s.kind==='hold'&&((s.pi===0&&s.t>1)||(s.pi===2&&s.t>2))):holds;
+    R.still=h.length?mean(h.map(s=>s.gyro/4+s.lin/.15))/3:null; }
+  if(d.metrics.includes('startstop')){ const w=data.filter(s=>(s.pi===1&&s.t<2)||(s.pi===2&&s.t<2)); R.startstop=w.length?Math.max(...w.map(s=>s.ah)):null; }
+  if(d.metrics.includes('bob')){ const w=data.filter(s=>['walk','back','aim'].includes(s.kind)&&s.t>1.5); R.bob=w.length?rms(w.map(s=>s.z)):null; }
+  if(d.metrics.includes('steps')) R.steps=RUN.stepCount??0;
+  if(d.metrics.includes('panEven')||d.metrics.includes('panEase')){ const pans=[...new Set(by('pan').map(s=>s.pi))]; let ev=[],ea=[],ang=[];
+    pans.forEach(pi=>{ const p=data.filter(s=>s.pi===pi); const r=p.map(s=>Math.abs(s.yaw)); const n=r.length; if(n<20)return; const mid=r.slice(Math.floor(n*.2),Math.ceil(n*.8)); const edge=[...r.slice(0,Math.floor(n*.12)),...r.slice(Math.ceil(n*.88))];
+      const mm=mean(mid); if(mm>2){ ev.push(sd(mid)/mm*100); ea.push(mean(edge)/mm); } ang.push(p.reduce((a,s)=>a+Math.abs(s.yaw)*s.dt,0)); });
+    R.panEven=ev.length?mean(ev):null; R.panEase=ea.length?mean(ea):null; R.panAngle=ang.length?mean(ang):null; }
+  if(d.metrics.includes('aimSmooth')){ const a=by('aim'); const jr=[]; for(let i=1;i<a.length;i++){ const dtt=Math.max(a[i].dt,.008); jr.push(Math.abs(a[i].yaw-a[i-1].yaw)/dtt); } const sm=[]; for(let i=0;i<jr.length;i+=6) sm.push(mean(jr.slice(i,i+6))); R.aimSmooth=sm.length?mean(sm):null; }
+  if(d.metrics.includes('riseEven')){ const r=by('rise').filter(s=>s.t>.4&&s.t<s.dur-.4); R.riseEven=r.length?sd(r.map(s=>s.av)):null; }
+  return R; }
+function judge(k,v){ const m=MET[k]; if(m.info||v==null) return {cls:'',mark:'',score:null};
+  let cls,score; if(v<=m.ok){ cls='ok'; score=85+15*clamp((m.ok-v)/m.ok,0,1); } else if(v<=m.mid){ cls='mid'; score=75-20*(v-m.ok)/(m.mid-m.ok); } else { cls='ng'; score=Math.max(0,55-55*(v-m.mid)/m.mid); }
+  return {cls,mark:{ok:'◎ 合格',mid:'○ もう少し',ng:'△ 要練習'}[cls],score}; }
+const ADVICE={
+ still:'止めている間に動いています。肘を体に付けて、息を止めるつもりで2秒。合図の直後に動き出さない。',
+ startstop:'歩き出し・止まりで急な加速が出ています。最初の1歩と最後の1歩を「半歩」にして、2歩かけて加速・減速。',
+ bob:'上下の揺れが大きめです。ひざをもう少し曲げ、かかとから静かに着地。テンポを遅く（設定で80）して練習。',
+ panEven:'向きを変える速さにムラがあります。腕ではなく腰から回り、目線の先の景色が一定の速さで流れるように。',
+ panEase:'動き始めと止まりが急です。最初の1秒と最後の1秒だけ、特にゆっくり。',
+ aimSmooth:'向きの変化がカクついています。足で位置を変え、腰で向きを合わせる。手首だけで追わない。',
+ riseEven:'持ち上げる速さにムラがあります。ひざの伸びで上げ、腕は固定。4秒かけて一定に。',
+};
+function finishRun(){ const d=RUN.d; const R=computeMetrics(d,RUN.data); const rows=[]; const tips=[]; const scores=[];
+  d.metrics.forEach(k=>{ const v=R[k]; const j=judge(k,v); if(j.score!=null) scores.push(j.score); if(j.cls&&j.cls!=='ok'&&ADVICE[k]) tips.push(ADVICE[k]);
+    rows.push(`<div class="mrow"><span>${MET[k].name}<small>${MET[k].sub}${MET[k].info?'':'・合格 '+(MET[k].lowGood?'≦':'≧')+MET[k].ok+MET[k].unit}</small></span><b class="${j.cls}">${v==null?'—':MET[k].fmt(v)+' '+MET[k].unit}<br><small class="${j.cls}" style="color:inherit">${j.mark}</small></b></div>`); });
+  const score=scores.length?mean(scores):0; let g=grade(score); const cl=d.metrics.map(k=>judge(k,R[k]).cls); const cap=cl.includes('ng')?'C':cl.includes('mid')?'B':'S'; if('SABCD'.indexOf(g)<'SABCD'.indexOf(cap)) g=cap;
+  if(!tips.length) tips.push('合格です。本番を想定して、2Lのペットボトルを持って同じメニューをもう1回。次のメニューへ進みましょう。');
+  const best=loadBest(); const order='SABCD'; if(!best[d.id]||order.indexOf(g)<order.indexOf(best[d.id])){ best[d.id]=g; try{ localStorage.setItem(BK,JSON.stringify(best)); }catch(e){} }
+  const main=d.metrics.filter(k=>!MET[k].info&&R[k]!=null).map(k=>`${MET[k].name} ${MET[k].fmt(R[k])}${MET[k].unit}`).join(' / ');
+  saveH({when:new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),name:d.title.replace(/（.*）/,''),grade:g,main});
+  $('#resSheet').innerHTML=`<div class="mute">${d.title}</div><div style="display:flex;align-items:baseline;gap:12px;margin:6px 0 10px"><span class="grade" style="color:${gradeColor(g)}">${g}</span><span>スコア <b>${Math.round(score)}</b> / 100</span></div>`+rows.join('')+tips.map(t=>`<div class="tip">${t}</div>`).join('')+
+    `<div class="row" style="margin-top:14px"><button class="ghost" style="flex:1" id="resAgain">もう一度</button><button class="big" style="flex:1" id="resClose">閉じる</button></div>`;
+  $('#result').classList.add('on'); $('#resClose').onclick=()=>{ $('#result').classList.remove('on'); $('#run').classList.remove('on'); stopCam(); renderPlan(); };
+  $('#resAgain').onclick=()=>{ $('#result').classList.remove('on'); startRun(); }; }
+// 歩数（歩く系の区間だけ数える）
+S.listeners.add(ev=>{ if(ev==='step'&&RUN.active){ const ph=RUN.d.phases[RUN.pi]; if(ph&&['walk','back','aim'].includes(ph[0])) RUN.stepCount=(RUN.stepCount||0)+1; } });
+const _startRun=startRun;
+
+/* 会場ウォークの結果表示で使う共通の表示 */
+function showResult(name,g,score,rows,tips){ $('#resSheet').innerHTML=`<div class="mute">${name} の結果</div><div style="display:flex;align-items:baseline;gap:12px;margin:6px 0 10px"><span class="grade" style="color:${gradeColor(g)}">${g}</span><span>スコア <b>${Math.round(score)}</b> / 100</span></div>`+rows.map(([a,b])=>`<div class="mrow"><span>${a}</span><b>${b}</b></div>`).join('')+tips.map(t=>`<div class="tip">${t}</div>`).join('')+`<button class="big" style="margin-top:14px" id="resClose">閉じる</button>`;
+  $('#result').classList.add('on'); $('#resClose').onclick=()=>$('#result').classList.remove('on'); }
 
 /* ============== HISTORY ============== */
 const HK='gimbalLabHist';
 function loadH(){ try{ return JSON.parse(localStorage.getItem(HK)||'[]'); }catch(e){ return []; } }
-function saveH(r){ const h=loadH(); h.unshift(r); try{ localStorage.setItem(HK,JSON.stringify(h.slice(0,80))); }catch(e){} }
-function renderHist(){ const h=loadH(); $('#histTable').innerHTML='<tr><th>日時</th><th>メニュー</th><th>ランク</th><th>主な数値</th></tr>'+(h.length?h.map(r=>`<tr><td>${r.when}</td><td>${r.name}</td><td><b>${r.grade}</b></td><td>${r.main}</td></tr>`).join(''):'<tr><td colspan="4" class="mute">まだ記録がありません</td></tr>'); }
-$('#bClear').onclick=()=>{ try{ localStorage.removeItem(HK); }catch(e){} renderHist(); };
+function saveH(r){ const h=loadH(); h.unshift(r); try{ localStorage.setItem(HK,JSON.stringify(h.slice(0,100))); }catch(e){} }
+function renderHist(){ const h=loadH(); $('#histTable').innerHTML='<tr><th>日時</th><th>メニュー</th><th>ランク</th><th>主な数値</th></tr>'+(h.length?h.map(r=>`<tr><td>${r.when}</td><td>${r.name}</td><td><b style="color:${gradeColor(r.grade)}">${r.grade}</b></td><td>${r.main}</td></tr>`).join(''):'<tr><td colspan="4" class="mute">まだ記録がありません</td></tr>'); }
+$('#bClear').onclick=()=>{ try{ localStorage.removeItem(HK); localStorage.removeItem(BK); }catch(e){} renderHist(); renderPlan(); };
 
-/* ============== DRILLS ============== */
-const DR={
- ninja:{name:'忍者歩き',coach:'ひざを曲げて、かかと→つま先。白い点を緑の中に',dur:30,show:{z:1,h:0,p:0}},
- level:{name:'水平キープ',coach:'緑の線を点線に重ねたまま、歩いたり向きを変えたり',dur:30,show:{z:0,h:1,p:0}},
- pan:{name:'なめらかパン',coach:'ゆっくり一定の速さで、右へ90° → 戻す（腰から回る）',dur:20,show:{z:0,h:1,p:1}},
- test:{name:'10m総合テスト',coach:'10m（約15歩）を忍者歩きで。着いたらストップ',dur:60,show:{z:1,h:1,p:0}},
-};
-let drill=null, rec=null, raf=0;
-const gcv=$('#graph'), gctx=gcv.getContext('2d'); let gbuf=[];
-function openDrill(k){ if(!S.ok){ enableSensors().then(ok=>{ if(ok) openDrill(k); }); return; }
-  drill=k; const d=DR[k]; $('#drill').classList.add('on'); $('#dTitle').textContent=d.name; $('#coach').textContent='スタートを押して、2秒じっとする';
-  $('#zbar').style.display=$('#zlab').style.display=d.show.z?'block':'none'; $('#horizon').style.display=$('#horizonRef').style.display=d.show.h?'block':'none';
-  $('#panGauge').style.display=$('#panLab').style.display=d.show.p?'block':'none'; $('#graph').style.display=d.show.z?'block':'none';
-  const band=$('#panGauge .band'); band.style.left=(8/60*100)+'%'; band.style.width=(17/60*100)+'%';
-  rec=null; gbuf=[]; $('#bStart').textContent='スタート'; cancelAnimationFrame(raf); loop(); }
-$('#bBack').onclick=()=>{ $('#drill').classList.remove('on'); rec=null; cancelAnimationFrame(raf); stopCam(); };
-let stream=null; $('#bCam').onclick=async()=>{ if(stream){ stopCam(); return; } try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); $('#video').srcObject=stream; $('#bCam').textContent='📷 オフ'; }catch(e){ $('#coach').textContent='カメラを使えませんでした'; } };
-function stopCam(){ if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; $('#video').srcObject=null; $('#bCam').textContent='📷 映像'; } }
-$('#bStart').onclick=()=>{ if(!rec){ rec={t0:performance.now(),calib:true,zs:[],rolls:[],rates:[],steps0:S.steps,roll0:0,rollAcc:[],}; S.v=0; S.z=0; S.x=0; S.xm=0; S.vm=0; $('#bStart').textContent='ストップ'; } else finishDrill(); };
-function loop(){ raf=requestAnimationFrame(loop); const d=DR[drill]; const now=performance.now();
-  const zcm=S.z*100; const dot=$('#zdot'); dot.style.top=(50-clamp(zcm/5,-1,1)*50)+'%'; dot.style.background=Math.abs(zcm)<1?'#34d399':Math.abs(zcm)<2.5?'#fbbf24':'#f87171';
-  let roll=(rec&&!rec.calib&&rec.ref)?relRoll(rec.ref):S.roll; $('#horizon').style.transform=`rotate(${-roll}deg)`; $('#horizon').style.borderColor=Math.abs(roll)<2?'#34d399':Math.abs(roll)<5?'#fbbf24':'#f87171';
-  const rate=Math.abs(S.yawRate); $('#panNeedle').style.left=(clamp(rate/60,0,1)*100)+'%';
-  gbuf.push(zcm); if(gbuf.length>240)gbuf.shift(); drawGraph();
-  let txt='';
-  if(rec){ const el=(now-rec.t0)/1000;
-    if(rec.calib){ rec.rollAcc.push({...S.gUp}); $('#coach').textContent='基準を取っています… じっとして'; if(el>2){ rec.calib=false; { const n=rec.rollAcc.length||1; rec.ref=rec.rollAcc.reduce((a,b)=>({x:a.x+b.x/n,y:a.y+b.y/n,z:a.z+b.z/n}),{x:0,y:0,z:0}); } rec.t1=now; S.v=0; S.z=0; S.x=0; S.xm=0; S.vm=0; rec.steps0=S.steps; $('#coach').textContent=d.coach; } }
-    else { const t=(now-rec.t1)/1000; rec.zs.push(zcm); rec.rolls.push(roll); rec.rates.push(rate); if(t>d.dur) finishDrill();
-      const rms=Math.sqrt(rec.zs.reduce((a,b)=>a+b*b,0)/rec.zs.length);
-      txt=`<b>${t.toFixed(1)}</b> 秒<br>歩数 <b>${S.steps-rec.steps0}</b><br>上下の揺れ <b>${rms.toFixed(2)}</b> cm<br>傾き <b>${roll.toFixed(1)}</b>°`; } }
-  else txt=`センサー ${S.motion?'OK':'待機中'}<br>上下 ${zcm.toFixed(1)} cm<br>傾き ${(S.roll).toFixed(1)}°`;
-  $('#dstats').innerHTML=txt; }
-function drawGraph(){ const W=gcv.width=gcv.clientWidth*devicePixelRatio, H=gcv.height=gcv.clientHeight*devicePixelRatio; gctx.clearRect(0,0,W,H);
-  gctx.fillStyle='#34d39922'; gctx.fillRect(0,H/2-H*.1,W,H*.2); gctx.strokeStyle='#fff'; gctx.lineWidth=2*devicePixelRatio; gctx.beginPath();
-  gbuf.forEach((v,i)=>{ const x=W*i/240, y=H/2-clamp(v/5,-1,1)*H/2; i?gctx.lineTo(x,y):gctx.moveTo(x,y); }); gctx.stroke(); }
-function grade(score){ return score>=90?'S':score>=75?'A':score>=55?'B':score>=35?'C':'D'; }
-function stats(arr){ const n=arr.length||1; const m=arr.reduce((a,b)=>a+b,0)/n; const sd=Math.sqrt(arr.reduce((a,b)=>a+(b-m)**2,0)/n); return {m,sd,rms:Math.sqrt(arr.reduce((a,b)=>a+b*b,0)/n),max:Math.max(...arr.map(Math.abs))}; }
-function finishDrill(){ if(!rec||rec.calib||rec.zs.length<10){ rec=null; $('#bStart').textContent='スタート'; return; } const d=DR[drill];
-  const z=stats(rec.zs), r=stats(rec.rolls); const steps=S.steps-rec.steps0; const moving=rec.rates.filter(v=>Math.abs(v)>4); const p=stats(moving); const cv=moving.length>20?p.sd/Math.max(1,Math.abs(p.m))*100:null;
-  const zScore=clamp(100-(z.rms-0.6)*40,0,100), rScore=clamp(100-(Math.abs(r.m)+r.sd-1)*12,0,100), pScore=cv==null?0:clamp(100-(cv-15)*1.4,0,100);
-  let score, main, tips=[];
-  if(drill==='ninja'){ score=zScore; main=`上下 ${z.rms.toFixed(2)}cm`; }
-  else if(drill==='level'){ score=rScore; main=`傾き 平均${Math.abs(r.m).toFixed(1)}°`; }
-  else if(drill==='pan'){ score=cv==null?0:pScore*.8+rScore*.2; main=cv==null?'パンが検出されず':`ムラ ${cv.toFixed(0)}%`; }
-  else { score=zScore*.6+rScore*.4; main=`上下 ${z.rms.toFixed(2)}cm / 傾き ${Math.abs(r.m).toFixed(1)}°`; }
-  if(d.show.z){ if(z.rms>1.5) tips.push('上下の揺れが大きめ。ひざをもう少し曲げて、歩幅を小さく。かかとから静かに着地。'); else tips.push('上下の揺れは良好。このままの歩き方で、少しずつ速さを上げてみましょう。'); if(steps<4&&drill!=='pan') tips.push('歩数が少なめです。歩きながら計測してください。'); }
-  if(d.show.h&&(Math.abs(r.m)+r.sd)>3) tips.push('傾きがぶれています。肘を体に寄せ、手首ではなく体ごと向きを変える。');
-  if(drill==='pan'){ if(cv==null) tips.push('向きを変える動きが小さすぎました。90°くらい回してください。'); else if(cv>35) tips.push('速さにムラがあります。動き始めと止まる前をゆっくりにすると、なめらかに見えます。'); else tips.push('なめらかなパンです。本番ではRS 5のフォロー速度を「遅い〜中」に。'); }
-  const g=grade(score); const when=new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  saveH({when,name:d.name,grade:g,main});
-  showResult(d.name,g,score,[['時間',((performance.now()-rec.t1)/1000).toFixed(0)+' 秒'],['歩数',steps+' 歩'],['上下の揺れ（RMS）',z.rms.toFixed(2)+' cm'],['上下の最大',z.max.toFixed(1)+' cm'],['傾き（平均）',Math.abs(r.m).toFixed(1)+'°'],['傾きのばらつき',r.sd.toFixed(1)+'°'],['パンのムラ',cv==null?'—':cv.toFixed(0)+' %']],tips);
-  rec=null; $('#bStart').textContent='もう一度'; }
-function showResult(name,g,score,rows,tips){ const col={S:'var(--good)',A:'var(--good)',B:'var(--warn)',C:'var(--bad)',D:'var(--bad)'}[g];
-  $('#resSheet').innerHTML=`<div class="mute">${name} の結果</div><div style="display:flex;align-items:baseline;gap:12px;margin:6px 0 10px"><span class="grade" style="color:${col}">${g}</span><span>スコア <b>${Math.round(score)}</b> / 100</span></div>`+rows.map(([a,b])=>`<div class="mrow"><span>${a}</span><b>${b}</b></div>`).join('')+tips.map(t=>`<div class="tip">${t}</div>`).join('')+`<button class="big" style="margin-top:14px" id="resClose">閉じる</button>`;
-  $('#result').classList.add('on'); $('#resClose').onclick=()=>$('#result').classList.remove('on'); }
+/* ============== NAV ============== */
+function tab(name){ if(name==='walkTab'){ openWalk(); return; } $$('.view').forEach(v=>v.classList.remove('on')); $$('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name)); $('#v-'+name).classList.add('on'); if(name==='hist') renderHist(); window.scrollTo(0,0); }
+$$('#tabbar button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+renderPlan();
 
 /* ============== WALK (3D venue) ============== */
 let W=null;
-function openWalk(){ $('#walk').classList.add('on'); if(!S.ok) enableSensors(); if(!W) W=initWalk(); W.start(); }
+function openWalk(){ $('#walk').classList.add('on'); unlockAudio(); if(!S.ok) enableSensors(); if(!W) W=initWalk(); W.start(); }
 $('#wBack').onclick=()=>{ $('#walk').classList.remove('on'); W&&W.stop(); };
 function initWalk(){
   const canvas=$('#wcanvas'); const renderer=new THREE.WebGLRenderer({canvas,antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.outputColorSpace=THREE.SRGBColorSpace;
