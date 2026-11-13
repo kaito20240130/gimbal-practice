@@ -202,6 +202,8 @@ const SRC = {
   zy:['Zhiyun イベント撮影のジンバル設定','https://store.zhiyun-tech.com/blogs/news/professional-camera-gimbal-setup-for-weddings-events-and-commercial-shoots'],
   cre8:['cre-8 RS5 レビュー（ズーム切替スイッチ）','https://cre-8.com.au/?p=15186'],
   compat:['DJI 互換性検索','https://www.dji.com/support/compatibility'],
+  rs4m:['DJI RS 4 Mini 取扱説明書（バランスの順序）','https://www.adorama.com/col/productManuals/DJIRS4M.pdf'],
+  rs5m:['DJI RS 5 取扱説明の要約（manuals.plus）','https://manuals.plus/asin/B0FLKBCT26'],
   naoj:['国立天文台 東京の日の出入り（2026年11月）','https://eco.mtk.nao.ac.jp/koyomi/dni/2026/s1311.html'],
 };
 
@@ -618,14 +620,25 @@ S.push({lv:'p',title:'このサイトの使い方',cam:{p:[1,6,-8],t:[0,.8,2]},
 /* ===== 初級：バランス ===== */
 S.push({lv:'b',title:'バランス① 準備：本番と同じ状態にする',cam:deskCam(.5,.2,-.35),
  lead:'バランスは「撮影するときの状態」で取ります。ここを省くと後の手順が全部ずれます。',
- pts:['レンズキャップを外す。フード・フィルター・マイクなど付ける物は全部付ける','ズームは主に使う焦点距離へ（迷ったら中間）。バランス後にズームすると崩れる','カメラ制御ケーブルもつないでから（ぶら下がり方で重心が変わる）','平らな台の上で、ジンバルの電源はOFF','クイックリリースプレートの矢印とレンズの向きを合わせて取り付ける'],
+ pts:['レンズキャップを外す。フード・フィルター・マイクなど付ける物は全部付ける','ズームは主に使う焦点距離へ（迷ったら中間）。バランス後にズームすると崩れる','カメラ制御ケーブルもつないでから（ぶら下がり方で重心が変わる）','平らな台の上で、ジンバルの電源はOFF（またはスリープ）','クイックリリースプレートの矢印とレンズの向きを合わせて取り付ける'],
  warn:'微調整ノブは<b>軸をロックしたまま回さない</b>。故障の原因になります（DJI公式の注意）。',
  drill:'付属品を全部付けた状態と外した状態で1回ずつバランスを取り、違いを体感する。',
  src:['dronexl','zy','dji_faq'],
  setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; addLabel('キャップを外す',deskRig.labelPts.focus,'acc'); addLabel('ケーブルも接続',deskRig.labelPts.usb); addLabel('ズーム位置を決める',deskRig.labelPts.zoom,'acc',-26); },
  update(t){ deskRig.zoom=.5; deskRig.apply(); cap('本番と同じ状態でバランスを取る','acc'); }});
 
-S.push({lv:'b',title:'バランス② 前後（チルトの奥行き）',cam:deskCam(.62,.12,.05,.1),
+S.push({lv:'b',title:'バランス② 上下（チルトの高さ）',cam:deskCam(.6,.15,.1,.12),
+ lead:'レンズを真上に向けて手を離し、前後どちらかに倒れるかを見ます。',
+ pts:['倒れる → チルトモーター側のアームの高さ（カメラの上下位置）を調整','DJIの取扱説明書の順番は「上下 → 前後 → 左右（ロール）→ パン」','②上下と③前後は互いに影響するので、交互に何度か行き来して詰める'],
+ pass:'レンズを真上に向けて手を離しても、そのまま止まる。',
+ src:['rs4m','rsc2','dronexl'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; deskRig.showRings(false,false,true); addLabel('高さ調整アーム',deskRig.labelPts.vArm,'tilt'); },
+ update(t){ const u=t%9, r=deskRig; r.dy=-.02*(1-seg(u,3,4.5));
+   r.tilt=Math.PI/2*seg(u,0,.9)-.55*seg(u,1.1,2.1)*(1-seg(u,2.2,2.9))-Math.PI/2*seg(u,7.8,8.8); r.apply();
+   arrow1.visible=u>2.9&&u<4.6; if(arrow1.visible){ const a=r.labelPts.cog.getWorldPosition(new V3()).add(new V3(.1,0,0)); arrow1.set(a,a.clone().add(new V3(0,0,-.06))); }
+   if(u<2.9)cap('真上で手を離すと倒れる ✕','bad'); else if(u<4.6)cap('アームの高さを調整','acc'); else if(u<7.8)cap('真上で止まる ✓','good'); else cap(''); }});
+
+S.push({lv:'b',title:'バランス③ 前後（チルトの奥行き）',cam:deskCam(.62,.12,.05,.1),
  lead:'レンズを正面に向けてチルト軸だけロックを外し、前と後ろのどちらに倒れるかを見ます。',
  pts:['レンズが下を向く ＝ 前が重い → カメラを<b>後ろ</b>へスライド','レンズが上を向く ＝ 後ろが重い → カメラを<b>前</b>へスライド','大まかに合わせたら、微調整ノブで追い込む'],
  pass:'45°上・45°下に向けて手を離し、その角度で止まる。',
@@ -635,17 +648,6 @@ S.push({lv:'b',title:'バランス② 前後（チルトの奥行き）',cam:des
    let tl=-.75*seg(u,.3,1.6)*(1-seg(u,1.8,2.4)); tl+= .78*seg(u,4.3,5.2)*(1-seg(u,6.6,7.2)) - .78*seg(u,7.2,7.9)*(1-seg(u,9,9.5)); r.tilt=tl; r.apply();
    arrow1.visible=u>2.2&&u<4.1; if(arrow1.visible){ const a=r.labelPts.cog.getWorldPosition(new V3()).add(new V3(.09,.05,0)); arrow1.set(a,a.clone().add(new V3(0,0,-.07))); }
    if(u<2.4)cap('前が重い → レンズが下がる ✕','bad'); else if(u<4.2)cap('カメラを後ろへスライド','acc'); else cap(u>5.3&&u<6.6?'45°上で手を離しても止まる ✓':u>7.9&&u<9?'45°下でも止まる ✓':'角度を変えて確かめる','good'); }});
-
-S.push({lv:'b',title:'バランス③ 上下（チルトの高さ）',cam:deskCam(.6,.15,.1,.12),
- lead:'レンズを真上に向けて手を離し、前後どちらかに倒れるかを見ます。',
- pts:['倒れる → チルトモーター側のアームの高さ（カメラの上下位置）を調整','②前後と③上下は互いに影響するので、交互に何度か行き来して詰める'],
- pass:'レンズを真上に向けて手を離しても、そのまま止まる。',
- src:['rsc2','dronexl'],
- setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; deskRig.showRings(false,false,true); addLabel('高さ調整アーム',deskRig.labelPts.vArm,'tilt'); },
- update(t){ const u=t%9, r=deskRig; r.dy=-.02*(1-seg(u,3,4.5));
-   r.tilt=Math.PI/2*seg(u,0,.9)-.55*seg(u,1.1,2.1)*(1-seg(u,2.2,2.9))-Math.PI/2*seg(u,7.8,8.8); r.apply();
-   arrow1.visible=u>2.9&&u<4.6; if(arrow1.visible){ const a=r.labelPts.cog.getWorldPosition(new V3()).add(new V3(.1,0,0)); arrow1.set(a,a.clone().add(new V3(0,0,-.06))); }
-   if(u<2.9)cap('真上で手を離すと倒れる ✕','bad'); else if(u<4.6)cap('アームの高さを調整','acc'); else if(u<7.8)cap('真上で止まる ✓','good'); else cap(''); }});
 
 S.push({lv:'b',title:'バランス④ 左右（ロール）',cam:{p:[DESK[0]-.05,DESK[1]+.2,DESK[2]-.6],t:[DESK[0],DESK[1]+.15,DESK[2]]},
  lead:'ロール軸のロックを外し、カメラが左右どちらに傾くかを見ます。',
@@ -669,8 +671,8 @@ S.push({lv:'b',title:'バランス⑤ パン軸',cam:{p:[1.2,1.5,-2.4],t:[0,1.15
 
 S.push({lv:'b',title:'電源・自動ロック・オートチューン',cam:deskCam(.5,.25,-.4),
  lead:'RS 5 は電源と連動して軸のロックが自動で動きます。バランスの後は必ずオートチューン（モーターの自動調整）を行います。',
- pts:['<b>電源ボタン長押し</b>：3軸のロックが自動で外れて展開。もう一度長押しでロックして電源OFF','<b>撮影の合間は電源ボタン1回押し</b>：軸をロックしてスリープ（もう1回で復帰）。2回押しはロックせずにスリープ','<b>オートチューン</b>：Mボタン＋トリガーを長押し（画面のキャリブレーションからも可）。実行中は台に触れない。緑で成功、赤で失敗','レンズ交換・縦位置への切替・付属品の変更のたびに「再バランス → オートチューン」','電源は必ずカメラを載せてから入れる（何も載せずに入れると暴れる）'],
- src:['dji_faq','dronexl'],
+ pts:['<b>電源ボタン長押し</b>：3軸のロックが自動で外れて展開。もう一度長押しでロックして電源OFF','<b>撮影の合間は電源ボタン1回押し</b>：軸をロックしてスリープ（もう1回で復帰）。2回押しはロックせずにスリープ','<b>オートチューン</b>：Mボタン＋トリガーを長押し（画面のキャリブレーションからも可）。載せた重さに合わせてモーターの強さを自動で調整する。実行中は台に触れない。緑で成功、赤で失敗','レンズ交換・付属品の変更のたびに「再バランス → オートチューン」。縦位置に切り替えたときは、前後とパンは合わせ直し不要とされるので、上下・ロールを確認してオートチューン','映像の水平がわずかに傾いて見えるときは、画面の設定（下スワイプ）の水平キャリブレーションで調整','電源は必ずカメラを載せてから入れる（何も載せずに入れると暴れる）'],
+ src:['dji_faq','dronexl','rs5m'],
  setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; addLabel('電源ボタン',deskRig.labelPts.power); addLabel('画面',deskRig.labelPts.screen,'acc'); },
  update(t){ const u=t%9, r=deskRig; const f=1-seg(u,1.4,3); r.pan=-1.4*f; r.tilt=1.1*f; r.roll=0;
    const tune=u>3.6&&u<6.6; if(tune){ r.pan+=.02*Math.sin(u*70); r.tilt+=.025*Math.sin(u*83); r.roll=.02*Math.sin(u*61); } r.showRings(tune); r.apply();
