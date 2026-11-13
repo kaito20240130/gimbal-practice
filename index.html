@@ -202,13 +202,13 @@ function onMotion(e){
   const now=performance.now(); const dt=S.lastT?Math.min(.05,(now-S.lastT)/1000):.016; S.lastT=now; S.n++; if(!S.t0)S.t0=now; S.hz=S.n/((now-S.t0)/1000+1e-3);
   const ig=e.accelerationIncludingGravity, a=e.acceleration, rr=e.rotationRate;
   if(!ig||ig.x==null) return; S.motion=true;
-  let lin=a&&a.x!=null?a:{x:0,y:0,z:0};
-  let gx=ig.x-lin.x, gy=ig.y-lin.y, gz=ig.z-lin.z;
-  // 端末によって符号の向きが逆でも、重力方向への射影なので上下の加速度は同じになる
-  const gl=Math.hypot(gx,gy,gz)||1; const ux=gx/gl, uy=gy/gl, uz=gz/gl;
+  // 重力込みの加速度だけで計算する（「重力を除いた加速度」を出さない機種があるため）
+  // 重力の向き＝重力込み加速度のローパス。上下の加速度＝その向きへの射影 − 重力の大きさ
+  { const k=1-Math.exp(-dt/.45); if(!S.glp){ S.glp={x:ig.x,y:ig.y,z:ig.z}; } S.glp.x+=(ig.x-S.glp.x)*k; S.glp.y+=(ig.y-S.glp.y)*k; S.glp.z+=(ig.z-S.glp.z)*k; }
+  const gl=Math.hypot(S.glp.x,S.glp.y,S.glp.z)||9.81; const ux=S.glp.x/gl, uy=S.glp.y/gl, uz=S.glp.z/gl;
   S.gUp={x:ux,y:uy,z:uz};
-  let av=(lin.x*ux+lin.y*uy+lin.z*uz);
-  if(!a||a.x==null){ av=0; }
+  let av=(ig.x*ux+ig.y*uy+ig.z*uz)-gl;
+  S.src=(a&&a.x!=null)?'both':'ig';
   S.av=av;
   // leaky double integration -> vertical displacement (m)
   { const al=1-Math.exp(-dt/.6); S.v=S.v*.985+av*dt; S.vm=(S.vm||0)+(S.v-S.vm)*al; const vh=S.v-S.vm; S.x=(S.x||0)*.985+vh*dt; S.xm=(S.xm||0)+(S.x-S.xm)*al; S.z=S.x-S.xm; if(!isFinite(S.z)){ S.v=S.vm=S.x=S.xm=S.z=0; } }
