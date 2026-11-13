@@ -20,7 +20,7 @@ header h1{font-size:16px;margin:0;font-weight:900;letter-spacing:.02em}
 header .sub{font-size:11.5px;color:var(--mute)}
 @media (max-width:979px){ header{padding:10px 14px 2px} header h1{font-size:14px} header .sub{display:none} }
 #stage{position:sticky;top:0;z-index:5;height:var(--sh,42vh);min-height:250px;transition:height .25s;background:#0b0c0f;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;touch-action:none}
-#stage canvas{display:block;width:100%;height:100%}
+#stage #c{display:block;width:100%;height:100%}
 #labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);white-space:nowrap;font-size:11px;font-weight:700;padding:3px 7px;border-radius:999px;background:rgba(15,16,19,.82);border:1px solid rgba(255,255,255,.18);color:#fff}
 .lbl::after{content:"";position:absolute;left:50%;bottom:-7px;width:1px;height:6px;background:rgba(255,255,255,.5)}
@@ -42,6 +42,13 @@ header .sub{font-size:11.5px;color:var(--mute)}
 #fTodo{position:absolute;left:10px;top:54px;max-width:min(62%,420px);font-size:12.5px;font-weight:700;color:var(--accent);background:rgba(15,16,19,.85);border:1px solid var(--accent);border-radius:8px;padding:5px 9px}
 #fBar{position:absolute;left:10px;right:10px;bottom:52px;display:flex;gap:6px;align-items:center;pointer-events:auto}
 #fBar input{flex:1;accent-color:var(--d);height:28px}
+#fMap{position:absolute;right:10px;top:54px;width:150px;height:90px;border-radius:8px;background:rgba(11,12,15,.82);border:1px solid var(--line)}
+#fBig{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:min(86%,520px);text-align:center;background:rgba(15,16,19,.9);border:2px solid var(--d);border-radius:14px;padding:12px 14px;opacity:0;transition:opacity .35s;pointer-events:none}
+#fBig.on{opacity:1}
+#fBig .t{font-size:30px;font-weight:900;color:var(--d);font-variant-numeric:tabular-nums}
+#fBig .e{font-size:18px;font-weight:900;margin-top:2px}
+#fBig .y{font-size:13px;color:var(--accent);margin-top:6px;font-weight:700}
+@media (max-width:979px){ #fMap{top:auto;bottom:96px;left:10px;right:auto;width:132px;height:80px} #fTodo{max-width:calc(100% - 66px)} }
 #fBar button{font:inherit;font-size:12px;font-weight:700;color:var(--text);background:rgba(23,25,30,.92);border:1px solid var(--line);border-radius:8px;padding:6px 9px;cursor:pointer}
 .ftl .it{cursor:pointer;border-radius:8px;padding:4px 6px;margin-left:-6px}
 .ftl .it.now{background:#2a1820;outline:1px solid var(--d)}
@@ -137,7 +144,9 @@ details.srcs summary{cursor:pointer;color:var(--text);font-weight:700}
   <div id="tools"><button id="bPlay">❚❚ 一時停止</button><button id="bView">↺ 視点</button></div>
   <div id="modeBar"><div class="seg" id="modeSeg"></div></div>
   <div id="fest"><div id="fClock"><b id="fTime">13:00</b><span id="fEv"></span></div><div id="fTodo"></div>
-    <div id="fBar"><input type="range" id="fRange" min="-3" max="182" step="0.1" value="-3"><button id="fNext" title="次の必須へ">必須⏭</button></div></div>
+    <div id="fBar"><button id="fPrev" title="前の場面">◀</button><input type="range" id="fRange" min="-3" max="182" step="0.1" value="-3"><button id="fNext2" title="次の場面">▶</button></div>
+    <canvas id="fMap" width="300" height="180"></canvas>
+    <div id="fBig"><div class="t"></div><div class="e"></div><div class="y"></div></div></div>
   <div id="err">3Dの読み込みに失敗しました。通信環境を確認して再読み込みしてください。</div>
   <button id="bSize" title="3Dの大きさ">⤢</button>
 </div>
@@ -219,6 +228,7 @@ scene.add(new THREE.HemisphereLight(0xdfe6ff,0x2a2420,1.0));
 const sun=new THREE.DirectionalLight(0xffffff,1.6); sun.position.set(-4,8,-6); scene.add(sun);
 const stageLightA=new THREE.PointLight(0xffb36b,12,14,1.6); stageLightA.position.set(-2.5,4,5.5); scene.add(stageLightA);
 const stageLightB=new THREE.PointLight(0x6bc8ff,10,14,1.6); stageLightB.position.set(2.5,4,5.5); scene.add(stageLightB);
+const deskKey=new THREE.PointLight(0xfff4e6,3.2,4,1.2); deskKey.position.set(.9,1.9,-5.9); scene.add(deskKey); const deskFill=new THREE.PointLight(0xdfe8ff,1.6,4,1.2); deskFill.position.set(-1,1.6,-4.2); scene.add(deskFill);
 
 /* ---------------- venue ---------------- */
 const venue=new THREE.Group(); scene.add(venue);
@@ -431,7 +441,7 @@ function cap(text,cls=''){ const k=text+'|'+cls; if(k===capKey)return; capKey=k;
 
 /* ---------------- camera tween ---------------- */
 let camTween=null;
-function goCam(p,t,dur=.9){ camTween={fp:camera.position.clone(),ft:controls.target.clone(),tp:new V3(...p),tt:new V3(...t),k:0,dur}; userMoved=false; }
+function goCam(p,t,dur=.9){ const tp=new V3(...p), tt=new V3(...t); const asp=stageEl.clientWidth/Math.max(1,stageEl.clientHeight); if(stageEl.clientWidth<700){ tp.sub(tt).multiplyScalar(asp<1?1.9:1.55).add(tt); } camTween={fp:camera.position.clone(),ft:controls.target.clone(),tp,tt,k:0,dur}; userMoved=false; }
 
 /* ---------------- follow sim ---------------- */
 function follow(rig,hy,hp,hr,mode,dt,tau,cmdPitch=0,cmdYaw=0){
@@ -556,7 +566,7 @@ function hidePeople(){ dayPeople.forEach(p=>p.group.visible=false); }
 hidePeople();
 
 /* ---------------- STEPS ---------------- */
-const LV={d:['明日の本番','var(--d)'],p:['準備','var(--p)'],b:['初級','var(--b)'],m:['中級','var(--m)'],a:['上級','var(--a)'],e:['本番の基本','var(--e)']};
+const LV={d:['明日の本番','var(--d)'],p:['準備','var(--p)'],b:['初級','var(--b)'],m:['中級','var(--m)'],a:['上級','var(--a)']};
 const DESK=[0,1.09,-5];
 const deskCam=(dx=.55,dy=.28,dz=-.5,ty=.12)=>({p:[DESK[0]+dx,DESK[1]+dy,DESK[2]+dz],t:[DESK[0],DESK[1]+ty,DESK[2]]});
 const S=[];
@@ -582,13 +592,14 @@ S.push({lv:'p',title:'あなたの機材と重さ',cam:deskCam(.45,.15,-.05,.1),
  setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; addLabel('ズームリング',deskRig.labelPts.zoom,'acc'); addLabel('重心',deskRig.labelPts.cog,'tilt',30); },
  update(t){ const u=t%6; const z=seg(u,.5,2.2)-seg(u,3.5,5.2); deskRig.zoom=z; deskRig.tilt=-.12*z; deskRig.apply(); cap(`焦点距離 ${Math.round(24+46*z)}mm ${z>.5?'→ 鏡筒が伸びて前が重くなる':''}`,z>.5?'bad':'acc'); }});
 
-S.push({lv:'p',title:'このページの使い方と、次の選択肢',cam:{p:[1,6,-8],t:[0,.8,2]},
- lead:'上の3Dは指で回せます（2本指で拡大）。初級 → 中級 → 上級 → 本番の順に見て、「練習」を家でやってから本番に臨むのがおすすめです。',
+S.push({lv:'p',title:'このサイトの使い方',cam:{p:[1,6,-8],t:[0,.8,2]},
+ lead:'上の3Dは指で回せます（2本指で拡大）。<b>明日までに見る順番</b>は次のとおりです。',
  html:`<div class="opts">
- <div class="opt"><h3>A. ブラウザで動く3D（このページ）<span class="now">いまここ</span></h3><div class="pm"><span>＋</span><span>スマホですぐ見られる・視点を自由に回せる・内容の追加や修正が簡単</span><span>−</span><span>見た目は簡易モデル。質感はリアルではない</span></div></div>
- <div class="opt"><h3>B. Blenderでレンダリングした動画</h3><div class="pm"><span>＋</span><span>実機に近い質感。MP4で、YouTubeを見る感覚で見られる</span><span>−</span><span>Blenderを動かせるPCが必要。この作業環境にはBlenderが無く、いまはインストールもできない。あなたのPCにBlenderを入れて、私が書くスクリプトを実行する形になる（デスクトップアプリ連携で私がPCを操作する手もある）。Fable 5.2 を使っても「Blenderを動かす場所」が必要な点は同じ</span></div></div>
- <div class="opt"><h3>C. 自分で撮った見本動画</h3><div class="pm"><span>＋</span><span>このページのショットを実際に撮って見比べられる。いちばん上達が早い</span><span>−</span><span>撮影の手間がかかる</span></div></div>
- <div class="opt"><h3>D. 写真に注釈を入れた手順スライド</h3><div class="pm"><span>＋</span><span>送ってもらった写真をそのまま使える。印刷向き</span><span>−</span><span>動きは伝わりにくい</span></div></div></div>`,
+ <div class="opt"><h3>① 明日の本番 → 「通しで見る」</h3>当日の流れと、場面ごとに「あなたがすること」を把握する（約3分）</div>
+ <div class="opt"><h3>② 初級のバランス①〜⑤とオートチューン</h3>家でジンバルにカメラを載せ、画面を見ながら一緒に手を動かす</div>
+ <div class="opt"><h3>③ 練習ラボ（スマホのセンサー）</h3>廊下や公園で「1カットの型」「忍者歩き」など。音声の合図で練習し、数値で上達を確認 <br><a href="index.html" style="color:var(--accent)">📱 練習ラボを開く</a>（GitHub Pages版のみ）</div>
+ <div class="opt"><h3>④ 本番中：ショットリスト</h3>明日の本番 → 「ショットリスト」を開いて、撮れたものからチェック</div></div>
+ <div class="box warn"><b class="h">注意</b>3Dは説明用の簡易モデルです。会場は チラシの地図をもとにした模式図（縮尺 約1/4）で、実際の道幅・建物とは違います。</div>`,
  setup(){ op.group.visible=true; placeOp(0,-1,0); },
  update(t){ if(userMoved||camTween)return; const a=t*.12; camera.position.set(Math.sin(a)*9,6,Math.cos(a)*-9+1); controls.target.set(0,.8,2); }});
 
@@ -830,25 +841,6 @@ S.push({lv:'a',title:'Log撮影・色・記録方式',cam:{p:[DESK[0]-.3,DESK[1]
  update(t){ deskRig.pan=.3*Math.sin(t*.4); deskRig.tilt=.15*Math.sin(t*.6); deskRig.apply(); cap(''); }});
 
 /* ===== 本番 ===== */
-S.push({lv:'e',title:'当日の動き方（会場マップ）',cam:{p:[0,15,-3.5],t:[0,0,2]},
- lead:'イベントは撮り直しができません。「どこで・どのショットを撮るか」を先に決めておくと、慌てずに済みます。',
- pts:['<b style="color:#60a5fa">A</b> 通路のプッシュイン（開演前・入場）','<b style="color:#f5b83d">B</b> 最前列の前の横移動（演目の合間だけ。演目中は端から）','<b style="color:#f472b6">C</b> 柱を使ったリビール（冒頭のつかみ）','<b style="color:#34d399">D</b> 壁際でブーム（客席越しにステージ）','開始前に会場を歩いて、動線・段差・ケーブル・電源を確認','撮影の合間は電源ボタン1回でスリープし、三脚を開いて置く（腕を休める・電池の節約）'],
- src:['dji_faq'],
- setup(){ mapGroup.visible=true; addLabel('A 通路',mapAnchors.A,'',0); addLabel('B 横移動',mapAnchors.B,'acc'); addLabel('C リビール',mapAnchors.C); addLabel('D ブーム',mapAnchors.D,'good'); },
- update(t){ cap(''); }});
-
-const CHECK=[['前日',['ジンバルを満充電（65W PD充電器で約1時間）','カメラの予備バッテリーとSDカード（記録方式に合う速度のもの）','ジンバル・カメラのファームウェアを最新に','自宅でバランスを取り、プレートの位置を写真でメモ']],
- ['会場に着いたら',['電源地域を確認（東日本 1/50・1/100 ／ 西日本 1/60・1/120）','レンズキャップを外し、付属品を全部付けて再バランス → オートチューン','静音モードを「入」','テスト撮影して、再生でピント・露出・ちらつきを確認','動線（A〜D）を歩いて確認']],
- ['撮影中',['短いクリップ（10〜20秒）を、前後2秒止めて撮る','迷ったらトリガー2回でセンタリング','合間は電源ボタン1回でスリープ、三脚を開いて置く','人の視界と安全を優先']]];
-S.push({lv:'e',title:'持ち物・確認チェックリスト',cam:deskCam(.5,.25,-.45),
- lead:'チェックはこの端末に保存されます（ブラウザによっては保存されないこともあります）。',
- html:()=>`<div class="chk">${CHECK.map(([h,items],i)=>`<h4>${h}</h4>`+items.map((s,j)=>`<label><input type="checkbox" data-k="c${i}_${j}"><span>${s}</span></label>`).join('')).join('')}</div>`,
- src:['dji_faq','giz'],
- setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; },
- mount(){ let st={}; try{ st=JSON.parse(localStorage.getItem('rs5chk')||'{}'); }catch(e){}
-   document.querySelectorAll('.chk input').forEach(cb=>{ cb.checked=!!st[cb.dataset.k]; cb.onchange=()=>{ st[cb.dataset.k]=cb.checked; try{ localStorage.setItem('rs5chk',JSON.stringify(st)); }catch(e){} }; }); },
- update(t){ deskRig.pan=.25*Math.sin(t*.5); deskRig.apply(); cap(''); }});
-
 
 /* ===== 明日の本番（囲町いけばな神輿まつり） ===== */
 const ROUTE_SVG=`<div class="map"><svg viewBox="70 735 510 315" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans JP, sans-serif">
@@ -1020,7 +1012,7 @@ const fFlat=(x1,y1,x2,y2,mat,y=.015)=>{ const a=fw(x1,y1), b=fw(x2,y2); const m=
   fBox(125,815,205,885,4,campus); fBox(215,830,285,890,3.5,campus); fBox(125,900,200,965,4.5,campus);          // 大学キャンパス（帝京平成・明治）
   fBox(312,910,375,962,6,office); fBox(390,910,468,962,5,office);                                           // 中野セントラルパーク
   fBox(495,740,560,788,7,stdMat(0xb7bcc6,{r:.8}));                                                          // 区役所
-  fBox(180,990,250,1022,3.5,stdMat(0xe2d8c6,{r:.8}));                                                          // 一葉式いけばな東京中野本部
+  { const hm=stdMat(0xe2d8c6,{r:.8}); hm.transparent=true; hm.opacity=.45; hm.depthWrite=false; fBox(180,990,250,1022,3.5,hm); }                                                          // 一葉式いけばな東京中野本部
   fBox(330,995,420,1050,5,gray); fBox(60,780,95,1000,5,gray); fBox(545,820,600,1000,5,gray); fBox(130,745,300,785,5,gray);
   [['hq',215,1006,5],['ku',528,764,9],['plaza',293,1028,.5],['park',384,854,1.5],['campus',165,850,6],['cp',420,936,8]].forEach(([k,x,y,h])=>{ const p=fw(x,y); fA[k]=new THREE.Object3D(); fA[k].position.set(p.x,h,p.z); fest.add(fA[k]); });
   const cols=[0x475569,0x9d174d,0x1e3a8a,0x14532d,0x6b21a8,0xb45309];
@@ -1038,7 +1030,7 @@ const FE=[[-3,'開場前','会場を一周して動線・段差・ケーブル�
  [105,'区役所前で区長をお見送り','握手・手を振る瞬間。動かずに撮る',1],[106,'広場へ（約10分）','背中越しを少し → 広場へ先回り',0],[115,'神輿を広場の真ん中へ','到着〜置く瞬間を正面から',1],
  [120,'いけばな体験（30分×2回）','室内は1/50・F2.8。子どもの顔の公開可否は主催者に確認',0],[150,'写真スポット・周りの様子','笑顔・花のアップ・マルシェなど短く',0],[170,'終了前の締め','ブームで広場全体のワイド',0],[180,'終了','おつかれさまでした',0]];
 const fmt=m=>{ const t=Math.round(13*60+m); return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`; };
-const fState={m:-3,speed:1,playing:true};
+const fState={m:-3,speed:1,playing:true,mode:'chapter',hold:0};
 function fMikoshi(m){ // returns {pos,yaw,lift,phase}
   if(m<85){ const lift=m<84.5?0:seg(m,84.5,85); return {p:START.clone(),yaw:Math.atan2(-1,0),lift,moving:false}; }
   if(m<105){ const a=fAt(RED*(m-85)/20); return {p:a.p,yaw:Math.atan2(a.dir.x,a.dir.z),lift:1,moving:true}; }
@@ -1067,13 +1059,26 @@ function fOperator(m,mk){ // returns {p,yaw,anchorY,crouch,aim:[x,y,z],inv,note}
   const b=seg(m,171,177); return {p:new V3(C.x+4.5,0,C.z+4.5),aim:[C.x,lerp(.9,.5,b),C.z],anchorY:lerp(.55,2.0,b),crouch:lerp(.38,0,Math.min(1,b*1.6))}; }
 let fLastIdx=-1;
 function fEventIdx(m){ let k=0; FE.forEach((e,i)=>{ if(m>=e[0]) k=i; }); return k; }
-function fUpdateCard(){ const k=fEventIdx(fState.m); if(k===fLastIdx)return; fLastIdx=k; document.querySelectorAll('.ftl .it').forEach((el,i)=>el.classList.toggle('now',i===k)); const e=FE[k];
-  document.getElementById('fEv').innerHTML=(e[3]?'<span class="must">必須</span>':'')+e[1]; }
+let fBigT=0;
+function fUpdateCard(){ const k=fEventIdx(fState.m); if(k===fLastIdx)return; const first=fLastIdx===-1; fLastIdx=k; document.querySelectorAll('.ftl .it').forEach((el,i)=>el.classList.toggle('now',i===k)); const e=FE[k];
+  document.getElementById('fEv').innerHTML=(e[3]?'<span class="must">必須</span>':'')+e[1];
+  const big=document.getElementById('fBig'); big.querySelector('.t').innerHTML=fmt(Math.max(0,e[0]))+(e[3]?' <span class="must" style="font-size:13px;vertical-align:middle;background:var(--bad);color:#111;border-radius:4px;padding:1px 6px">必須</span>':''); big.querySelector('.e').textContent=e[1]; big.querySelector('.y').textContent='あなた：'+e[2];
+  big.classList.add('on'); fBigT=2.2; if(fState.mode==='chapter') fState.hold=1.6; }
+function fChapterEnd(k){ return k+1<FE.length?FE[k+1][0]:182; }
+function fGoChapter(k){ k=Math.max(0,Math.min(FE.length-1,k)); fState.m=FE[k][0]+.01; fState.snap=true; userMoved=false; fLastIdx=-1; document.getElementById('fRange').value=fState.m; }
+const fmc=()=>document.getElementById('fMap').getContext('2d');
+function fDrawMap(M,O){ const c=document.getElementById('fMap'); const g=fmc(); const W=c.width,H=c.height; g.clearRect(0,0,W,H);
+  const px=wx=>((wx-FX)/FK+GX-90)/470*W, py=wz=>((wz/FK+GY)-770)/260*H;
+  g.fillStyle='#1f3a22'; g.fillRect((298-90)/470*W,(815-770)/260*H,172/470*W,78/260*H);
+  g.lineWidth=5; g.lineCap='round'; g.lineJoin='round';
+  for(let i=0;i<FR.length-1;i++){ g.strokeStyle=i<3?'#ef4444':'#60a5fa'; g.setLineDash(i<3?[]:[8,6]); g.beginPath(); g.moveTo(px(FR[i].x),py(FR[i].z)); g.lineTo(px(FR[i+1].x),py(FR[i+1].z)); g.stroke(); }
+  g.setLineDash([]); g.fillStyle='#fb7185'; g.beginPath(); g.arc(px(M.p.x),py(M.p.z),9,0,7); g.fill(); g.fillStyle='#f5b83d'; g.beginPath(); g.arc(px(O.p.x),py(O.p.z),7,0,7); g.fill();
+  g.font='bold 18px sans-serif'; g.fillStyle='#fff'; g.fillText('●神輿',8,H-10); g.fillStyle='#f5b83d'; g.fillText('●あなた',W*.5,H-10); }
 const festStep={lv:'d',title:'通しで見る：13:00〜16:00 祭りの流れ',inset:true,insetY:96,cam:{p:[FX-12,14,22],t:[FX-8,0,-20]},
- lead:'当日の流れを早送り（1秒＝1分）で再生します。下のバーで好きな時刻に飛べて、「必須⏭」で次の必須の場面へ。<b>オレンジの文字が、その時刻にあなたがすること</b>、右下が「あなたのカメラに映る映像」です。',
+ lead:'当日の流れを<b>場面ごと</b>に再生します（1場面およそ10秒。必須の場面はゆっくり）。場面が変わると、時刻と「あなたがすること」が大きく出ます。<b>ミニ地図</b>で神輿（ピンク）とあなた（黄色）の位置、右下の枠で「あなたのカメラに映る映像」を確認できます。◀ ▶ で場面を移動、下の時刻表をタップでもその場面へ。「連続」にすると1秒＝1分で通して流れます。',
  html:()=>`<div class="tl ftl">${FE.map(([m,e,sh,must],i)=>`<div class="it" data-m="${m}"><div class="tm">${fmt(Math.max(m,0))}${m<0?' 前':''}${must?'<span class="must">必須</span>':''}</div><div><b>${e}</b></div><div class="sh">📹 ${sh}</div></div>`).join('')}</div>
  <div class="box warn"><b class="h">この再生について</b>チラシの地図をもとにした模式図で、縮尺は約1/4です。道幅・建物・人の数は実際と違います。巡行中の位置（横→前→後ろ→足元）は一例です。</div>`,
- modes:[[.5,'×30'],[1,'×60'],[3,'×180']],modeKey:'fspeed',
+ modes:[['chapter','場面ごと'],['cont','連続']],modeKey:'fmode',
  setup(){ document.getElementById('fest').style.display='block'; fest.visible=true; mk.visible=true; dayOp(); fLastIdx=-1; fState.snap=true;
    scene.background.set(0xbcd3e6); scene.fog.color.set(0xbcd3e6); scene.fog.near=70; scene.fog.far=260;
    if(window.innerWidth<980&&!stageEl.classList.contains('big')){ stageEl.classList.add('big'); autoBig=true; } addLabel('神輿',mk.anchor,'acc');
@@ -1082,8 +1087,12 @@ const festStep={lv:'d',title:'通しで見る：13:00〜16:00 祭りの流れ',i
    addLabel('区長',kucho.head,'',-14).maxD=28; addLabel('家元',iemoto.head,'',-14).maxD=28; addLabel('大学キャンパス',fA.campus).maxD=120; addLabel('中野セントラルパーク',fA.cp).maxD=120; },
  mount(){ const r=document.getElementById('fRange'); r.value=fState.m; r.oninput=()=>{ fState.m=+r.value; fState.snap=true; };
    document.querySelectorAll('.ftl .it').forEach(el=>el.onclick=()=>{ fState.m=+el.dataset.m; r.value=fState.m; fState.snap=true; userMoved=false; });
-   document.getElementById('fNext').onclick=()=>{ const n=FE.find(e=>e[3]&&e[0]>fState.m+.2); fState.m=n?n[0]-.5:-3; r.value=fState.m; fState.snap=true; userMoved=false; }; },
- update(t,dt){ if(fState.playing&&playing){ fState.m+=dt*fState.speed; if(fState.m>182) fState.m=-3; document.getElementById('fRange').value=fState.m; }
+   document.getElementById('fPrev').onclick=()=>fGoChapter(fEventIdx(fState.m)-(fState.m-FE[fEventIdx(fState.m)][0]<1.5?1:0));
+   document.getElementById('fNext2').onclick=()=>fGoChapter(fEventIdx(fState.m)+1);
+   document.querySelectorAll('.ftl .it').forEach((el,i)=>el.onclick=()=>fGoChapter(i)); },
+ update(t,dt){ if(fBigT>0){ fBigT-=rdt; if(fBigT<=0) document.getElementById('fBig').classList.remove('on'); }
+   if(fState.playing&&playing){ if(fState.mode==='chapter'){ if(fState.hold>0) fState.hold-=dt; else { const k=fEventIdx(fState.m); const L=fChapterEnd(k)-FE[k][0]; const T=FE[k][3]?11:7; fState.m+=dt*L/T; } } else fState.m+=dt*1;
+     if(fState.m>182){ fState.m=-3; fLastIdx=-1; fState.snap=true; } document.getElementById('fRange').value=fState.m; }
    const m=fState.m; document.getElementById('fTime').textContent=fmt(Math.max(0,m)); fUpdateCard();
    setFlowers(m<30?0:m<60?.2*seg(m,30,60):m<65?.2+.77*seg(m,60,65):m<66?.97+.03*seg(m,65,66):1);
    const M=fMikoshi(m); mkPlace(M.p.x-TX,M.p.z,M.lift,M.yaw); bearers.forEach(b=>b.group.visible=m>=78);
@@ -1103,8 +1112,8 @@ const festStep={lv:'d',title:'通しで見る：13:00〜16:00 祭りの流れ',i
    opRig.inverted=!!O.inv; op.anchor.position.set(0,O.anchorY||1.12,O.inv?.42:.32);
    const pp=op.group.position; lastMoving=!!(lastPos&&Math.hypot(pp.x-lastPos.x,pp.z-lastPos.z)>dt*.05); walkAnim(dt,O.crouch??.07);
    opRig.zoom=(m>=30&&m<84)?.55:0; opRig.apply(); opRig.setHandle(0,0,0); aimAt(O.aim[0],O.aim[1],O.aim[2]);
-   document.getElementById('fTodo').textContent='あなた：'+FE[fEventIdx(m)][2]+(O.note?`（今は「${O.note}」）`:'');
-   if(!userMoved&&!camTween){ const f=M.p.clone().lerp(O.p,.4); const cp=new V3(f.x+5,26,f.z+15); const k=fState.snap?1:1-Math.exp(-rdt*2.5); fState.snap=false; camera.position.lerp(cp,k); controls.target.lerp(new V3(f.x,.8,f.z),k); }
+   document.getElementById('fTodo').textContent='あなた：'+FE[fEventIdx(m)][2]+(O.note?`（今は「${O.note}」）`:''); fDrawMap(M,O);
+   if(!userMoved&&!camTween){ const f=M.p.clone().lerp(O.p,.4); const near=!M.moving; const cp=near?new V3(f.x+4,11,f.z+11):new V3(f.x+5,24,f.z+15); const k=fState.snap?1:1-Math.exp(-rdt*2.5); fState.snap=false; camera.position.lerp(cp,k); controls.target.lerp(new V3(f.x,.8,f.z),k); }
    cap(''); }};
 const fsState={k:1};
 SD.unshift(festStep);
@@ -1118,7 +1127,7 @@ function renderLevels(){ levelsEl.innerHTML=''; Object.entries(LV).forEach(([k,[
 function renderSteps(){ stepsEl.innerHTML=''; stepsEl.style.setProperty('--lv',LV[curLv][1]); S.forEach((s,i)=>{ if(s.lv!==curLv)return; const n=S.filter((x,j)=>x.lv===curLv&&j<=i).length; const b=document.createElement('button'); b.innerHTML=`<b>${n}</b>${s.title}`; if(i===cur)b.className='on'; b.onclick=()=>go(i); stepsEl.appendChild(b); if(i===cur)setTimeout(()=>b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}),30); }); }
 const modeBar=document.getElementById('modeBar'), modeSeg=document.getElementById('modeSeg');
 function renderModes(s){ if(!s.modes){modeBar.style.display='none';modeSeg.innerHTML='';return;} modeBar.style.display='block'; modeSeg.innerHTML='';
-  const st=s.modeKey==='speed'?speedState:s.modeKey==='pos'?posState:s.modeKey==='fspeed'?fState:modeState, key=s.modeKey==='speed'||s.modeKey==='pos'?'k':s.modeKey==='fspeed'?'speed':'mode';
+  const st=s.modeKey==='speed'?speedState:s.modeKey==='pos'?posState:s.modeKey==='fmode'?fState:modeState, key=s.modeKey==='speed'||s.modeKey==='pos'?'k':'mode';
   s.modes.forEach(([v,label])=>{ const b=document.createElement('button'); b.textContent=label; if(st[key]===v)b.className='on'; b.onclick=()=>{ st[key]=v; if(key==='mode'){ opRig.cs.lockY=opRig.cs.yaw; opRig.cs.lockP=opRig.cs.pitch; } demos.speed&&demos.speed.clear(); renderModes(s); }; modeSeg.appendChild(b); }); }
 function renderCard(s){ const [lvName,col]=LV[s.lv]; const idx=S.filter((x,j)=>x.lv===s.lv&&j<=cur).length;
   const html=typeof s.html==='function'?s.html():(s.html||'');
