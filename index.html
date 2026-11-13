@@ -108,7 +108,7 @@ a{color:var(--accent)}
 
 <!-- ================= HOME ================= -->
 <section class="view on" id="v-home">
-  <h1>ジンバル練習ラボ</h1>
+  <div class="row" style="justify-content:space-between"><h1>ジンバル練習ラボ</h1><a href="training.html" class="chip" style="text-decoration:none;color:var(--accent);border-color:var(--accent)">📘 3Dトレーニング</a></div>
   <div class="count"><span class="mute">囲町いけばな神輿まつり（11/14 13:00）まで</span><b id="countdown">--</b></div>
 
   <div class="why">
@@ -319,7 +319,7 @@ const MET={ // 名前・単位・目安（ok, mid）・小さいほど良いか
 };
 const BK='gimbalLabBest';
 const loadBest=()=>{ try{ return JSON.parse(localStorage.getItem(BK)||'{}'); }catch(e){ return {}; } };
-function renderPlan(){ const best=loadBest(); $('#plan').innerHTML=DRILLS.map((d,i)=>{ const b=best[d.id]; return `<button class="drill ${b&&'SAB'.includes(b)?'done':''}" data-d="${d.id}"><span class="no">${i+1}</span><span><b>${d.title}</b><small><span class="scene">${d.scene}</span>${d.time}</small></span><span class="badge" style="color:${b?gradeColor(b):'var(--mute)'}">${b||'—'}</span></button>`; }).join('')+
+function renderPlan(){ const best=loadBest(); $('#plan').innerHTML=DRILLS.map((d,i)=>{ const b=best[d.id]; return `<button class="drill ${b&&'SAB'.includes(b)?'done':''}" data-d="${d.id}"><span class="no">${i+1}</span><span><b>${d.title}</b><small><span class="scene">${d.scene}</span>${d.time}</small></span><span class="badge" style="color:${b?gradeColor(b):'var(--mute)'};font-size:${b?20:12}px">${b||'未'}</span></button>`; }).join('')+
   `<button class="drill" id="planWalk"><span class="no">${DRILLS.length+1}</span><span><b>会場ウォーク（本番の予行）</b><small><span class="scene">巡行ルート</span>神輿を枠の中に入れ続けて歩く</small></span><span class="badge">🏮</span></button>`;
   $$('#plan [data-d]').forEach(b=>b.onclick=()=>openBrief(b.dataset.d)); $('#planWalk').onclick=()=>openWalk(); }
 const gradeColor=g=>({S:'var(--good)',A:'var(--good)',B:'var(--warn)',C:'var(--bad)',D:'var(--bad)'}[g]||'var(--mute)');
