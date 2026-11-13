@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1013">
+<title>ジンバル練習ラボ — スマホで忍者歩き・水平・パン・会場ウォーク</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1013;--panel:#17191e;--panel2:#1e2128;--line:#2b2f38;--text:#e9e7e2;--mute:#9aa0aa;--accent:#f5b83d;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--pink:#fb7185;--blue:#60a5fa}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:"Noto Sans JP",system-ui,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+.view{display:none;min-height:100%;padding:calc(14px + env(safe-area-inset-top)) 16px calc(90px + env(safe-area-inset-bottom))}
+.view.on{display:block}
+h1{font-size:20px;margin:4px 0 2px;font-weight:900} h2{font-size:17px;margin:18px 0 8px}
+.mute{color:var(--mute);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+.menu{display:grid;gap:10px;margin-top:12px}
+.menu button{display:flex;gap:12px;align-items:center;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.menu .ic{font-size:26px;width:44px;height:44px;display:grid;place-items:center;background:var(--panel2);border-radius:12px;flex:0 0 auto}
+.menu b{display:block;font-size:15px} .menu span{font-size:12.5px;color:var(--mute)}
+.big{display:block;width:100%;font-size:16px;font-weight:900;padding:14px;border-radius:12px;border:0;background:var(--accent);color:#111}
+.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-weight:700;padding:10px 14px;border-radius:10px}
+.pill{display:inline-block;font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px;background:var(--panel2);border:1px solid var(--line)}
+#tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(15,16,19,.97);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:30}
+#tabbar button{flex:1;background:none;border:0;padding:10px 0 8px;font-size:11px;color:var(--mute)}
+#tabbar button i{display:block;font-style:normal;font-size:20px}
+#tabbar button.on{color:var(--accent)}
+/* drill */
+#drill{position:fixed;inset:0;display:none;z-index:40;background:#000;overflow:hidden}
+#drill.on{display:block}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
+.hud{position:absolute;inset:0;pointer-events:none}
+.top{position:absolute;left:0;right:0;top:0;padding:calc(10px + env(safe-area-inset-top)) 12px 8px;display:flex;align-items:center;gap:8px;pointer-events:auto;background:linear-gradient(#000c,#0000)}
+.top b{font-size:15px;flex:1}
+#horizon{position:absolute;left:10%;right:10%;top:50%;height:0;border-top:3px solid var(--good);transform-origin:50% 50%}
+#horizonRef{position:absolute;left:4%;right:4%;top:50%;height:0;border-top:1px dashed #fff6}
+#zbar{position:absolute;right:14px;top:22%;bottom:30%;width:26px;border-radius:13px;background:#0008;border:1px solid #fff3;overflow:hidden}
+#zbar .g{position:absolute;left:0;right:0;top:40%;bottom:40%;background:#34d39944}
+#zbar .y1{position:absolute;left:0;right:0;top:25%;height:15%;background:#fbbf2426}#zbar .y2{position:absolute;left:0;right:0;bottom:25%;height:15%;background:#fbbf2426}
+#zdot{position:absolute;left:3px;right:3px;height:8px;border-radius:4px;background:#fff;top:50%;margin-top:-4px}
+#zlab{position:absolute;right:6px;top:calc(22% - 22px);font-size:11px;color:#fffc;font-weight:700}
+#panGauge{position:absolute;left:12px;right:52px;bottom:calc(110px + env(safe-area-inset-bottom));height:14px;border-radius:7px;background:#0008;border:1px solid #fff3}
+#panGauge .band{position:absolute;top:0;bottom:0;background:#34d39944}
+#panNeedle{position:absolute;top:-4px;bottom:-4px;width:4px;border-radius:2px;background:#fff;left:50%}
+#panLab{position:absolute;left:12px;bottom:calc(128px + env(safe-area-inset-bottom));font-size:11px;color:#fffc;font-weight:700}
+.stats{position:absolute;left:12px;top:calc(56px + env(safe-area-inset-top));font-size:12px;line-height:1.6;background:#0009;border-radius:10px;padding:8px 10px;font-variant-numeric:tabular-nums}
+.stats b{font-size:15px}
+#graph{position:absolute;left:12px;right:52px;bottom:calc(150px + env(safe-area-inset-bottom));height:70px;background:#0007;border-radius:8px}
+.bottom{position:absolute;left:0;right:0;bottom:0;padding:10px 12px calc(14px + env(safe-area-inset-bottom));display:flex;gap:8px;pointer-events:auto;background:linear-gradient(#0000,#000c)}
+.bottom .big{flex:1}
+#coach{position:absolute;left:12px;right:52px;top:42%;text-align:center;font-weight:900;font-size:20px;text-shadow:0 2px 8px #000;pointer-events:none}
+/* result */
+#result{position:fixed;inset:0;display:none;z-index:60;background:#000c;align-items:flex-end;justify-content:center}
+#result.on{display:flex}
+#result .sheet{width:100%;max-width:560px;background:var(--panel);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+.grade{font-size:56px;font-weight:900;line-height:1}
+.mrow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.mrow b{font-variant-numeric:tabular-nums}
+.tip{background:#1b2230;border:1px solid #2c3a52;border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:12px}
+/* walk */
+#walk{position:fixed;inset:0;display:none;z-index:40;background:#000}
+#walk.on{display:block}
+#wcanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#minimap{position:absolute;left:10px;top:calc(56px + env(safe-area-inset-top));width:130px;height:110px;border-radius:10px;background:#000a;border:1px solid #fff3}
+#frameBox{position:absolute;left:30%;right:30%;top:25%;bottom:25%;border:1px dashed #fff5;border-radius:6px;pointer-events:none}
+.seg{display:inline-flex;gap:4px} .seg button{background:#0009;border:1px solid #fff3;border-radius:8px;padding:6px 9px;font-size:12px;font-weight:700}
+.seg button.on{background:var(--accent);color:#111;border-color:var(--accent)}
+#wctl{position:absolute;left:0;right:0;bottom:0;padding:8px 10px calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;background:linear-gradient(#0000,#000d)}
+#wctl .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#holdWalk{flex:1;min-width:120px;padding:14px;border-radius:12px;border:2px solid var(--accent);background:#f5b83d22;font-weight:900;font-size:15px;user-select:none;-webkit-user-select:none;touch-action:none}
+#wstats{position:absolute;right:10px;top:calc(56px + env(safe-area-inset-top));font-size:11.5px;line-height:1.55;background:#0009;border-radius:10px;padding:7px 9px;text-align:right;font-variant-numeric:tabular-nums}
+#wcoach{position:absolute;left:0;right:0;top:20%;text-align:center;font-weight:900;font-size:16px;text-shadow:0 2px 8px #000;pointer-events:none}
+table.h{width:100%;border-collapse:collapse;font-size:12.5px} table.h td,table.h th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left} table.h th{color:var(--mute);font-weight:500}
+.warnbox{background:#2a1d14;border:1px solid #5a3a1d;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:10px}
+a{color:var(--accent)}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+</head>
+<body>
+
+<!-- ================= HOME ================= -->
+<section class="view on" id="v-home">
+  <h1>ジンバル練習ラボ</h1>
+  <div class="mute">スマホをジンバル代わりに持って、揺れ・傾き・パンを数値で練習します。明日（11/14）の囲町いけばな神輿まつりに向けて。</div>
+  <div class="card" id="sensorCard">
+    <b>① 最初にセンサーを有効にする</b>
+    <div class="mute" style="margin:6px 0 10px">スマホの傾き・揺れセンサーを使います。iPhoneでは許可のダイアログが出るので「許可」を押してください。</div>
+    <button class="big" id="bSensor">センサーを有効にする</button>
+    <div class="mute" id="sensorStatus" style="margin-top:8px"></div>
+  </div>
+  <h2>練習メニュー</h2>
+  <div class="menu">
+    <button data-drill="ninja"><span class="ic">🥷</span><span><b>忍者歩き（上下の揺れ）</b><span>RS 5のZ軸インジケーターと同じ考え方。緑のゾーンを保って歩く</span></span></button>
+    <button data-drill="level"><span class="ic">📐</span><span><b>水平キープ</b><span>スマホを傾けずに歩く・向きを変える。地平線を真っすぐに</span></span></button>
+    <button data-drill="pan"><span class="ic">↔️</span><span><b>なめらかパン</b><span>一定の速さで90°向きを変える。速さのムラを測る</span></span></button>
+    <button data-drill="test"><span class="ic">🏁</span><span><b>10m総合テスト</b><span>忍者歩き＋水平を同時に採点。公園や廊下で</span></span></button>
+    <button data-go="walk"><span class="ic">🏮</span><span><b>会場ウォーク（3D）</b><span>明日の巡行ルートを、スマホをジンバルにして歩く。神輿を画面に収め続けられるか</span></span></button>
+  </div>
+  <h2>持ち方</h2>
+  <div class="card" style="font-size:13.5px;line-height:1.7">
+    ・スマホを<b>縦向き</b>にして、画面を自分に向け、ジンバルのグリップを握る位置（胸の前）で両手で持つ<br>
+    ・肘を体に寄せる。本番と同じ姿勢で<br>
+    ・スタート直後の2秒は「基準」を取るので、静かに止まっていてください<br>
+    ・<b>周りの安全を最優先</b>。画面ばかり見ずに、足元と前を見て歩く
+  </div>
+  <h2>リンク</h2>
+  <div class="card" style="font-size:13.5px">
+    <a href="training.html">📘 3Dトレーニング（バランス・モード・カメラワーク・明日の本番プラン）</a>
+  </div>
+  <div class="mute" style="margin-top:14px">数値はスマホのセンサーからの推定で、機種や持ち方で変わります。絶対値よりも「前回より良くなったか」を見てください。</div>
+</section>
+
+<!-- ================= HISTORY ================= -->
+<section class="view" id="v-hist">
+  <h1>記録</h1>
+  <div class="mute">この端末に保存されます。</div>
+  <div class="card"><table class="h" id="histTable"></table></div>
+  <button class="ghost" id="bClear">記録を消す</button>
+</section>
+
+<!-- ================= HELP ================= -->
+<section class="view" id="v-help">
+  <h1>使い方とヒント</h1>
+  <div class="card" style="font-size:13.5px;line-height:1.75">
+    <b>スコアの意味</b><br>
+    ・<b>上下の揺れ</b>：歩くたびにスマホが上下する量（cm、推定）。1cm未満なら上出来<br>
+    ・<b>水平のずれ</b>：スタート時からの傾き（°）。平均2°未満が目標<br>
+    ・<b>パンのムラ</b>：向きを変える速さのばらつき（%）。小さいほどなめらか<br>
+    ・<b>画面に収めた割合</b>（会場ウォーク）：神輿が画面中央の枠に入っていた時間の割合
+  </div>
+  <div class="card" style="font-size:13.5px;line-height:1.75">
+    <b>家でできる練習</b><br>
+    ・廊下を往復：忍者歩き → 10m総合テスト<br>
+    ・その場で足踏み：会場ウォークで「足踏みで進む」をオンに<br>
+    ・椅子に座って：なめらかパンだけを繰り返す<br><br>
+    <b>公園でできる練習</b><br>
+    ・木を被写体にして、横移動しながら水平キープ<br>
+    ・ベンチの周りを回り込み（オービット）しながら水平キープ<br>
+    ・階段の上り下りで忍者歩き（いちばん揺れやすい）
+  </div>
+  <div class="warnbox">センサーが反応しないとき：iPhoneは「設定 → Safari → モーションと画面の向きのアクセス」をオン。どちらの機種も https のページで開く必要があります。</div>
+</section>
+
+<nav id="tabbar">
+  <button data-tab="home" class="on"><i>🏠</i>練習</button>
+  <button data-tab="walkTab"><i>🏮</i>会場ウォーク</button>
+  <button data-tab="hist"><i>📈</i>記録</button>
+  <button data-tab="help"><i>❔</i>ヒント</button>
+</nav>
+
+<!-- ================= DRILL ================= -->
+<div id="drill">
+  <video id="video" playsinline muted autoplay></video>
+  <div class="hud">
+    <div id="horizonRef"></div><div id="horizon"></div>
+    <div id="zlab">上下</div>
+    <div id="zbar"><div class="y1"></div><div class="y2"></div><div class="g"></div><div id="zdot"></div></div>
+    <canvas id="graph"></canvas>
+    <div id="panLab">パンの速さ</div>
+    <div id="panGauge"><div class="band"></div><div id="panNeedle"></div></div>
+    <div class="stats" id="dstats"></div>
+    <div id="coach"></div>
+  </div>
+  <div class="top"><button class="ghost" id="bBack">✕</button><b id="dTitle"></b><button class="ghost" id="bCam">📷 映像</button></div>
+  <div class="bottom"><button class="big" id="bStart">スタート</button></div>
+</div>
+
+<!-- ================= WALK ================= -->
+<div id="walk">
+  <canvas id="wcanvas"></canvas>
+  <div id="frameBox"></div>
+  <canvas id="minimap" width="260" height="220"></canvas>
+  <div id="wstats"></div>
+  <div id="wcoach"></div>
+  <div class="top"><button class="ghost" id="wBack">✕</button><b>会場ウォーク</b><button class="ghost" id="wRec">● 計測</button></div>
+  <div id="wctl">
+    <div class="row">
+      <div class="seg" id="wMode"></div>
+      <div class="seg" id="wSpeed"></div>
+    </div>
+    <div class="row">
+      <div class="seg" id="wJump"></div>
+      <label class="mute" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="wStep" checked>足踏みで進む</label>
+    </div>
+    <div class="row"><button id="holdWalk">押している間 歩く</button><button class="ghost" id="wZoom">24mm</button></div>
+  </div>
+</div>
+
+<div id="result"><div class="sheet" id="resSheet"></div></div>
+
+<script type="module">
+import * as THREE from 'three';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), D=Math.PI/180;
+
+/* ============== SENSORS ============== */
+const S={ok:false,motion:false,orient:false, gUp:{x:0,y:1,z:0}, av:0, v:0, z:0, roll:0, roll0:null, yawRate:0, lastT:0, steps:0, lastStep:0, stepPeak:false, ori:null, listeners:new Set(), hz:0, n:0, t0:0};
+function onMotion(e){
+  const now=performance.now(); const dt=S.lastT?Math.min(.05,(now-S.lastT)/1000):.016; S.lastT=now; S.n++; if(!S.t0)S.t0=now; S.hz=S.n/((now-S.t0)/1000+1e-3);
+  const ig=e.accelerationIncludingGravity, a=e.acceleration, rr=e.rotationRate;
+  if(!ig||ig.x==null) return; S.motion=true;
+  let lin=a&&a.x!=null?a:{x:0,y:0,z:0};
+  let gx=ig.x-lin.x, gy=ig.y-lin.y, gz=ig.z-lin.z;
+  // 端末によって符号の向きが逆でも、重力方向への射影なので上下の加速度は同じになる
+  const gl=Math.hypot(gx,gy,gz)||1; const ux=gx/gl, uy=gy/gl, uz=gz/gl;
+  S.gUp={x:ux,y:uy,z:uz};
+  let av=(lin.x*ux+lin.y*uy+lin.z*uz);
+  if(!a||a.x==null){ av=0; }
+  S.av=av;
+  // leaky double integration -> vertical displacement (m)
+  { const al=1-Math.exp(-dt/.6); S.v=S.v*.985+av*dt; S.vm=(S.vm||0)+(S.v-S.vm)*al; const vh=S.v-S.vm; S.x=(S.x||0)*.985+vh*dt; S.xm=(S.xm||0)+(S.x-S.xm)*al; S.z=S.x-S.xm; }
+  // roll relative to device "up" axis in screen plane
+  { const sg=uy<0?-1:1; S.roll=Math.atan2(ux*sg,uy*sg)/D; }
+  if(rr&&rr.alpha!=null){ S.yawRate=(rr.beta*ux+rr.gamma*uy+rr.alpha*uz); }
+  // steps: peaks of vertical acceleration
+  if(av>1.1&&!S.stepPeak&&now-S.lastStep>280){ S.stepPeak=true; S.lastStep=now; S.steps++; S.listeners.forEach(f=>f('step')); }
+  if(av<.2) S.stepPeak=false;
+}
+function onOrient(e){ if(e.alpha==null&&e.beta==null)return; S.orient=true; S.ori={a:e.alpha||0,b:e.beta||0,g:e.gamma||0}; }
+async function enableSensors(){
+  const st=$('#sensorStatus');
+  try{
+    if(!window.isSecureContext){ st.textContent='このページは https で開く必要があります。'; return false; }
+    if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
+      const r=await DeviceMotionEvent.requestPermission(); if(r!=='granted'){ st.textContent='許可されませんでした。設定 → Safari → モーションと画面の向きのアクセス をオンにして再読み込みしてください。'; return false; }
+      if(typeof DeviceOrientationEvent.requestPermission==='function'){ try{ await DeviceOrientationEvent.requestPermission(); }catch(e){} }
+    }
+    window.addEventListener('devicemotion',onMotion); window.addEventListener('deviceorientation',onOrient);
+    S.ok=true; st.textContent='確認中…';
+    setTimeout(()=>{ st.innerHTML=S.motion?`<span style="color:var(--good)">センサーOK（約${Math.round(S.hz)}回/秒）</span>`:'センサーの値が来ていません。PCでは使えません（会場ウォークはPCでもマウスで操作できます）。'; $('#bSensor').textContent=S.motion?'有効になっています ✓':'もう一度試す'; },1200);
+    wakeLock(); return true;
+  }catch(e){ st.textContent='エラー：'+e.message; return false; }
+}
+let wl=null; async function wakeLock(){ try{ wl=await navigator.wakeLock?.request('screen'); }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&S.ok) wakeLock(); });
+$('#bSensor').onclick=enableSensors;
+const wrap=a=>{ a=(a+540)%360-180; return a; };
+function relRoll(ref){ const g=S.gUp; return wrap((Math.atan2(g.x,g.y)-Math.atan2(ref.x,ref.y))/D); }
+
+/* ============== NAV ============== */
+function tab(name){ $$('.view').forEach(v=>v.classList.remove('on')); $$('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
+  if(name==='walkTab'){ openWalk(); $$('#tabbar button')[0].classList.add('on'); $$('#tabbar button')[1].classList.remove('on'); $('#v-home').classList.add('on'); return; }
+  $('#v-'+name).classList.add('on'); if(name==='hist') renderHist(); }
+$$('#tabbar button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+$$('[data-drill]').forEach(b=>b.onclick=()=>openDrill(b.dataset.drill));
+$$('[data-go="walk"]').forEach(b=>b.onclick=()=>openWalk());
+
+/* ============== HISTORY ============== */
+const HK='gimbalLabHist';
+function loadH(){ try{ return JSON.parse(localStorage.getItem(HK)||'[]'); }catch(e){ return []; } }
+function saveH(r){ const h=loadH(); h.unshift(r); try{ localStorage.setItem(HK,JSON.stringify(h.slice(0,80))); }catch(e){} }
+function renderHist(){ const h=loadH(); $('#histTable').innerHTML='<tr><th>日時</th><th>メニュー</th><th>ランク</th><th>主な数値</th></tr>'+(h.length?h.map(r=>`<tr><td>${r.when}</td><td>${r.name}</td><td><b>${r.grade}</b></td><td>${r.main}</td></tr>`).join(''):'<tr><td colspan="4" class="mute">まだ記録がありません</td></tr>'); }
+$('#bClear').onclick=()=>{ try{ localStorage.removeItem(HK); }catch(e){} renderHist(); };
+
+/* ============== DRILLS ============== */
+const DR={
+ ninja:{name:'忍者歩き',coach:'ひざを曲げて、かかと→つま先。白い点を緑の中に',dur:30,show:{z:1,h:0,p:0}},
+ level:{name:'水平キープ',coach:'緑の線を点線に重ねたまま、歩いたり向きを変えたり',dur:30,show:{z:0,h:1,p:0}},
+ pan:{name:'なめらかパン',coach:'ゆっくり一定の速さで、右へ90° → 戻す（腰から回る）',dur:20,show:{z:0,h:1,p:1}},
+ test:{name:'10m総合テスト',coach:'10m（約15歩）を忍者歩きで。着いたらストップ',dur:60,show:{z:1,h:1,p:0}},
+};
+let drill=null, rec=null, raf=0;
+const gcv=$('#graph'), gctx=gcv.getContext('2d'); let gbuf=[];
+function openDrill(k){ if(!S.ok){ enableSensors().then(ok=>{ if(ok) openDrill(k); }); return; }
+  drill=k; const d=DR[k]; $('#drill').classList.add('on'); $('#dTitle').textContent=d.name; $('#coach').textContent='スタートを押して、2秒じっとする';
+  $('#zbar').style.display=$('#zlab').style.display=d.show.z?'block':'none'; $('#horizon').style.display=$('#horizonRef').style.display=d.show.h?'block':'none';
+  $('#panGauge').style.display=$('#panLab').style.display=d.show.p?'block':'none'; $('#graph').style.display=d.show.z?'block':'none';
+  const band=$('#panGauge .band'); band.style.left=(8/60*100)+'%'; band.style.width=(17/60*100)+'%';
+  rec=null; gbuf=[]; $('#bStart').textContent='スタート'; cancelAnimationFrame(raf); loop(); }
+$('#bBack').onclick=()=>{ $('#drill').classList.remove('on'); rec=null; cancelAnimationFrame(raf); stopCam(); };
+let stream=null; $('#bCam').onclick=async()=>{ if(stream){ stopCam(); return; } try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); $('#video').srcObject=stream; $('#bCam').textContent='📷 オフ'; }catch(e){ $('#coach').textContent='カメラを使えませんでした'; } };
+function stopCam(){ if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; $('#video').srcObject=null; $('#bCam').textContent='📷 映像'; } }
+$('#bStart').onclick=()=>{ if(!rec){ rec={t0:performance.now(),calib:true,zs:[],rolls:[],rates:[],steps0:S.steps,roll0:0,rollAcc:[],}; S.v=0; S.z=0; S.x=0; S.xm=0; S.vm=0; $('#bStart').textContent='ストップ'; } else finishDrill(); };
+function loop(){ raf=requestAnimationFrame(loop); const d=DR[drill]; const now=performance.now();
+  const zcm=S.z*100; const dot=$('#zdot'); dot.style.top=(50-clamp(zcm/5,-1,1)*50)+'%'; dot.style.background=Math.abs(zcm)<1?'#34d399':Math.abs(zcm)<2.5?'#fbbf24':'#f87171';
+  let roll=(rec&&!rec.calib&&rec.ref)?relRoll(rec.ref):S.roll; $('#horizon').style.transform=`rotate(${-roll}deg)`; $('#horizon').style.borderColor=Math.abs(roll)<2?'#34d399':Math.abs(roll)<5?'#fbbf24':'#f87171';
+  const rate=Math.abs(S.yawRate); $('#panNeedle').style.left=(clamp(rate/60,0,1)*100)+'%';
+  gbuf.push(zcm); if(gbuf.length>240)gbuf.shift(); drawGraph();
+  let txt='';
+  if(rec){ const el=(now-rec.t0)/1000;
+    if(rec.calib){ rec.rollAcc.push({...S.gUp}); $('#coach').textContent='基準を取っています… じっとして'; if(el>2){ rec.calib=false; { const n=rec.rollAcc.length||1; rec.ref=rec.rollAcc.reduce((a,b)=>({x:a.x+b.x/n,y:a.y+b.y/n,z:a.z+b.z/n}),{x:0,y:0,z:0}); } rec.t1=now; S.v=0; S.z=0; S.x=0; S.xm=0; S.vm=0; rec.steps0=S.steps; $('#coach').textContent=d.coach; } }
+    else { const t=(now-rec.t1)/1000; rec.zs.push(zcm); rec.rolls.push(roll); rec.rates.push(rate); if(t>d.dur) finishDrill();
+      const rms=Math.sqrt(rec.zs.reduce((a,b)=>a+b*b,0)/rec.zs.length);
+      txt=`<b>${t.toFixed(1)}</b> 秒<br>歩数 <b>${S.steps-rec.steps0}</b><br>上下の揺れ <b>${rms.toFixed(2)}</b> cm<br>傾き <b>${roll.toFixed(1)}</b>°`; } }
+  else txt=`センサー ${S.motion?'OK':'待機中'}<br>上下 ${zcm.toFixed(1)} cm<br>傾き ${(S.roll).toFixed(1)}°`;
+  $('#dstats').innerHTML=txt; }
+function drawGraph(){ const W=gcv.width=gcv.clientWidth*devicePixelRatio, H=gcv.height=gcv.clientHeight*devicePixelRatio; gctx.clearRect(0,0,W,H);
+  gctx.fillStyle='#34d39922'; gctx.fillRect(0,H/2-H*.1,W,H*.2); gctx.strokeStyle='#fff'; gctx.lineWidth=2*devicePixelRatio; gctx.beginPath();
+  gbuf.forEach((v,i)=>{ const x=W*i/240, y=H/2-clamp(v/5,-1,1)*H/2; i?gctx.lineTo(x,y):gctx.moveTo(x,y); }); gctx.stroke(); }
+function grade(score){ return score>=90?'S':score>=75?'A':score>=55?'B':score>=35?'C':'D'; }
+function stats(arr){ const n=arr.length||1; const m=arr.reduce((a,b)=>a+b,0)/n; const sd=Math.sqrt(arr.reduce((a,b)=>a+(b-m)**2,0)/n); return {m,sd,rms:Math.sqrt(arr.reduce((a,b)=>a+b*b,0)/n),max:Math.max(...arr.map(Math.abs))}; }
+function finishDrill(){ if(!rec||rec.calib||rec.zs.length<10){ rec=null; $('#bStart').textContent='スタート'; return; } const d=DR[drill];
+  const z=stats(rec.zs), r=stats(rec.rolls); const steps=S.steps-rec.steps0; const moving=rec.rates.filter(v=>Math.abs(v)>4); const p=stats(moving); const cv=moving.length>20?p.sd/Math.max(1,Math.abs(p.m))*100:null;
+  const zScore=clamp(100-(z.rms-0.6)*40,0,100), rScore=clamp(100-(Math.abs(r.m)+r.sd-1)*12,0,100), pScore=cv==null?0:clamp(100-(cv-15)*1.4,0,100);
+  let score, main, tips=[];
+  if(drill==='ninja'){ score=zScore; main=`上下 ${z.rms.toFixed(2)}cm`; }
+  else if(drill==='level'){ score=rScore; main=`傾き 平均${Math.abs(r.m).toFixed(1)}°`; }
+  else if(drill==='pan'){ score=cv==null?0:pScore*.8+rScore*.2; main=cv==null?'パンが検出されず':`ムラ ${cv.toFixed(0)}%`; }
+  else { score=zScore*.6+rScore*.4; main=`上下 ${z.rms.toFixed(2)}cm / 傾き ${Math.abs(r.m).toFixed(1)}°`; }
+  if(d.show.z){ if(z.rms>1.5) tips.push('上下の揺れが大きめ。ひざをもう少し曲げて、歩幅を小さく。かかとから静かに着地。'); else tips.push('上下の揺れは良好。このままの歩き方で、少しずつ速さを上げてみましょう。'); if(steps<4&&drill!=='pan') tips.push('歩数が少なめです。歩きながら計測してください。'); }
+  if(d.show.h&&(Math.abs(r.m)+r.sd)>3) tips.push('傾きがぶれています。肘を体に寄せ、手首ではなく体ごと向きを変える。');
+  if(drill==='pan'){ if(cv==null) tips.push('向きを変える動きが小さすぎました。90°くらい回してください。'); else if(cv>35) tips.push('速さにムラがあります。動き始めと止まる前をゆっくりにすると、なめらかに見えます。'); else tips.push('なめらかなパンです。本番ではRS 5のフォロー速度を「遅い〜中」に。'); }
+  const g=grade(score); const when=new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  saveH({when,name:d.name,grade:g,main});
+  showResult(d.name,g,score,[['時間',((performance.now()-rec.t1)/1000).toFixed(0)+' 秒'],['歩数',steps+' 歩'],['上下の揺れ（RMS）',z.rms.toFixed(2)+' cm'],['上下の最大',z.max.toFixed(1)+' cm'],['傾き（平均）',Math.abs(r.m).toFixed(1)+'°'],['傾きのばらつき',r.sd.toFixed(1)+'°'],['パンのムラ',cv==null?'—':cv.toFixed(0)+' %']],tips);
+  rec=null; $('#bStart').textContent='もう一度'; }
+function showResult(name,g,score,rows,tips){ const col={S:'var(--good)',A:'var(--good)',B:'var(--warn)',C:'var(--bad)',D:'var(--bad)'}[g];
+  $('#resSheet').innerHTML=`<div class="mute">${name} の結果</div><div style="display:flex;align-items:baseline;gap:12px;margin:6px 0 10px"><span class="grade" style="color:${col}">${g}</span><span>スコア <b>${Math.round(score)}</b> / 100</span></div>`+rows.map(([a,b])=>`<div class="mrow"><span>${a}</span><b>${b}</b></div>`).join('')+tips.map(t=>`<div class="tip">${t}</div>`).join('')+`<button class="big" style="margin-top:14px" id="resClose">閉じる</button>`;
+  $('#result').classList.add('on'); $('#resClose').onclick=()=>$('#result').classList.remove('on'); }
+
+/* ============== WALK (3D venue) ============== */
+let W=null;
+function openWalk(){ $('#walk').classList.add('on'); if(!S.ok) enableSensors(); if(!W) W=initWalk(); W.start(); }
+$('#wBack').onclick=()=>{ $('#walk').classList.remove('on'); W&&W.stop(); };
+function initWalk(){
+  const canvas=$('#wcanvas'); const renderer=new THREE.WebGLRenderer({canvas,antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.outputColorSpace=THREE.SRGBColorSpace;
+  const scene=new THREE.Scene(); scene.background=new THREE.Color(0xbfd6ea); scene.fog=new THREE.Fog(0xbfd6ea,60,260);
+  const cam=new THREE.PerspectiveCamera(53,1,.1,600);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x6b6050,1.3)); const sun=new THREE.DirectionalLight(0xfff3dd,1.6); sun.position.set(-80,120,60); scene.add(sun);
+  const M=(c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:o.r??.85,metalness:o.m??0});
+  // route (meters). origin = おまつり広場。north = -z
+  const P=[[-97.5,-51],[-240,-51],[-240,-330],[172.5,-330],[172.5,-100.5],[10.5,-100.5],[4.5,-33],[0,0]].map(([x,z])=>new THREE.Vector3(x,0,z));
+  const segLen=[]; let total=0; for(let i=0;i<P.length-1;i++){ const l=P[i].distanceTo(P[i+1]); segLen.push(l); total+=l; }
+  const at=d=>{ d=clamp(d,0,total); let i=0; while(i<segLen.length-1&&d>segLen[i]){ d-=segLen[i]; i++; } const a=P[i],b=P[i+1]; const t=clamp(d/segLen[i],0,1); return {p:a.clone().lerp(b,t),dir:b.clone().sub(a).normalize(),seg:i}; };
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(900,700),M(0x8a877f)); ground.rotation.x=-Math.PI/2; ground.position.set(-30,0,-170); scene.add(ground);
+  // roads along route
+  for(let i=0;i<P.length-1;i++){ const a=P[i],b=P[i+1]; const L=a.distanceTo(b); const r=new THREE.Mesh(new THREE.PlaneGeometry(i<3?12:9,L+10),M(0x4a4b4f)); r.rotation.x=-Math.PI/2; r.position.set((a.x+b.x)/2,.02,(a.z+b.z)/2); r.rotation.z=-Math.atan2(b.x-a.x,b.z-a.z); scene.add(r);
+    const line=new THREE.Mesh(new THREE.PlaneGeometry(.25,L),new THREE.MeshBasicMaterial({color:i<3?0xef4444:0x60a5fa})); line.rotation.x=-Math.PI/2; line.position.set((a.x+b.x)/2,.04,(a.z+b.z)/2); line.rotation.z=r.rotation.z; scene.add(line); }
+  const plaza=new THREE.Mesh(new THREE.CircleGeometry(18,48),M(0xc2b49c)); plaza.rotation.x=-Math.PI/2; plaza.position.y=.03; scene.add(plaza);
+  const park=new THREE.Mesh(new THREE.PlaneGeometry(255,158),M(0x5b8a4a)); park.rotation.x=-Math.PI/2; park.position.set(-15,.03,-209); scene.add(park);
+  // trees (instanced)
+  const treePos=[]; for(let i=0;i<220;i++){ const x=-135+Math.random()*240, z=-282+Math.random()*145; treePos.push([x,z]); }
+  for(let i=0;i<P.length-1;i++){ const a=P[i],b=P[i+1]; const L=a.distanceTo(b); const n=Math.floor(L/12); const side=new THREE.Vector3(-(b.z-a.z),0,b.x-a.x).normalize(); for(let k=1;k<n;k++){ const p=a.clone().lerp(b,k/n); treePos.push([p.x+side.x*8,p.z+side.z*8]); } }
+  const trunkG=new THREE.CylinderGeometry(.25,.35,4,6), leafG=new THREE.SphereGeometry(2.6,8,6);
+  const trunks=new THREE.InstancedMesh(trunkG,M(0x5a3d26),treePos.length), leaves=new THREE.InstancedMesh(leafG,M(0x3e7a3a),treePos.length); const m4=new THREE.Matrix4();
+  treePos.forEach(([x,z],i)=>{ m4.makeTranslation(x,2,z); trunks.setMatrixAt(i,m4); const s=.8+Math.random()*.6; m4.makeScale(s,s*1.1,s).setPosition(x,5.2,z); leaves.setMatrixAt(i,m4); }); scene.add(trunks,leaves);
+  // buildings (instanced) avoiding route + park
+  const near=(x,z)=>{ for(let i=0;i<P.length-1;i++){ const a=P[i],b=P[i+1]; const ab=b.clone().sub(a); const t=clamp(((x-a.x)*ab.x+(z-a.z)*ab.z)/ab.lengthSq(),0,1); if(Math.hypot(x-(a.x+ab.x*t),z-(a.z+ab.z*t))<22) return true; } return (x>-145&&x<115&&z>-292&&z<-128)||Math.hypot(x,z)<26; };
+  const bl=[]; for(let x=-330;x<=280;x+=26) for(let z=-420;z<=90;z+=26){ const jx=x+(Math.random()-.5)*8, jz=z+(Math.random()-.5)*8; if(near(jx,jz))continue; bl.push([jx,jz,8+Math.random()*12,8+Math.random()*12,10+Math.random()*40]); }
+  const bG=new THREE.BoxGeometry(1,1,1); const bI=new THREE.InstancedMesh(bG,M(0x9a9ca3,{r:.7}),bl.length); const col=new THREE.Color();
+  bl.forEach(([x,z,w,d,h],i)=>{ m4.makeScale(w,h,d).setPosition(x,h/2,z); bI.setMatrixAt(i,m4); col.setHSL(.6,.04,.45+Math.random()*.25); bI.setColorAt(i,col); }); scene.add(bI);
+  // landmarks
+  const lm=(x,z,w,d,h,c)=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c)); b.position.set(x,h/2,z); scene.add(b); };
+  lm(-97.5,-25,40,22,14,0xe2d8c6); lm(185,-280,60,50,45,0xb7bcc6); // 一葉式本部 / 区役所
+  // mikoshi
+  const mk=new THREE.Group(); scene.add(mk);
+  { mk.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(1,.25,1),M(0x22140e)),{position:new THREE.Vector3(0,.12,0)}));
+    mk.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(.78,.5,.78),M(0x8b1e1e)),{position:new THREE.Vector3(0,.5,0)}));
+    const roof=new THREE.Mesh(new THREE.ConeGeometry(.78,.45,4),M(0x22140e)); roof.rotation.y=Math.PI/4; roof.position.y=.98; mk.add(roof);
+    const fc=[0xf9a8d4,0xfde047,0xf8fafc,0xfb7185,0xc4b5fd,0xfdba74]; for(let i=0;i<90;i++){ const th=Math.random()*6.28, ph=Math.random()*1.3; const f=new THREE.Mesh(new THREE.SphereGeometry(.06+Math.random()*.05,6,5),M(fc[i%6])); f.position.set(.62*Math.sin(ph)*Math.cos(th),.95+.4*Math.cos(ph),.62*Math.sin(ph)*Math.sin(th)); mk.add(f); }
+    for(const x of [-.42,.42]){ const p=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,3.4,8),M(0xd9c7a0)); p.rotation.x=Math.PI/2; p.position.set(x,.16,0); mk.add(p); }
+    const pc=[0x1d4ed8,0x1d4ed8,0x1d4ed8,0x1d4ed8,0xeab308,0xeab308]; [[-.62,-1.2],[.62,-1.2],[-.62,1.2],[.62,1.2],[0,4],[0,-4]].forEach(([x,z],i)=>{ const b=new THREE.Mesh(new THREE.CapsuleGeometry(.2,1.1,4,8),M(pc[i])); b.position.set(x,-.5,z); mk.add(b); const h=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),M(0x3a2b22)); h.position.set(x,.32,z); mk.add(h); }); }
+  // crowd along plaza
+  for(let i=0;i<30;i++){ const a=i/30*6.28, r=14+Math.random()*3; const c=new THREE.Mesh(new THREE.CapsuleGeometry(.22,1.1,4,8),M([0x475569,0x9d174d,0x1e3a8a,0x14532d,0xb45309][i%5])); c.position.set(Math.sin(a)*r,.8,Math.cos(a)*r); scene.add(c); }
+
+  // ---------- state ----------
+  const st={running:false,mode:'PF',speed:'mid',mkSpeed:1.0,mkD:0,pos:new THREE.Vector3(),heading:0,yaw:0,pitch:0,roll:0,walking:false,fov:24,rec:null,yaw0:null,lastStepSeen:0,mouse:{yaw:0,pitch:0},z0:0};
+  const TAU={slow:.9,mid:.45,fast:.15};
+  const POINTS=[['A',60],['B',230],['C',560],['D',800],['E',900],['F',total-8]];
+  function jump(d){ st.mkD=d; const a=at(d); const side=new THREE.Vector3(-a.dir.z,0,a.dir.x); st.pos.copy(a.p).addScaledVector(side,-4.5).addScaledVector(a.dir,-2); st.heading=Math.atan2(-a.dir.x,-a.dir.z)+.6*0; st.yaw0=null; }
+  jump(60);
+  // UI
+  const seg=(el,items,key,fmt)=>{ el.innerHTML=''; items.forEach(([v,l])=>{ const b=document.createElement('button'); b.textContent=l; if(st[key]===v)b.className='on'; b.onclick=()=>{ st[key]=v; seg(el,items,key); }; el.appendChild(b); }); };
+  seg($('#wMode'),[['PF','PF'],['PTF','PTF'],['FPV','FPV']],'mode'); seg($('#wSpeed'),[['slow','追従 遅'],['mid','中'],['fast','速']],'speed');
+  const jEl=$('#wJump'); POINTS.forEach(([n,d])=>{ const b=document.createElement('button'); b.textContent=n; b.onclick=()=>jump(d); jEl.appendChild(b); });
+  const hw=$('#holdWalk'); const on=e=>{ e.preventDefault(); st.walking=true; }, off=()=>{ st.walking=false; };
+  hw.addEventListener('pointerdown',on); hw.addEventListener('pointerup',off); hw.addEventListener('pointerleave',off); hw.addEventListener('pointercancel',off);
+  $('#wZoom').onclick=()=>{ st.fov=st.fov===24?50:st.fov===50?70:24; $('#wZoom').textContent=st.fov+'mm'; };
+  // mouse/touch look (fallback when no orientation sensor)
+  let drag=null; canvas.addEventListener('pointerdown',e=>{ drag={x:e.clientX,y:e.clientY}; }); window.addEventListener('pointerup',()=>drag=null);
+  window.addEventListener('pointermove',e=>{ if(!drag||S.orient)return; st.mouse.yaw-=(e.clientX-drag.x)*.005; st.mouse.pitch=clamp(st.mouse.pitch-(e.clientY-drag.y)*.004,-.8,.8); drag={x:e.clientX,y:e.clientY}; });
+  const keys={}; window.addEventListener('keydown',e=>keys[e.key]=true); window.addEventListener('keyup',e=>keys[e.key]=false);
+  S.listeners.add(ev=>{ if(ev==='step'&&$('#walk').classList.contains('on')&&$('#wStep').checked) st.stepBoost=0.55; });
+  $('#wRec').onclick=()=>{ if(!st.rec){ st.rec={t0:performance.now(),zs:[],rolls:[],yawRates:[],inFrame:0,frames:0,dist:0,lastYaw:null}; S.v=0; S.z=0; S.x=0; S.xm=0; S.vm=0; $('#wRec').textContent='■ 終了'; } else finishWalk(); };
+  function finishWalk(){ const r=st.rec; st.rec=null; $('#wRec').textContent='● 計測'; if(!r||r.frames<30)return;
+    const z=stats(r.zs), rl=stats(r.rolls); const yr=r.yawRates.filter(v=>Math.abs(v)>3); const p=stats(yr.length?yr:[0]); const jerk=yr.length>20?p.sd/Math.max(1,Math.abs(p.m))*100:null; const frame=r.inFrame/r.frames*100;
+    const score=clamp(100-(z.rms-.6)*40,0,100)*.4+frame*.4+(jerk==null?20:clamp(100-(jerk-15)*1.4,0,100)*.2);
+    const g=grade(score); saveH({when:new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),name:'会場ウォーク',grade:g,main:`枠内 ${frame.toFixed(0)}% / 上下 ${z.rms.toFixed(2)}cm`});
+    const tips=[]; if(frame<60) tips.push('神輿が枠から外れがち。体ごと向きを変えて、神輿を画面中央の点線の枠に入れ続けましょう。追従を「中〜速」にすると追いやすくなります。'); else tips.push('神輿をよく画面に収められています。');
+    if(z.rms>1.5) tips.push('ジンバルは上下の揺れを消せません。忍者歩きで上下の揺れを減らしましょう。');
+    tips.push(`モード ${st.mode} で計測しました。PFは水平が保たれるので、巡行の並走に向いています。`);
+    showResult('会場ウォーク',g,score,[['時間',((performance.now()-r.t0)/1000).toFixed(0)+' 秒'],['歩いた距離',r.dist.toFixed(0)+' m'],['神輿が枠内にいた割合',frame.toFixed(0)+' %'],['上下の揺れ（RMS）',z.rms.toFixed(2)+' cm'],['カメラのパンのムラ',jerk==null?'—':jerk.toFixed(0)+' %'],['モード',st.mode]],tips); }
+  // phone orientation -> quaternion (same math as three's old DeviceOrientationControls)
+  const zee=new THREE.Vector3(0,0,1), q0=new THREE.Quaternion(), q1=new THREE.Quaternion(-Math.sqrt(.5),0,0,Math.sqrt(.5)), eu=new THREE.Euler(), qPhone=new THREE.Quaternion(), eOut=new THREE.Euler(0,0,0,'YXZ');
+  function phoneEuler(){ if(!S.ori)return null; const o=S.ori; const so=(screen.orientation&&screen.orientation.angle||window.orientation||0)*D;
+    eu.set(o.b*D,o.a*D,-o.g*D,'YXZ'); qPhone.setFromEuler(eu); qPhone.multiply(q1); qPhone.multiply(q0.setFromAxisAngle(zee,-so)); eOut.setFromQuaternion(qPhone,'YXZ'); return {yaw:eOut.y,pitch:eOut.x,roll:eOut.z}; }
+  const mmc=$('#minimap').getContext('2d');
+  function drawMini(){ const w=260,h=220; mmc.clearRect(0,0,w,h); const sx=x=>(x+260)/460*w, sz=z=>(z+350)/380*h; mmc.lineWidth=4; mmc.lineCap='round';
+    for(let i=0;i<P.length-1;i++){ mmc.strokeStyle=i<3?'#ef4444':'#60a5fa'; mmc.beginPath(); mmc.moveTo(sx(P[i].x),sz(P[i].z)); mmc.lineTo(sx(P[i+1].x),sz(P[i+1].z)); mmc.stroke(); }
+    mmc.fillStyle='#5b8a4a88'; mmc.fillRect(sx(-142),sz(-288),sx(112)-sx(-142),sz(-130)-sz(-288));
+    const m=at(st.mkD).p; mmc.fillStyle='#fb7185'; mmc.beginPath(); mmc.arc(sx(m.x),sz(m.z),7,0,6.28); mmc.fill();
+    mmc.fillStyle='#f5b83d'; mmc.beginPath(); mmc.arc(sx(st.pos.x),sz(st.pos.z),6,0,6.28); mmc.fill();
+    mmc.strokeStyle='#f5b83d'; mmc.lineWidth=2; mmc.beginPath(); mmc.moveTo(sx(st.pos.x),sz(st.pos.z)); mmc.lineTo(sx(st.pos.x)-Math.sin(st.yaw)*16,sz(st.pos.z)-Math.cos(st.yaw)*16); mmc.stroke(); }
+  let raf2=0, last=0;
+  function frame(now){ raf2=requestAnimationFrame(frame); const dt=Math.min(.05,(now-(last||now))/1000); last=now;
+    const w=canvas.clientWidth,h=canvas.clientHeight; if(canvas.width!==Math.round(w*renderer.getPixelRatio())){ renderer.setSize(w,h,false); }
+    cam.aspect=w/h;
+    // handle orientation
+    let hy,hp,hr; const pe=phoneEuler();
+    if(pe){ if(st.yaw0===null){ st.yaw0=pe.yaw; } hy=st.heading+(pe.yaw-st.yaw0); hp=pe.pitch; hr=pe.roll; }
+    else { hy=st.heading+st.mouse.yaw; hp=st.mouse.pitch; hr=0; if(keys.a||keys.ArrowLeft) st.mouse.yaw+=dt*1.2; if(keys.d||keys.ArrowRight) st.mouse.yaw-=dt*1.2; }
+    // gimbal follow
+    const a=1-Math.exp(-dt/TAU[st.speed]); let dy=hy-st.yaw; dy=Math.atan2(Math.sin(dy),Math.cos(dy)); const prevYaw=st.yaw; st.yaw+=dy*a;
+    if(st.mode==='PF'){ st.pitch+=(0-st.pitch)*a; st.roll+=(0-st.roll)*a; } else if(st.mode==='PTF'){ st.pitch+=(hp-st.pitch)*a; st.roll+=(0-st.roll)*a; } else { st.pitch+=(hp-st.pitch)*a; st.roll+=(hr-st.roll)*a; }
+    // movement
+    let v=0; if(st.walking||keys.w||keys.ArrowUp) v=1.2; if(st.stepBoost){ v=Math.max(v,1.3); st.stepBoost=Math.max(0,st.stepBoost-dt); }
+    const mv=v*dt; st.pos.x-=Math.sin(hy)*mv; st.pos.z-=Math.cos(hy)*mv;
+    // mikoshi along route
+    st.mkD+=st.mkSpeed*dt*(st.mkD<total?1:0); const m=at(st.mkD); mk.position.set(m.p.x,1.24+.03*Math.sin(now/110),m.p.z); mk.rotation.y=Math.atan2(m.dir.x,m.dir.z);
+    // camera: real vertical bob from sensor passes straight through (gimbal can't fix it)
+    const bob=S.motion?S.z:(v>0?.025*Math.sin(now/160):0);
+    cam.position.set(st.pos.x,1.35+bob,st.pos.z); cam.rotation.set(st.pitch,st.yaw,st.roll,'YXZ'); cam.fov=2*Math.atan(12/st.fov)/D*1.0; cam.updateProjectionMatrix();
+    renderer.render(scene,cam); drawMini();
+    // framing
+    const mp=mk.position.clone().add(new THREE.Vector3(0,.4,0)).project(cam); const dist=mk.position.distanceTo(cam.position); const inFrame=mp.z<1&&Math.abs(mp.x)<.4&&Math.abs(mp.y)<.5;
+    $('#frameBox').style.borderColor=inFrame?'#34d399':'#fff5';
+    const yawRate=Math.atan2(Math.sin(st.yaw-prevYaw),Math.cos(st.yaw-prevYaw))/Math.max(dt,1e-3)/D;
+    if(st.rec){ const r=st.rec; r.frames++; if(inFrame&&dist<60) r.inFrame++; r.zs.push(bob*100); r.rolls.push(st.roll/D); r.yawRates.push(yawRate); r.dist+=mv; }
+    const k=st.rec?`<b>計測中</b> ${((now-st.rec.t0)/1000).toFixed(0)}秒<br>枠内 ${(st.rec.inFrame/Math.max(1,st.rec.frames)*100).toFixed(0)}%<br>`:'';
+    $('#wstats').innerHTML=k+`神輿まで ${dist.toFixed(0)}m<br>上下 ${(bob*100).toFixed(1)}cm<br>${pe?'センサー操作':'マウス／キー操作'}`;
+    $('#wcoach').textContent=dist>40?'神輿に近づこう（地図のピンク）':''; }
+  return { start(){ last=0; cancelAnimationFrame(raf2); raf2=requestAnimationFrame(frame); }, stop(){ cancelAnimationFrame(raf2); if(st.rec) finishWalk(); } };
+}
+</script>
+</body>
+</html>

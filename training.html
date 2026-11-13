@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RS 5 × α7C II イベント撮影 3Dトレーニング</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1013; --panel:#17191e; --panel2:#1e2128; --line:#2b2f38; --text:#e9e7e2; --mute:#9aa0aa;
+  --accent:#f5b83d; --pan:#2dd4bf; --roll:#a78bfa; --tilt:#fb923c; --good:#34d399; --bad:#f87171;
+  --b:#60a5fa; --d:#fb7185; --m:#f5b83d; --a:#f472b6; --e:#34d399; --p:#9aa0aa;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Sans JP",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+body{line-height:1.65}
+header{padding:14px 16px 10px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+header h1{font-size:16px;margin:0;font-weight:900;letter-spacing:.02em}
+header .sub{font-size:11.5px;color:var(--mute)}
+@media (max-width:979px){ header{padding:10px 14px 2px} header h1{font-size:14px} header .sub{display:none} }
+#stage{position:sticky;top:0;z-index:5;height:var(--sh,42vh);min-height:250px;transition:height .25s;background:#0b0c0f;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;touch-action:none}
+#stage canvas{display:block;width:100%;height:100%}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);white-space:nowrap;font-size:11px;font-weight:700;padding:3px 7px;border-radius:999px;background:rgba(15,16,19,.82);border:1px solid rgba(255,255,255,.18);color:#fff}
+.lbl::after{content:"";position:absolute;left:50%;bottom:-7px;width:1px;height:6px;background:rgba(255,255,255,.5)}
+.lbl.pan{border-color:var(--pan);color:var(--pan)} .lbl.roll{border-color:var(--roll);color:var(--roll)} .lbl.tilt{border-color:var(--tilt);color:var(--tilt)}
+.lbl.acc{border-color:var(--accent);color:var(--accent)} .lbl.good{border-color:var(--good);color:var(--good)} .lbl.bad{border-color:var(--bad);color:var(--bad)}
+#inset{position:absolute;border:2px solid var(--accent);border-radius:6px;pointer-events:none;display:none;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+#inset span{position:absolute;left:6px;top:-11px;background:var(--accent);color:#111;font-size:10px;font-weight:900;padding:1px 6px;border-radius:4px}
+#cap{position:absolute;left:10px;top:10px;max-width:calc(100% - 20px);font-size:12.5px;font-weight:700;padding:6px 10px;border-radius:8px;background:rgba(15,16,19,.85);border:1px solid var(--line);display:none}
+#cap.good{border-color:var(--good);color:var(--good)} #cap.bad{border-color:var(--bad);color:var(--bad)} #cap.acc{border-color:var(--accent);color:var(--accent)}
+#tools{position:absolute;left:10px;bottom:10px;display:flex;gap:6px}
+#tools button,.seg button{font:inherit;font-size:12px;font-weight:700;color:var(--text);background:rgba(23,25,30,.9);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+#hint{position:absolute;right:10px;top:10px;font-size:10.5px;color:var(--mute);background:rgba(15,16,19,.7);padding:3px 7px;border-radius:6px}
+#modeBar{position:absolute;right:10px;bottom:10px;display:none}
+#fest{display:none;position:absolute;inset:0;pointer-events:none}
+#fClock{position:absolute;left:10px;top:10px;right:56px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#fClock b{font-size:22px;font-weight:900;background:rgba(15,16,19,.88);border:1px solid var(--d);color:var(--d);border-radius:10px;padding:2px 10px;font-variant-numeric:tabular-nums}
+#fEv{font-size:13px;font-weight:700;background:rgba(15,16,19,.85);border-radius:8px;padding:5px 9px}
+#fEv .must{display:inline-block;font-size:10.5px;font-weight:900;background:var(--bad);color:#111;border-radius:4px;padding:0 5px;margin-right:6px}
+#fTodo{position:absolute;left:10px;top:54px;max-width:min(62%,420px);font-size:12.5px;font-weight:700;color:var(--accent);background:rgba(15,16,19,.85);border:1px solid var(--accent);border-radius:8px;padding:5px 9px}
+#fBar{position:absolute;left:10px;right:10px;bottom:52px;display:flex;gap:6px;align-items:center;pointer-events:auto}
+#fBar input{flex:1;accent-color:var(--d);height:28px}
+#fBar button{font:inherit;font-size:12px;font-weight:700;color:var(--text);background:rgba(23,25,30,.92);border:1px solid var(--line);border-radius:8px;padding:6px 9px;cursor:pointer}
+.ftl .it{cursor:pointer;border-radius:8px;padding:4px 6px;margin-left:-6px}
+.ftl .it.now{background:#2a1820;outline:1px solid var(--d)}
+.seg{display:inline-flex;gap:4px;flex-wrap:wrap}
+.seg button.on{background:var(--accent);color:#111;border-color:var(--accent)}
+nav#levels{display:flex;gap:6px;padding:12px 12px 6px;overflow-x:auto;scrollbar-width:none}
+nav#levels button{flex:0 0 auto;font:inherit;font-size:13px;font-weight:900;color:var(--mute);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+nav#levels button.on{color:#111}
+nav#steps{display:flex;gap:6px;padding:4px 12px 10px;overflow-x:auto;scrollbar-width:none}
+nav#steps button{flex:0 0 auto;font:inherit;font-size:12px;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;max-width:220px;text-align:left}
+nav#steps button.on{border-color:var(--lv);box-shadow:inset 0 0 0 1px var(--lv)}
+nav#steps button b{color:var(--lv);margin-right:4px}
+main{padding:0 14px 30px;max-width:760px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;margin-top:4px}
+.tag{display:inline-block;font-size:11px;font-weight:900;color:#111;border-radius:6px;padding:2px 8px;margin-bottom:6px}
+.card h2{font-size:19px;margin:0 0 6px;line-height:1.4}
+.lead{color:#d6d3cc;margin:0 0 10px;font-size:14.5px}
+ul.pts{margin:0;padding-left:1.2em;font-size:14px} ul.pts li{margin:4px 0}
+.box{border-radius:10px;padding:10px 12px;margin-top:12px;font-size:13.5px}
+.drill{background:#1b2230;border:1px solid #2c3a52}
+.pass{background:#142620;border:1px solid #1f4436}
+.box b.h{display:block;font-size:12px;letter-spacing:.06em;margin-bottom:2px}
+.drill b.h{color:#93c5fd} .pass b.h{color:var(--good)}
+.warn{background:#2a1d14;border:1px solid #5a3a1d}
+.warn b.h{color:var(--tilt)}
+.src{margin-top:12px;font-size:11.5px;color:var(--mute)}
+.src a{color:var(--mute);text-decoration:underline;text-underline-offset:2px;margin-right:8px}
+table.t{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+table.t td,table.t th{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top;text-align:left}
+table.t th{color:var(--mute);font-weight:500;white-space:nowrap;width:30%}
+.demo{margin-top:12px;background:#0b0c0f;border:1px solid var(--line);border-radius:10px;padding:10px}
+.demo canvas{width:100%;display:block;border-radius:6px}
+.demo .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:12px;color:var(--mute)}
+.verdict{font-weight:900;font-size:14px;margin-top:6px}
+.opts{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+.opt{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.opt h3{margin:0 0 4px;font-size:14.5px}
+.opt .now{font-size:10.5px;background:var(--accent);color:#111;border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:900}
+.pm{display:grid;grid-template-columns:auto 1fr;gap:2px 8px}
+.pm span:nth-child(odd){font-weight:900}
+.chk label{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.chk input{width:18px;height:18px;margin-top:3px;accent-color:var(--good)}
+.chk h4{margin:14px 0 2px;font-size:13px;color:var(--mute)}
+.navbtns{display:flex;justify-content:space-between;margin-top:14px;gap:8px}
+.navbtns button{font:inherit;font-size:13px;font-weight:700;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer}
+footer{max-width:760px;margin:0 auto;padding:10px 14px 40px;font-size:11.5px;color:var(--mute)}
+footer a{color:var(--mute)}
+#err{display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;padding:20px;font-size:13px;color:var(--mute)}
+
+#stage.big{--sh:66vh}
+#bSize{position:absolute;right:10px;top:10px;font:inherit;font-size:16px;line-height:1;color:var(--text);background:rgba(23,25,30,.9);border:1px solid var(--line);border-radius:8px;width:34px;height:34px;cursor:pointer}
+#hint{right:52px}
+#bbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(15,16,19,.96);border-top:1px solid var(--line);backdrop-filter:blur(8px)}
+#bbar button{font:inherit;font-size:18px;font-weight:900;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:10px;width:52px;height:42px;cursor:pointer;flex:0 0 auto}
+#bbTitle{flex:1;min-width:0;font-size:12.5px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#bbTitle b{display:inline-block;color:#111;border-radius:4px;padding:0 5px;margin-right:5px;font-size:11px}
+body{padding-bottom:70px}
+details.srcs summary{cursor:pointer;color:var(--text);font-weight:700}
+.kbd{font-size:11px;color:var(--mute);margin-top:8px}
+.map svg{width:100%;height:auto;display:block;border-radius:10px;background:#0b0c0f;border:1px solid var(--line);margin-top:10px}
+.tl{margin-top:10px;border-left:2px solid var(--line);padding-left:12px}
+.tl .it{position:relative;margin:0 0 10px}
+.tl .it::before{content:"";position:absolute;left:-18px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--d)}
+.tl .tm{font-weight:900;color:var(--d);font-size:13px}
+.tl .must{display:inline-block;font-size:10.5px;font-weight:900;background:var(--bad);color:#111;border-radius:4px;padding:0 5px;margin-left:6px}
+.tl .sh{font-size:13px;color:#d6d3cc}
+@media (min-width:980px){
+  body{padding-bottom:0;overflow:hidden}
+  #app{display:grid;grid-template-columns:minmax(0,1fr) 460px;height:100vh}
+  #stage{position:relative;height:100vh!important;border:0;border-right:1px solid var(--line)}
+  #side{height:100vh;overflow-y:auto}
+  #bbar,#bSize{display:none}
+  #hint{right:10px}
+  nav#steps,nav#levels{flex-wrap:wrap}
+  nav#steps button{max-width:none}
+  main{padding:0 14px 20px}
+  .opts{grid-template-columns:1fr}
+}
+
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="app">
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="labels"></div>
+  <div id="inset"><span>カメラの映像</span></div>
+  <div id="cap"></div>
+  <div id="hint">ドラッグで回転・ピンチで拡大</div>
+  <div id="tools"><button id="bPlay">❚❚ 一時停止</button><button id="bView">↺ 視点</button></div>
+  <div id="modeBar"><div class="seg" id="modeSeg"></div></div>
+  <div id="fest"><div id="fClock"><b id="fTime">13:00</b><span id="fEv"></span></div><div id="fTodo"></div>
+    <div id="fBar"><input type="range" id="fRange" min="-3" max="182" step="0.1" value="-3"><button id="fNext" title="次の必須へ">必須⏭</button></div></div>
+  <div id="err">3Dの読み込みに失敗しました。通信環境を確認して再読み込みしてください。</div>
+  <button id="bSize" title="3Dの大きさ">⤢</button>
+</div>
+<div id="side">
+<header>
+  <h1>RS 5 × α7C II イベント撮影 3Dトレーニング</h1>
+  <span class="sub">DJI RS 5 ／ α7C II ／ SIGMA 24-70mm F2.8 DG DN | Art</span>
+</header>
+<nav id="levels"></nav>
+<nav id="steps"></nav>
+<main id="main"></main>
+<footer id="foot"></footer>
+</div>
+</div>
+<div id="bbar"><button id="bbPrev">←</button><div id="bbTitle"></div><button id="bbNext">→</button></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ---------------- sources ---------------- */
+const SRC = {
+  dji_faq:['DJI RS 5 FAQ','https://www.dji.com/rs-5/faq'],
+  dronexl:['DroneXL RS5ビギナーガイド','https://dronexl.co/2026/04/28/dji-rs5-gimbal-beginners-guide/'],
+  dji_guide:['DJI ジンバル使い方ガイド','https://www.dji.com/ae/media-center/insights/gimbal-how-to-use'],
+  rsc2:['DJI RSC 2 マニュアル（バランス手順）','https://manuals.plus/m/4e0bf8cb14d1777e717e37c6bdc2714515fe00a27f2cfb52232edb427f6f429a'],
+  cj:['Camera Jabber RS 5 レビュー','https://camerajabber.com/?p=1420394'],
+  bh:['B&H RS 5 製品ページ','https://www.bhphotovideo.com/c/product/1941838-REG/dji_cp_rn_00000496_03_rs_5_gimbal_stabilizer.html'],
+  sigma:['SIGMA 24-70 DG DN Art 仕様','https://www.sigma-imaging.no/24-70mm-f2-8-dg-dn-a'],
+  a7c2w:['α7C II 仕様（質量）','https://camerahaus.com/collections/all/products/bcj367320'],
+  dpr:['DPReview α7C II レビュー','https://www.dpreview.com/reviews/4852191202/2'],
+  vm:['Videomaker α7C II レビュー','https://www.videomaker.com/reviews/cameras/sony-a7c-ii-review-small-camera-big-upgrades/'],
+  lr:['Lensrentals α7C II','https://www.lensrentals.com/rent/sony-alpha-a7c-ii'],
+  ss:['Sony ヘルプガイド SteadyShot(動画)','https://helpguide.sony.net/ilc/2360/v1/en/contents/0412B_movie_steadyshot.html'],
+  au:['Alpha Universe 手ブレ補正の話','https://alphauniverse-mea.com/story/sony-stabilization'],
+  wc:['wolfcrow 手ブレ補正の使い方','https://wolfcrow.com/how-to-use-image-stabilization/'],
+  af:['Sony AFトランジション速度/乗り移り感度','https://support.d-imaging.sony.co.jp/support/tutorial/ilc/ilce-7c/ja/18.php'],
+  giz:['ギズモード フリッカー対策','https://www.gizmodo.jp/article/photo_flickering/'],
+  nikon:['ニコン フリッカー低減（周波数別シャッター）','https://onlinemanual.nikonimglib.com/z6III/ja/vrm_video_flicker_reduction_189.html'],
+  ul:['Ulanzi 180度ルール','https://www.ulanzi.com/en-ca/blogs/news/dji-osmo-pocket-3-video-stability-tips'],
+  forum:['DJIフォーラム 上下ブレ対策','https://forum.dji.com/thread-194132-1-1.html'],
+  zy:['Zhiyun イベント撮影のジンバル設定','https://store.zhiyun-tech.com/blogs/news/professional-camera-gimbal-setup-for-weddings-events-and-commercial-shoots'],
+  cre8:['cre-8 RS5 レビュー（ズーム切替スイッチ）','https://cre-8.com.au/?p=15186'],
+  compat:['DJI 互換性検索','https://www.dji.com/support/compatibility'],
+};
+
+/* ---------------- helpers ---------------- */
+const V3 = THREE.Vector3;
+const clamp01 = x => Math.max(0, Math.min(1, x));
+const ez = x => { x = clamp01(x); return x < .5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2; };
+const seg = (u,a,b) => ez((u-a)/(b-a));
+const bump = (u,a,b) => { const s = clamp01((u-a)/(b-a)); return Math.sin(Math.PI*s); };
+const lerp = (a,b,t) => a + (b-a)*t;
+const D = Math.PI/180;
+const stdMat = (color, o={}) => new THREE.MeshStandardMaterial({color, roughness:o.r??.6, metalness:o.m??.15, emissive:o.e??0x000000, emissiveIntensity:o.ei??1});
+const basic = (color, o={}) => new THREE.MeshBasicMaterial({color, transparent:o.t??false, opacity:o.o??1, depthTest:o.dt??true});
+function box(w,h,d,mat,x=0,y=0,z=0){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x,y,z); return m; }
+function cyl(r,h,mat,axis='y',x=0,y=0,z=0,seg=20){ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,seg),mat); if(axis==='x')m.rotation.z=Math.PI/2; if(axis==='z')m.rotation.x=Math.PI/2; m.position.set(x,y,z); return m; }
+const UP = new V3(0,1,0);
+function placeBetween(m,a,b){ const d=new V3().subVectors(b,a); const L=d.length(); m.position.copy(a).addScaledVector(d,.5); m.scale.set(1,Math.max(L,1e-4),1); if(L>1e-6) m.quaternion.setFromUnitVectors(UP,d.normalize()); }
+function ik(a,t,l1,l2,pole,elbow,end){
+  const d=new V3().subVectors(t,a); let dist=d.length(); dist=Math.min(Math.max(dist,1e-3),l1+l2-1e-3); d.normalize();
+  const x=(l1*l1-l2*l2+dist*dist)/(2*dist); const h=Math.sqrt(Math.max(0,l1*l1-x*x));
+  const p=pole.clone().addScaledVector(d,-pole.dot(d)); if(p.lengthSq()<1e-8)p.set(0,0,1); p.normalize();
+  elbow.copy(a).addScaledVector(d,x).addScaledVector(p,h); end.copy(a).addScaledVector(d,dist);
+}
+
+/* ---------------- renderer ---------------- */
+const stageEl=document.getElementById('stage'), canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x101114); scene.fog=new THREE.Fog(0x101114,14,34);
+const camera=new THREE.PerspectiveCamera(45,1,.02,80);
+const controls=new OrbitControls(camera,canvas); controls.enableDamping=true; controls.dampingFactor=.08; controls.enablePan=false;
+let userMoved=false; controls.addEventListener('start',()=>{userMoved=true; camTween=null;});
+
+scene.add(new THREE.HemisphereLight(0xdfe6ff,0x2a2420,1.0));
+const sun=new THREE.DirectionalLight(0xffffff,1.6); sun.position.set(-4,8,-6); scene.add(sun);
+const stageLightA=new THREE.PointLight(0xffb36b,12,14,1.6); stageLightA.position.set(-2.5,4,5.5); scene.add(stageLightA);
+const stageLightB=new THREE.PointLight(0x6bc8ff,10,14,1.6); stageLightB.position.set(2.5,4,5.5); scene.add(stageLightB);
+
+/* ---------------- venue ---------------- */
+const venue=new THREE.Group(); scene.add(venue);
+{
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(30,30),stdMat(0x2b2621,{r:.9})); floor.rotation.x=-Math.PI/2; venue.add(floor);
+  const grid=new THREE.GridHelper(30,30,0x3a342e,0x332e29); grid.position.y=.002; venue.add(grid);
+  venue.add(box(8,.6,3.5,stdMat(0x3b3530,{r:.8}),0,.3,6.75));
+  venue.add(box(8,.04,.06,stdMat(0x888070),0,.62,5.0));
+  const wall=box(12,5.5,.2,stdMat(0x1c1b22,{r:.95}),0,2.75,8.6); venue.add(wall);
+  const sc=document.createElement('canvas'); sc.width=512; sc.height=288; const g=sc.getContext('2d');
+  const gr=g.createLinearGradient(0,0,512,288); gr.addColorStop(0,'#1d3a6e'); gr.addColorStop(1,'#5b2a6e'); g.fillStyle=gr; g.fillRect(0,0,512,288);
+  g.fillStyle='rgba(255,255,255,.9)'; g.font='900 46px sans-serif'; g.textAlign='center'; g.fillText('ANNUAL EVENT',256,150); g.font='500 22px sans-serif'; g.fillText('2026',256,190);
+  const tex=new THREE.CanvasTexture(sc); tex.colorSpace=THREE.SRGBColorSpace;
+  const screenM=new THREE.Mesh(new THREE.PlaneGeometry(4.2,2.36),new THREE.MeshBasicMaterial({map:tex})); screenM.position.set(0,2.9,8.48); screenM.rotation.y=Math.PI; venue.add(screenM);
+  venue.add(box(9,.12,.12,stdMat(0x444),0,4.4,5.6));
+  [[-3,0xffb36b],[-1,0xffffff],[1,0x6bc8ff],[3,0xff7bd0]].forEach(([x,c])=>{ const s=new THREE.Mesh(new THREE.SphereGeometry(.13,12,8),basic(c)); s.position.set(x,4.25,5.6); venue.add(s); });
+  venue.add(box(.6,1.1,.45,stdMat(0x5a4636),1.5,1.15,5.7));
+  // pillars
+  const pm=stdMat(0x4a4540,{r:.8});
+  venue.add(cyl(.26,4.6,pm,'y',-1.38,2.3,-.2,24));
+  venue.add(cyl(.26,4.6,pm,'y',3.6,2.3,-.2,24));
+  // chairs + audience
+  const cols=[0x475569,0x7c2d12,0x1e3a8a,0x14532d,0x6b21a8,0x334155,0x92400e,0x0f766e];
+  let k=0;
+  for(const z of [1.6,2.5,3.4]) for(const x of [-3.2,-2.5,-1.8,-1.1,1.1,1.8,2.5,3.2]){
+    venue.add(box(.46,.45,.46,stdMat(0x2f2f35),x,.225,z));
+    venue.add(box(.46,.5,.06,stdMat(0x2f2f35),x,.7,z-.22));
+    const b=new THREE.Mesh(new THREE.CapsuleGeometry(.17,.28,4,10),stdMat(cols[k%cols.length],{r:.85})); b.position.set(x,.8,z-.04); venue.add(b);
+    const h=new THREE.Mesh(new THREE.SphereGeometry(.105,14,10),stdMat(0x3a2b22,{r:.8})); h.position.set(x,1.2,z-.04); venue.add(h);
+    k++;
+  }
+  // desk for gimbal
+  const dt=stdMat(0x6b4f36,{r:.7});
+  venue.add(box(1.3,.05,.75,dt,0,.715,-5));
+  for(const [x,z] of [[-.6,-5.32],[.6,-5.32],[-.6,-4.68],[.6,-4.68]]) venue.add(box(.05,.69,.05,dt,x,.345,z));
+}
+
+/* ---------------- floor markers (event map) ---------------- */
+const mapGroup=new THREE.Group(); mapGroup.visible=false; scene.add(mapGroup);
+function floorPath(pts,color){ const curve=new THREE.CatmullRomCurve3(pts.map(p=>new V3(p[0],.03,p[1]))); const geo=new THREE.TubeGeometry(curve,40,.05,6,false); const m=new THREE.Mesh(geo,basic(color)); mapGroup.add(m);
+  const end=pts[pts.length-1], pre=pts[pts.length-2]; const cone=new THREE.Mesh(new THREE.ConeGeometry(.16,.4,12),basic(color)); cone.position.set(end[0],.05,end[1]); cone.quaternion.setFromUnitVectors(UP,new V3(end[0]-pre[0],0,end[1]-pre[1]).normalize()); mapGroup.add(cone); return m; }
+const mapA=floorPath([[0,-1.5],[0,0],[0,1]],0x60a5fa);
+const mapB=floorPath([[-3.4,4.5],[0,4.5],[3.4,4.5]],0xf5b83d);
+const mapC=floorPath([[-2.5,-.6],[-.2,-.6]],0xf472b6);
+const mapD=new THREE.Mesh(new THREE.RingGeometry(.25,.36,24),basic(0x34d399)); mapD.rotation.x=-Math.PI/2; mapD.position.set(4.6,.03,1.2); mapGroup.add(mapD);
+const mapAnchors={A:new THREE.Object3D(),B:new THREE.Object3D(),C:new THREE.Object3D(),D:new THREE.Object3D()};
+mapAnchors.A.position.set(0,.3,-.4); mapAnchors.B.position.set(0,.3,4.5); mapAnchors.C.position.set(-1.4,.3,-.6); mapAnchors.D.position.set(4.6,.3,1.2);
+Object.values(mapAnchors).forEach(o=>mapGroup.add(o));
+
+/* ---------------- Rig (gimbal + camera) ---------------- */
+const M = {
+  black:stdMat(0x1c1e22,{r:.5,m:.35}), dark:stdMat(0x2b2e34,{r:.55,m:.3}), rubber:stdMat(0x121316,{r:.95}),
+  screen:stdMat(0x0b2540,{e:0x0a4a80,ei:.55,r:.3}), red:stdMat(0xd11f1f,{r:.4}), lensRing:stdMat(0x232428,{r:.9}),
+  glass:stdMat(0x0b1020,{r:.1,m:.6,e:0x1a2a55,ei:.25}), silver:stdMat(0x9aa0a8,{r:.35,m:.8}), redRing:stdMat(0xb33a1f,{r:.4,m:.6}),
+};
+class Rig{
+  constructor(){
+    const R=this.root=new THREE.Group(); R.rotation.order='YXZ';
+    // handle / battery grip
+    R.add(cyl(.022,.2,M.rubber,'y',0,-.1,0));
+    const panel=box(.058,.072,.052,M.black,0,.034,.004); R.add(panel);
+    const scr=new THREE.Mesh(new THREE.PlaneGeometry(.04,.034),M.screen); scr.position.set(0,.045,-.0225); scr.rotation.y=Math.PI; R.add(scr);
+    this.screen=scr;
+    this.modeSwitch=box(.006,.022,.012,M.silver,-.031,.03,-.008); R.add(this.modeSwitch);
+    this.power=cyl(.006,.004,M.dark,'z',-.012,.012,-.0235); R.add(this.power);
+    this.joystick=cyl(.005,.012,M.dark,'z',.008,-.012,-.026); R.add(this.joystick);
+    this.recBtn=cyl(.005,.005,M.red,'z',.008,-.032,-.024); R.add(this.recBtn);
+    this.trigger=box(.016,.03,.012,M.dark,0,-.03,.026); R.add(this.trigger);
+    this.dial=cyl(.011,.012,M.redRing,'x',.032,.005,.015); R.add(this.dial);
+    this.legs=new THREE.Group(); R.add(this.legs);
+    for(let i=0;i<3;i++){ const a=i*2*Math.PI/3; const lg=cyl(.007,.17,M.black); placeBetween(lg,new V3(0,-.2,0),new V3(Math.cos(a)*.11,-.33,Math.sin(a)*.11)); this.legs.add(lg); }
+    // pan motor
+    R.add(cyl(.033,.045,M.black,'y',0,.085,0));
+    this.panRing=this._ring(.052,0x2dd4bf); this.panRing.rotation.x=Math.PI/2; this.panRing.position.y=.085; R.add(this.panRing);
+    const pan=this.panPivot=new THREE.Group(); pan.position.y=.09; R.add(pan);
+    this.panSlide=new THREE.Group(); pan.add(this.panSlide);
+    this.panSlide.add(box(.03,.02,.12,M.black,0,.03,-.05));
+    this.panSlide.add(box(.03,.17,.022,M.black,0,.1,-.11));
+    const roll=this.rollPivot=new THREE.Group(); roll.position.set(0,.17,-.11); this.panSlide.add(roll);
+    roll.add(cyl(.03,.045,M.black,'z',0,0,0));
+    this.rollRing=this._ring(.046,0xa78bfa); roll.add(this.rollRing);
+    const rs=this.rollSlide=new THREE.Group(); roll.add(rs);
+    rs.add(box(.1,.024,.02,M.black,.045,0,.03));
+    rs.add(box(.02,.024,.1,M.black,.088,0,.075));
+    rs.add(cyl(.03,.034,M.black,'x',.078,0,.12));
+    this.tiltRing=this._ring(.046,0xfb923c); this.tiltRing.rotation.y=Math.PI/2; this.tiltRing.position.set(.078,0,.12); rs.add(this.tiltRing);
+    const tilt=this.tiltPivot=new THREE.Group(); tilt.position.set(0,0,.12); rs.add(tilt);
+    const vs=this.vSlide=new THREE.Group(); tilt.add(vs);
+    vs.add(box(.012,.06,.05,M.black,.062,-.03,0));
+    vs.add(box(.11,.01,.14,M.black,.006,-.047,0));
+    const mount=this.mount=new THREE.Group(); mount.position.set(0,-.042,0); vs.add(mount);
+    // camera (α7C II) — origin at plate top, COG ≈ (0,.036,0)
+    const cam=this.cam=new THREE.Group(); cam.position.z=-.012; mount.add(cam);
+    cam.add(box(.124,.071,.06,M.black,0,.0355,-.046));
+    cam.add(box(.03,.062,.022,M.black,-.047,.033,-.006));
+    cam.add(box(.024,.006,.018,M.silver,.0,.074,-.046));
+    this.modeDial=cyl(.012,.008,M.dark,'y',-.035,.075,-.05); cam.add(this.modeDial);
+    this.camRec=cyl(.004,.004,M.red,'y',-.052,.073,-.03); cam.add(this.camRec);
+    this.menuBtn=box(.012,.004,.006,M.dark,-.02,.072,-.075); cam.add(this.menuBtn);
+    this.usb=box(.002,.008,.012,M.silver,.063,.03,-.055); cam.add(this.usb);
+    cam.add(new THREE.Mesh(new THREE.PlaneGeometry(.09,.055),stdMat(0x090a0c,{r:.2,e:0x101826,ei:.4})).translateZ(-.0765).translateY(.036).rotateY(Math.PI));
+    // lens
+    const lens=this.lens=new THREE.Group(); lens.position.set(0,.036,-.016); cam.add(lens);
+    lens.add(cyl(.032,.006,M.redRing,'z',0,0,.003,28));
+    lens.add(cyl(.036,.03,M.black,'z',0,0,.02,28));
+    this.zoomRing=cyl(.0425,.04,M.lensRing,'z',0,0,.055,28); lens.add(this.zoomRing);
+    const inner=this.inner=new THREE.Group(); inner.position.z=.075; lens.add(inner);
+    inner.add(cyl(.04,.02,M.black,'z',0,0,.01,28));
+    this.focusRing=cyl(.043,.03,M.lensRing,'z',0,0,.035,28); inner.add(this.focusRing);
+    inner.add(cyl(.044,.012,M.black,'z',0,0,.055,28));
+    const gl=new THREE.Mesh(new THREE.CircleGeometry(.036,28),M.glass); gl.position.z=.0615; inner.add(gl);
+    this.lensFront=new THREE.Object3D(); this.lensFront.position.z=.064; inner.add(this.lensFront);
+    this.vcam=new THREE.PerspectiveCamera(37.8,16/9,.03,60); this.vcam.position.set(0,0,.075); this.vcam.rotation.y=Math.PI; inner.add(this.vcam);
+    this.labelPts={
+      pan:this._pt(R,0,.09,.04), roll:this._pt(roll,0,.045,0), tilt:this._pt(rs,.1,.035,.12),
+      screen:this._pt(R,0,.08,-.03), mode:this._pt(R,-.036,.03,-.01), trigger:this._pt(R,0,-.025,.04),
+      joy:this._pt(R,.01,-.005,-.04), rec:this._pt(R,.01,-.035,-.035), power:this._pt(R,-.015,.02,-.03), dial:this._pt(R,.045,.01,.015),
+      camRec:this._pt(cam,-.052,.08,-.03), modeDial:this._pt(cam,-.035,.085,-.05), menu:this._pt(cam,-.02,.08,-.075), usb:this._pt(cam,.07,.04,-.055),
+      zoom:this._pt(lens,0,.05,.055), focus:this._pt(inner,0,.05,.035), plate:this._pt(vs,-.06,-.04,0), vArm:this._pt(vs,.07,-.02,0),
+      rollArm:this._pt(rs,.045,.02,.03), panArm:this._pt(this.panSlide,0,.05,-.06), cog:this._pt(mount,0,.036,0)
+    };
+    this.reset();
+  }
+  _ring(r,c){ const m=new THREE.Mesh(new THREE.TorusGeometry(r,.0035,8,48),basic(c,{t:true,o:.95})); m.visible=false; return m; }
+  _pt(parent,x,y,z){ const o=new THREE.Object3D(); o.position.set(x,y,z); parent.add(o); return o; }
+  reset(){ this.pan=0; this.roll=0; this.tilt=0; this.dz=0; this.dy=0; this.dx=0; this.dzPan=0; this.zoom=0; this.inverted=false;
+    this.root.rotation.set(0,0,0); this.legs.visible=false; this.showRings(false); this.cs={yaw:0,pitch:0,roll:0}; this.apply(); }
+  showRings(p,r,t){ this.panRing.visible=!!p; this.rollRing.visible=!!(r??p); this.tiltRing.visible=!!(t??p); }
+  apply(){
+    this.panPivot.rotation.y=this.pan; this.rollPivot.rotation.z=this.roll; this.tiltPivot.rotation.x=-this.tilt;
+    this.mount.position.z=this.dz; this.vSlide.position.y=this.dy; this.rollSlide.position.x=this.dx; this.panSlide.position.z=this.dzPan;
+    this.inner.position.z=.075+.03*this.zoom;
+    const f=24+46*this.zoom; this.vcam.fov=2*Math.atan(12/f)/D; this.vcam.updateProjectionMatrix();
+  }
+  // handle orientation (radians) + desired camera orientation relative to operator frame
+  setHandle(y,p,r){ this.root.rotation.set(-p,y,r+(this.inverted?Math.PI:0)); this.h={y,p,r}; }
+  aim(yaw,pitch,roll=0){
+    const h=this.h||{y:0,p:0,r:0};
+    if(this.inverted){ this.pan=-(yaw-h.y); this.tilt=pitch-h.p; this.roll=-Math.PI+(roll-h.r); }
+    else { this.pan=yaw-h.y; this.tilt=pitch-h.p; this.roll=roll-h.r; }
+    this.apply();
+  }
+}
+
+/* ---------------- Person ---------------- */
+class Person{
+  constructor(jacket=0x334155,pants=0x1f2937,skin=0xc9a68a){
+    const G=this.group=new THREE.Group(); scene.add(G);
+    const mj=stdMat(jacket,{r:.85}), mp=stdMat(pants,{r:.9}), ms=stdMat(skin,{r:.8}), mh=stdMat(0x2a211b,{r:.9}), msh=stdMat(0x111111,{r:.7});
+    this.torso=new THREE.Mesh(new THREE.CapsuleGeometry(.16,.32,4,12),mj); G.add(this.torso);
+    this.head=new THREE.Mesh(new THREE.SphereGeometry(.105,16,12),ms); G.add(this.head);
+    this.hair=new THREE.Mesh(new THREE.SphereGeometry(.108,16,12,0,Math.PI*2,0,Math.PI*.55),mh); G.add(this.hair);
+    const limb=(r,m)=>{ const x=new THREE.Mesh(new THREE.CylinderGeometry(r,r,1,10),m); G.add(x); return x; };
+    this.uaL=limb(.045,mj); this.faL=limb(.038,mj); this.uaR=limb(.045,mj); this.faR=limb(.038,mj);
+    this.thL=limb(.06,mp); this.shL=limb(.05,mp); this.thR=limb(.06,mp); this.shR=limb(.05,mp);
+    const j=(r,m)=>{ const s=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),m); G.add(s); return s; };
+    this.hdL=j(.04,ms); this.hdR=j(.04,ms); this.elL=j(.045,mj); this.elR=j(.045,mj); this.knL=j(.058,mp); this.knR=j(.058,mp);
+    this.ftL=new THREE.Mesh(new THREE.BoxGeometry(.09,.06,.24),msh); this.ftR=this.ftL.clone(); G.add(this.ftL,this.ftR);
+    this.anchor=new THREE.Group(); G.add(this.anchor);
+    this.pelvisY=.9; this.lean=.06; this.footL=new V3(.11,.045,0); this.footR=new V3(-.11,.045,0);
+    this.handL=new V3(.25,.85,.05); this.handR=new V3(-.25,.85,.05); this.rig=null;
+  }
+  attach(rig){ this.rig=rig; this.anchor.add(rig.root); }
+  gait(phi,stride,lift){ this.footL.set(.11,.045+lift*Math.max(0,Math.cos(phi)),stride*Math.sin(phi)); this.footR.set(-.11,.045+lift*Math.max(0,Math.cos(phi+Math.PI)),stride*Math.sin(phi+Math.PI)); }
+  update(){
+    const p=this.pelvisY, G=this.group; G.updateMatrixWorld(true);
+    this.torso.position.set(0,p+.3,0); this.torso.rotation.x=this.lean;
+    const hy=p+.72; this.head.position.set(0,hy,.04*this.lean/.06); this.hair.position.copy(this.head.position).add(new V3(0,.012,-.008));
+    if(this.rig){ this.rig.root.updateMatrixWorld(true);
+      const a=this.rig.root.localToWorld(new V3(0,-.075,0)), b=this.rig.root.localToWorld(new V3(0,-.165,0));
+      G.worldToLocal(a); G.worldToLocal(b); this.handR.copy(a).add(new V3(-.02,0,0)); this.handL.copy(b).add(new V3(.02,0,0)); }
+    const sL=new V3(.19,p+.5,.02), sR=new V3(-.19,p+.5,.02), e=new V3(), h=new V3();
+    ik(sL,this.handL,.29,.27,new V3(.7,-1,-.6),e,h); placeBetween(this.uaL,sL,e); placeBetween(this.faL,e,h); this.elL.position.copy(e); this.hdL.position.copy(h);
+    ik(sR,this.handR,.29,.27,new V3(-.7,-1,-.6),e,h); placeBetween(this.uaR,sR,e); placeBetween(this.faR,e,h); this.elR.position.copy(e); this.hdR.position.copy(h);
+    const hL=new V3(.1,p,0), hR=new V3(-.1,p,0);
+    ik(hL,this.footL,.45,.44,new V3(0,.2,1),e,h); placeBetween(this.thL,hL,e); placeBetween(this.shL,e,h); this.knL.position.copy(e); this.ftL.position.set(h.x,h.y-.01,h.z+.05);
+    ik(hR,this.footR,.45,.44,new V3(0,.2,1),e,h); placeBetween(this.thR,hR,e); placeBetween(this.shR,e,h); this.knR.position.copy(e); this.ftR.position.set(h.x,h.y-.01,h.z+.05);
+  }
+}
+
+/* ---------------- actors ---------------- */
+const deskRig=new Rig(); scene.add(deskRig.root);
+const op=new Person(0x2f4a6b,0x1f2937); const opRig=new Rig(); op.attach(opRig);
+const op2=new Person(0x6b3a2f,0x1f2937); const op2Rig=new Rig(); op2.attach(op2Rig);
+const speaker=new Person(0x7a5c2e,0x2a2a2a); speaker.group.position.set(0,.6,6.3); speaker.group.rotation.y=Math.PI;
+const guest=new Person(0x9d3c6a,0x2b2b33); guest.group.position.set(-3.6,0,-2.3); guest.group.rotation.y=Math.PI*.5;
+
+// trails for walk compare
+function makeTrail(color){ const N=140; const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3)); const l=new THREE.Line(g,new THREE.LineBasicMaterial({color})); l.frustumCulled=false; l.visible=false; scene.add(l); return {line:l,N,buf:[]}; }
+const trail1=makeTrail(0xf87171), trail2=makeTrail(0x34d399);
+
+// arrows
+function makeArrow(color){ const g=new THREE.Group(); const sh=new THREE.Mesh(new THREE.CylinderGeometry(.004,.004,1,8),basic(color)); const hd=new THREE.Mesh(new THREE.ConeGeometry(.012,.03,12),basic(color)); g.add(sh,hd); g.sh=sh; g.hd=hd; g.visible=false; scene.add(g);
+  g.set=(a,b)=>{ const d=new V3().subVectors(b,a); const L=d.length(); const n=d.clone().normalize(); g.position.copy(a); g.quaternion.setFromUnitVectors(UP,n); sh.scale.y=Math.max(L-.03,.001); sh.position.y=(L-.03)/2; hd.position.y=L-.015; }; return g; }
+const arrow1=makeArrow(0xf5b83d), arrow2=makeArrow(0xf5b83d);
+
+/* ---------------- labels ---------------- */
+const labelLayer=document.getElementById('labels'); let labels=[];
+function clearLabels(){ labels.forEach(l=>l.el.remove()); labels=[]; }
+function addLabel(text,obj,cls='',dy=0){ const el=document.createElement('div'); el.className='lbl '+cls; el.textContent=text; labelLayer.appendChild(el); const L={el,obj,dy}; labels.push(L); return L; }
+const tmpV=new V3();
+function updateLabels(w,h){ for(const l of labels){ if(!l.obj||l.hidden){l.el.style.display='none';continue;} l.obj.getWorldPosition(tmpV); tmpV.project(camera);
+  if(tmpV.z>1||Math.abs(tmpV.x)>1.2||Math.abs(tmpV.y)>1.2){l.el.style.display='none';continue;} l.el.style.display='block';
+  l.el.style.transform=`translate(${(tmpV.x*.5+.5)*w}px,${(-tmpV.y*.5+.5)*h+l.dy}px) translate(-50%,-100%)`; } }
+
+/* ---------------- caption ---------------- */
+const capEl=document.getElementById('cap');
+let capKey='';
+function cap(text,cls=''){ const k=text+'|'+cls; if(k===capKey)return; capKey=k; if(!text){capEl.style.display='none';capEl.textContent='';return;} capEl.style.display='block'; capEl.className=cls; capEl.textContent=text; }
+
+/* ---------------- camera tween ---------------- */
+let camTween=null;
+function goCam(p,t,dur=.9){ camTween={fp:camera.position.clone(),ft:controls.target.clone(),tp:new V3(...p),tt:new V3(...t),k:0,dur}; userMoved=false; }
+
+/* ---------------- follow sim ---------------- */
+function follow(rig,hy,hp,hr,mode,dt,tau,cmdPitch=0,cmdYaw=0){
+  const a=1-Math.exp(-dt/Math.max(tau,1e-3)); const c=rig.cs;
+  let ty=c.yaw,tp=c.pitch,tr=0;
+  if(mode==='PF'){ty=hy+cmdYaw;tp=cmdPitch;}
+  else if(mode==='PTF'){ty=hy+cmdYaw;tp=hp+cmdPitch;}
+  else if(mode==='FPV'){ty=hy;tp=hp;tr=hr;}
+  else if(mode==='LOCK'){ty=c.lockY??0;tp=c.lockP??0;}
+  c.yaw+= (ty-c.yaw)*a; c.pitch+=(tp-c.pitch)*a; c.roll+=(tr-c.roll)*a;
+  rig.setHandle(hy,hp,hr); rig.aim(c.yaw,c.pitch,c.roll);
+}
+
+/* ---------------- 2D demos ---------------- */
+const demos={};
+function shutterDemo(cv){ const g=cv.getContext('2d'); return (t)=>{ const W=cv.width,H=cv.height; g.fillStyle='#0b0c0f'; g.fillRect(0,0,W,H);
+  const lanes=[['1/50秒（24p の基本）',1/50],['1/500秒（速すぎ）',1/500]]; const fps=24, v=W*.9; const k=Math.floor(t*fps); const t0=k/fps;
+  lanes.forEach(([name,S],i)=>{ const y=H*(.3+.45*i); g.fillStyle='#9aa0aa'; g.font=`${Math.round(H*.1)}px sans-serif`; g.fillText(name,8,y-H*.14);
+    g.strokeStyle='#2b2f38'; g.beginPath(); g.moveTo(0,y+H*.09); g.lineTo(W,y+H*.09); g.stroke();
+    const N=14; for(let j=0;j<N;j++){ const tt=t0+S*j/N; const x=((tt*v)%(W+40))-20; g.globalAlpha=Math.min(1,2.2/N*(S<1/100?N/2:1)); g.fillStyle=i?'#f87171':'#34d399'; g.beginPath(); g.arc(x,y,H*.07,0,Math.PI*2); g.fill(); }
+    g.globalAlpha=1; }); }; }
+function flickerDemo(root){
+  const cv=root.querySelector('canvas'), g=cv.getContext('2d'); const st={hz:50,fps:24,S:1/50};
+  const segs=root.querySelectorAll('.seg'); const out=root.querySelector('.verdict');
+  const mk=(el,key,vals,fmt)=>{ el.innerHTML=''; vals.forEach(v=>{ const b=document.createElement('button'); b.textContent=fmt(v); if(st[key]===v)b.className='on'; b.onclick=()=>{st[key]=v; mk(el,key,vals,fmt); calc();}; el.appendChild(b); }); };
+  mk(segs[0],'hz',[50,60],v=>v===50?'東日本 50Hz':'西日本 60Hz'); mk(segs[1],'fps',[24,30,60],v=>v+'p'); mk(segs[2],'S',[1/50,1/60,1/100,1/120],v=>'1/'+Math.round(1/v));
+  let fr=[]; let ok=true; const ROWS=24, TR=1/60; // 読み出し時間は仮定（1/60秒）
+  const avg=(t0,S,f)=>.5-(Math.sin(4*Math.PI*f*(t0+S))-Math.sin(4*Math.PI*f*t0))/(8*Math.PI*f*S);
+  function calc(){ ok=st.S<=1/st.fps+1e-9; fr=[]; const f=st.hz; let all=[];
+    for(let k=0;k<60;k++){ const rows=[]; for(let j=0;j<ROWS;j++){ const v=avg(k/st.fps+j*TR/ROWS,st.S,f); rows.push(v); all.push(v);} fr.push(rows); }
+    const mean=all.reduce((a,b)=>a+b)/all.length; const fm=fr.map(r=>r.reduce((a,b)=>a+b)/ROWS);
+    const temporal=(Math.max(...fm)-Math.min(...fm))/mean*100; const band=Math.max(...fr.map(r=>(Math.max(...r)-Math.min(...r))/mean*100)); const fl=Math.max(temporal,band);
+    fr.mean=mean; fr.fm=fm;
+    if(!ok){out.textContent='このフレームレートでは選べないシャッター速度です（1/フレームレートより速くする）'; out.style.color='var(--mute)';}
+    else if(fl<2){out.textContent=`ちらつき・縞 ${fl.toFixed(1)}% → OK`; out.style.color='var(--good)';}
+    else {out.textContent=`ちらつき・縞 ${fl.toFixed(0)}% → NG（${band>temporal?'画面に縞が出る':'明るさが波打つ'}）`; out.style.color='var(--bad)';} }
+  calc();
+  return (t)=>{ const W=cv.width,H=cv.height; g.fillStyle='#0b0c0f'; g.fillRect(0,0,W,H); if(!ok)return;
+    const k=Math.floor(t*st.fps)%60, mean=fr.mean, sq=H-16, rh=sq/ROWS;
+    for(let j=0;j<ROWS;j++){ const lv=Math.max(0,Math.min(255,Math.round(150*fr[k][j]/mean))); g.fillStyle=`rgb(${lv},${Math.round(lv*.92)},${Math.round(lv*.75)})`; g.fillRect(8,8+j*rh,sq,rh+.5); }
+    g.fillStyle='#9aa0aa'; g.font=`${Math.round(H*.1)}px sans-serif`; g.fillText('フレームごとの明るさ',H+4,H*.16);
+    const bw=(W-H-12)/30; for(let i=0;i<30;i++){ const v=fr.fm[(k-29+i+60)%60]/mean; const bh=(H*.62)*Math.min(1.6,v)/1.6; g.fillStyle=i===29?'#f5b83d':'#4b5563'; g.fillRect(H+4+i*bw,H-8-bh,bw-1.5,bh); } }; }
+function speedGraph(cv){ const g=cv.getContext('2d'); const buf=[]; return { push(a,b){ buf.push([a,b]); if(buf.length>240)buf.shift(); }, clear(){buf.length=0;}, draw(){ const W=cv.width,H=cv.height; g.fillStyle='#0b0c0f'; g.fillRect(0,0,W,H);
+  g.font=`${Math.round(H*.12)}px sans-serif`; g.fillStyle='#9aa0aa'; g.fillText('━ 手（ハンドル）',8,H*.16); g.fillStyle='#f5b83d'; g.fillText('━ カメラの向き',W*.42,H*.16);
+  const y=v=>H*.9-v/0.9*H*.65; g.lineWidth=2; [[0,'#9aa0aa'],[1,'#f5b83d']].forEach(([i,c])=>{ g.strokeStyle=c; g.beginPath(); buf.forEach((p,j)=>{ const x=W*j/240; j?g.lineTo(x,y(p[i])):g.moveTo(x,y(p[i])); }); g.stroke(); }); } }; }
+
+/* ---------------- move paths (venue) ---------------- */
+function placeOp(x,z,yaw){ op.group.position.set(x,0,z); op.group.rotation.y=yaw; }
+let gaitPhi=0; let lastPos=null;
+function walkAnim(dt,crouch=.07,stride=.18,lift=.05){ const p=op.group.position; if(lastPos){ const d=Math.hypot(p.x-lastPos.x,p.z-lastPos.z); gaitPhi+=d/stride*Math.PI*.5*(d>0?1:0); } lastPos=p.clone();
+  op.gait(gaitPhi,lastMoving?stride:0,lastMoving?lift:0); op.pelvisY=.9-crouch-.004*Math.abs(Math.cos(gaitPhi)); }
+let lastMoving=false;
+const yawTo=(x,z,tx,tz)=>Math.atan2(tx-x,tz-z);
+
+
+/* ---------------- TOWN（囲町・当日の会場の模式） ---------------- */
+const TX=60; const TW=(x,y,z)=>new V3(x+TX,y,z);
+const town=new THREE.Group(); town.position.x=TX; scene.add(town);
+const townAnch={};
+{
+  const g=new THREE.Mesh(new THREE.PlaneGeometry(70,80),stdMat(0x55534f,{r:.95})); g.rotation.x=-Math.PI/2; g.position.z=12; town.add(g);
+  const plaza=new THREE.Mesh(new THREE.CircleGeometry(6.5,48),stdMat(0xb4a690,{r:.9})); plaza.rotation.x=-Math.PI/2; plaza.position.y=.01; town.add(plaza);
+  const road=new THREE.Mesh(new THREE.PlaneGeometry(6,36),stdMat(0x3e3f43,{r:.9})); road.rotation.x=-Math.PI/2; road.position.set(0,.012,24); town.add(road);
+  for(let z=8;z<42;z+=3){ const l=new THREE.Mesh(new THREE.PlaneGeometry(.12,1.4),basic(0xd8d4c8)); l.rotation.x=-Math.PI/2; l.position.set(0,.015,z); town.add(l); }
+  const park=new THREE.Mesh(new THREE.PlaneGeometry(16,18),stdMat(0x3f6b3a,{r:1})); park.rotation.x=-Math.PI/2; park.position.set(13,.013,26); town.add(park);
+  const trunk=stdMat(0x5a3d26,{r:.9}), leaf=[stdMat(0x2f6b35,{r:.9}),stdMat(0x3c7d3f,{r:.9}),stdMat(0x8a6d2a,{r:.9})];
+  const tree=(x,z,h=3.2,k=0)=>{ town.add(cyl(.14,h,trunk,'y',x,h/2,z,8)); const c=new THREE.Mesh(new THREE.SphereGeometry(1.1+(k%3)*.2,10,8),leaf[k%3]); c.position.set(x,h+.6,z); town.add(c); };
+  let k=0; for(let z=9;z<40;z+=4.2){ tree(-4.2,z,3,k++); tree(4.2,z+1.5,3.2,k++); }
+  for(let i=0;i<16;i++) tree(8+(i%4)*3.6,19+Math.floor(i/4)*4,3.4,k++);
+  townAnch.tree=new THREE.Object3D(); townAnch.tree.position.set(4.2,1.2,22.1); town.add(townAnch.tree);
+  const bm=[stdMat(0x6b6f78,{r:.8}),stdMat(0x8a8577,{r:.8}),stdMat(0x5b6270,{r:.8})];
+  [[-12,-4,8,10,18],[-12,10,8,12,30],[-12,26,8,12,22],[0,-14,22,8,26],[14,-2,10,12,40],[22,26,6,18,14]].forEach(([x,z,w,d,h],i)=>{ const b=box(w,h,d,bm[i%3],x,h/2,z); town.add(b); });
+  // 一葉式いけばな東京中野本部（出発地点）
+  town.add(box(7,4.5,5,stdMat(0xd9d2c3,{r:.8}),-9.5,2.25,3));
+  const sign=box(3,.6,.1,stdMat(0x7a1f3d,{r:.6,e:0x3a0f1d,ei:.6}),-6.4,3.2,3); sign.rotation.y=Math.PI/2; town.add(sign);
+  townAnch.hq=new THREE.Object3D(); townAnch.hq.position.set(-7,4.8,3); town.add(townAnch.hq);
+  townAnch.plaza=new THREE.Object3D(); townAnch.plaza.position.set(0,.3,-5.6); town.add(townAnch.plaza);
+  townAnch.park=new THREE.Object3D(); townAnch.park.position.set(13,.4,30); town.add(townAnch.park);
+  // 観客
+  const cols=[0x475569,0x9d174d,0x1e3a8a,0x14532d,0x6b21a8,0xb45309,0x0f766e,0x374151];
+  for(let i=0;i<18;i++){ const a=-Math.PI*.95+i*(Math.PI*1.9/17); const r=5.2+(i%2)*.6; if(Math.abs(a)<.35)continue; const x=Math.sin(a)*r, z=-Math.cos(a)*r;
+    const b=new THREE.Mesh(new THREE.CapsuleGeometry(.17,.75,4,10),stdMat(cols[i%cols.length],{r:.85})); b.position.set(x,.75,z); town.add(b);
+    const h=new THREE.Mesh(new THREE.SphereGeometry(.1,12,10),stdMat(0x3a2b22)); h.position.set(x,1.42,z); town.add(h); }
+}
+// 神輿
+const mk=new THREE.Group(); town.add(mk);
+const mkFlowers=[];
+{
+  const lac=stdMat(0x22140e,{r:.4,m:.3}), wood=stdMat(0x8b1e1e,{r:.5}), gold=stdMat(0xc9a227,{r:.35,m:.8});
+  mk.add(box(1.0,.22,1.0,lac,0,.11,0)); mk.add(box(.78,.5,.78,wood,0,.47,0)); mk.add(box(.92,.06,.92,gold,0,.74,0));
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(.78,.42,4),lac); roof.rotation.y=Math.PI/4; roof.position.y=.98; mk.add(roof);
+  const top=new THREE.Mesh(new THREE.SphereGeometry(.07,10,8),gold); top.position.y=1.24; mk.add(top);
+  mk.poles=[]; for(const x of [-.42,.42]){ const p=cyl(.045,3.4,stdMat(0xd9c7a0,{r:.6}),'z',x,.16,0); mk.add(p); mk.poles.push(x); }
+  const fc=[0xf9a8d4,0xfde047,0xf8fafc,0xfb7185,0xc4b5fd,0xfdba74,0x86efac];
+  let seed=7; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+  for(let i=0;i<110;i++){ let x,y,z; if(i<70){ const th=rnd()*Math.PI*2, ph=rnd()*1.2; x=.62*Math.sin(ph)*Math.cos(th); z=.62*Math.sin(ph)*Math.sin(th); y=.95+.38*Math.cos(ph); }
+    else { const side=Math.floor(rnd()*4), t=rnd()*.7-.35, h=.3+rnd()*.38; x=side<2?(side?.41:-.41):t; z=side<2?t:(side===2?.41:-.41); y=h; }
+    const f=new THREE.Mesh(new THREE.SphereGeometry(.055+rnd()*.045,8,6),stdMat(fc[i%fc.length],{r:.7})); f.position.set(x,y,z); mk.add(f); mkFlowers.push(f); }
+  mk.stands=[box(.3,.45,1.2,stdMat(0x3a2a1e),-.42,-.225+0,0),box(.3,.45,1.2,stdMat(0x3a2a1e),.42,-.225,0)];
+  // stands are positioned separately in town (not children of mk)
+  mk.standsG=new THREE.Group(); mk.stands.forEach(b=>mk.standsG.add(b)); town.add(mk.standsG);
+  mk.anchor=new THREE.Object3D(); mk.anchor.position.y=1.5; mk.add(mk.anchor);
+}
+function setFlowers(p){ const n=Math.round(mkFlowers.length*p); mkFlowers.forEach((f,i)=>f.visible=i<n); }
+// 担ぎ手・警備員・区長・家元
+const bearers=[]; const BEAR=[[-.62,-1.2],[.62,-1.2],[-.62,1.2],[.62,1.2]];
+BEAR.forEach(()=>{ const b=new Person(0x1d4ed8,0xf1f5f9); bearers.push(b); });
+const guards=[new Person(0xeab308,0x1f2937),new Person(0xeab308,0x1f2937)];
+const kucho=new Person(0x1f2937,0x1f2937); const iemoto=new Person(0x3f3f46,0x27272a,0xc9a68a);
+const dayPeople=[...bearers,...guards,kucho,iemoto];
+function mkPlace(x,z,lift,yaw=0){ // lift 0=台の上, 1=担いでいる
+  const y=lerp(.45,1.24,lift)+ (lift>.99?.03*Math.sin(stepT*9):0);
+  mk.position.set(x,y,z); mk.rotation.y=yaw; mk.standsG.visible=lift<.05; mk.standsG.position.set(x,.45,z);
+  bearers.forEach((b,i)=>{ const [bx,bz]=BEAR[i]; b.group.visible=true; b.group.position.set(x+TX+bx,0,z+bz); b.group.rotation.y=yaw;
+    const poleX=bx<0?-.42:.42; const py=y+.16;
+    const w1=TW(x+poleX,py,z+bz+.15), w2=TW(x+poleX,py,z+bz-.2);
+    b.group.updateMatrixWorld(true);
+    if(lift>.02){ b.handL.copy(b.group.worldToLocal(bx<0?w2.clone():w1.clone())); b.handR.copy(b.group.worldToLocal(bx<0?w1.clone():w2.clone())); b.pelvisY=lerp(.62,.9,lift); }
+    else { b.handL.set(.24,.85,.05); b.handR.set(-.24,.85,.05); b.pelvisY=.9; }
+  }); }
+function hidePeople(){ dayPeople.forEach(p=>p.group.visible=false); }
+hidePeople();
+
+/* ---------------- STEPS ---------------- */
+const LV={d:['明日の本番','var(--d)'],p:['準備','var(--p)'],b:['初級','var(--b)'],m:['中級','var(--m)'],a:['上級','var(--a)'],e:['本番の基本','var(--e)']};
+const DESK=[0,1.09,-5];
+const deskCam=(dx=.55,dy=.28,dz=-.5,ty=.12)=>({p:[DESK[0]+dx,DESK[1]+dy,DESK[2]+dz],t:[DESK[0],DESK[1]+ty,DESK[2]]});
+const S=[];
+
+/* ===== 準備 ===== */
+S.push({lv:'p',title:'全体像：3つの軸と各部の名前',cam:deskCam(.5,.22,-.45),
+ lead:'ジンバルは3つのモーター（軸）でカメラの向きを保つ機械です。どの軸が何を受け持つかを先に覚えておくと、後の説明がすべてつながります。',
+ pts:['<b style="color:var(--pan)">パン軸</b>（いちばん下のモーター）：左右の首振り','<b style="color:var(--roll)">ロール軸</b>（カメラの後ろのモーター）：水平の傾き','<b style="color:var(--tilt)">チルト軸</b>（カメラ横のモーター）：上下の首振り','歩いたときの「上下の揺れ」はどの軸でも消せません。歩き方で消します（中級で練習）'],
+ src:['dronexl'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; deskRig.showRings(true);
+   addLabel('パン軸',deskRig.labelPts.pan,'pan'); addLabel('ロール軸',deskRig.labelPts.roll,'roll'); addLabel('チルト軸',deskRig.labelPts.tilt,'tilt');
+   addLabel('画面',deskRig.labelPts.screen); addLabel('モード切替',deskRig.labelPts.mode); addLabel('トリガー（前側）',deskRig.labelPts.trigger,'',14); addLabel('フロントダイヤル',deskRig.labelPts.dial); },
+ update(t){ const u=t%9; const r=deskRig;
+   r.pan=.7*bump(u,.3,2.6); r.roll=.45*bump(u,3.2,5.4); r.tilt=.6*bump(u,6,8.4); r.apply();
+   cap(u<2.9?'パン軸：左右に振る':u<5.8?'ロール軸：水平の傾き':'チルト軸：上下に振る','acc');
+   r.panRing.material.opacity=u<2.9?1:.25; r.rollRing.material.opacity=(u>=2.9&&u<5.8)?1:.25; r.tiltRing.material.opacity=u>=5.8?1:.25; }});
+
+S.push({lv:'p',title:'あなたの機材と重さ',cam:deskCam(.45,.15,-.05,.1),
+ lead:'持っている機材の組み合わせで、何に気をつけるべきかを確認します。',
+ pts:['<b>DJI RS 5</b>：最大積載 3kg。ジンバル本体（グリップ・プレート込み）は約1.46kg','<b>α7C II</b>：本体 約429g（バッテリー・カード別）','<b>SIGMA 24-70mm F2.8 DG DN | Art（初代・Eマウント）</b>：約830g、フィルター径 82mm、ワイド端でズームを固定するロックスイッチ付き','載せる重さは合計1.3〜1.4kgほどで積載には余裕があります。ただし<b>手に持つ総重量はジンバル込みで約2.8kg</b>。長時間のイベントでは体力配分が大事です','ズームすると鏡筒が伸びて重心が前に動きます → <b>バランスは使う焦点距離で取る</b>（迷ったら中間）'],
+ drill:'家で約2.8kgのセットを構えて、1分構える → 30秒休む を3回。腕の疲れ方を知っておく。',
+ src:['bh','cj','a7c2w','sigma','dronexl'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; addLabel('ズームリング',deskRig.labelPts.zoom,'acc'); addLabel('重心',deskRig.labelPts.cog,'tilt',30); },
+ update(t){ const u=t%6; const z=seg(u,.5,2.2)-seg(u,3.5,5.2); deskRig.zoom=z; deskRig.tilt=-.12*z; deskRig.apply(); cap(`焦点距離 ${Math.round(24+46*z)}mm ${z>.5?'→ 鏡筒が伸びて前が重くなる':''}`,z>.5?'bad':'acc'); }});
+
+S.push({lv:'p',title:'このページの使い方と、次の選択肢',cam:{p:[1,6,-8],t:[0,.8,2]},
+ lead:'上の3Dは指で回せます（2本指で拡大）。初級 → 中級 → 上級 → 本番の順に見て、「練習」を家でやってから本番に臨むのがおすすめです。',
+ html:`<div class="opts">
+ <div class="opt"><h3>A. ブラウザで動く3D（このページ）<span class="now">いまここ</span></h3><div class="pm"><span>＋</span><span>スマホですぐ見られる・視点を自由に回せる・内容の追加や修正が簡単</span><span>−</span><span>見た目は簡易モデル。質感はリアルではない</span></div></div>
+ <div class="opt"><h3>B. Blenderでレンダリングした動画</h3><div class="pm"><span>＋</span><span>実機に近い質感。MP4で、YouTubeを見る感覚で見られる</span><span>−</span><span>Blenderを動かせるPCが必要。この作業環境にはBlenderが無く、いまはインストールもできない。あなたのPCにBlenderを入れて、私が書くスクリプトを実行する形になる（デスクトップアプリ連携で私がPCを操作する手もある）。Fable 5.2 を使っても「Blenderを動かす場所」が必要な点は同じ</span></div></div>
+ <div class="opt"><h3>C. 自分で撮った見本動画</h3><div class="pm"><span>＋</span><span>このページのショットを実際に撮って見比べられる。いちばん上達が早い</span><span>−</span><span>撮影の手間がかかる</span></div></div>
+ <div class="opt"><h3>D. 写真に注釈を入れた手順スライド</h3><div class="pm"><span>＋</span><span>送ってもらった写真をそのまま使える。印刷向き</span><span>−</span><span>動きは伝わりにくい</span></div></div></div>`,
+ setup(){ op.group.visible=true; placeOp(0,-1,0); },
+ update(t){ if(userMoved||camTween)return; const a=t*.12; camera.position.set(Math.sin(a)*9,6,Math.cos(a)*-9+1); controls.target.set(0,.8,2); }});
+
+/* ===== 初級：バランス ===== */
+S.push({lv:'b',title:'バランス① 準備：本番と同じ状態にする',cam:deskCam(.5,.2,-.35),
+ lead:'バランスは「撮影するときの状態」で取ります。ここを省くと後の手順が全部ずれます。',
+ pts:['レンズキャップを外す。フード・フィルター・マイクなど付ける物は全部付ける','ズームは主に使う焦点距離へ（迷ったら中間）。バランス後にズームすると崩れる','カメラ制御ケーブルもつないでから（ぶら下がり方で重心が変わる）','平らな台の上で、ジンバルの電源はOFF','クイックリリースプレートの矢印とレンズの向きを合わせて取り付ける'],
+ warn:'微調整ノブは<b>軸をロックしたまま回さない</b>。故障の原因になります（DJI公式の注意）。',
+ drill:'付属品を全部付けた状態と外した状態で1回ずつバランスを取り、違いを体感する。',
+ src:['dronexl','zy','dji_faq'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; addLabel('キャップを外す',deskRig.labelPts.focus,'acc'); addLabel('ケーブルも接続',deskRig.labelPts.usb); addLabel('ズーム位置を決める',deskRig.labelPts.zoom,'acc',-26); },
+ update(t){ deskRig.zoom=.5; deskRig.apply(); cap('本番と同じ状態でバランスを取る','acc'); }});
+
+S.push({lv:'b',title:'バランス② 前後（チルトの奥行き）',cam:deskCam(.62,.12,.05,.1),
+ lead:'レンズを正面に向けてチルト軸だけロックを外し、前と後ろのどちらに倒れるかを見ます。',
+ pts:['レンズが下を向く ＝ 前が重い → カメラを<b>後ろ</b>へスライド','レンズが上を向く ＝ 後ろが重い → カメラを<b>前</b>へスライド','大まかに合わせたら、微調整ノブで追い込む'],
+ pass:'45°上・45°下に向けて手を離し、その角度で止まる。',
+ src:['rsc2','dronexl'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; deskRig.showRings(false,false,true); addLabel('チルト軸',deskRig.labelPts.tilt,'tilt'); addLabel('プレート',deskRig.labelPts.plate); },
+ update(t){ const u=t%9.5, r=deskRig; let dz=.03*(1-seg(u,2.4,4)); r.dz=dz;
+   let tl=-.75*seg(u,.3,1.6)*(1-seg(u,1.8,2.4)); tl+= .78*seg(u,4.3,5.2)*(1-seg(u,6.6,7.2)) - .78*seg(u,7.2,7.9)*(1-seg(u,9,9.5)); r.tilt=tl; r.apply();
+   arrow1.visible=u>2.2&&u<4.1; if(arrow1.visible){ const a=r.labelPts.cog.getWorldPosition(new V3()).add(new V3(.09,.05,0)); arrow1.set(a,a.clone().add(new V3(0,0,-.07))); }
+   if(u<2.4)cap('前が重い → レンズが下がる ✕','bad'); else if(u<4.2)cap('カメラを後ろへスライド','acc'); else cap(u>5.3&&u<6.6?'45°上で手を離しても止まる ✓':u>7.9&&u<9?'45°下でも止まる ✓':'角度を変えて確かめる','good'); }});
+
+S.push({lv:'b',title:'バランス③ 上下（チルトの高さ）',cam:deskCam(.6,.15,.1,.12),
+ lead:'レンズを真上に向けて手を離し、前後どちらかに倒れるかを見ます。',
+ pts:['倒れる → チルトモーター側のアームの高さ（カメラの上下位置）を調整','②前後と③上下は互いに影響するので、交互に何度か行き来して詰める'],
+ pass:'レンズを真上に向けて手を離しても、そのまま止まる。',
+ src:['rsc2','dronexl'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; deskRig.showRings(false,false,true); addLabel('高さ調整アーム',deskRig.labelPts.vArm,'tilt'); },
+ update(t){ const u=t%9, r=deskRig; r.dy=-.02*(1-seg(u,3,4.5));
+   r.tilt=Math.PI/2*seg(u,0,.9)-.55*seg(u,1.1,2.1)*(1-seg(u,2.2,2.9))-Math.PI/2*seg(u,7.8,8.8); r.apply();
+   arrow1.visible=u>2.9&&u<4.6; if(arrow1.visible){ const a=r.labelPts.cog.getWorldPosition(new V3()).add(new V3(.1,0,0)); arrow1.set(a,a.clone().add(new V3(0,0,-.06))); }
+   if(u<2.9)cap('真上で手を離すと倒れる ✕','bad'); else if(u<4.6)cap('アームの高さを調整','acc'); else if(u<7.8)cap('真上で止まる ✓','good'); else cap(''); }});
+
+S.push({lv:'b',title:'バランス④ 左右（ロール）',cam:{p:[DESK[0]-.05,DESK[1]+.2,DESK[2]-.6],t:[DESK[0],DESK[1]+.15,DESK[2]]},
+ lead:'ロール軸のロックを外し、カメラが左右どちらに傾くかを見ます。',
+ pts:['左に傾く → 右へずらす。右に傾く → 左へずらす','ロールアームの位置（または微調整ノブ）で合わせる'],
+ pass:'水平で手を離して止まる。少し斜めにしても、その角度で止まる。',
+ src:['rsc2'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; deskRig.showRings(false,true,false); addLabel('ロールアーム',deskRig.labelPts.rollArm,'roll'); },
+ update(t){ const u=t%8, r=deskRig; r.dx=.018*(1-seg(u,2.6,4.2)); r.roll=-.5*seg(u,.3,1.5)*(1-seg(u,1.8,2.5))+.3*seg(u,5,5.8)*(1-seg(u,7,7.8)); r.apply();
+   arrow1.visible=u>2.5&&u<4.3; if(arrow1.visible){ const a=r.labelPts.rollArm.getWorldPosition(new V3()).add(new V3(.03,.03,0)); arrow1.set(a,a.clone().add(new V3(-.06,0,0))); }
+   if(u<2.5)cap('片側が重い → 傾く ✕','bad'); else if(u<4.3)cap('アームを反対側へずらす','acc'); else cap(u>5.8&&u<7?'斜めでも止まる ✓':'水平で止まる ✓','good'); }});
+
+S.push({lv:'b',title:'バランス⑤ パン軸',cam:{p:[1.2,1.5,-2.4],t:[0,1.15,-1]},
+ lead:'グリップを持ったままジンバル全体を前に傾けて、パン軸が勝手に回るかを見ます。',
+ pts:['パン軸のロックを外し、ジンバルを前に傾ける','パンアームを自分と平行にしたとき、レンズが左に回る → パン軸を右へ、右に回る → 左へ'],
+ pass:'前に傾けても、アームが勝手に回らない。',
+ src:['rsc2'],
+ setup(){ op.group.visible=true; placeOp(0,-1,0); opRig.showRings(true,false,false); addLabel('パンアーム',opRig.labelPts.panArm,'pan'); },
+ update(t){ const u=t%8, r=opRig; r.dzPan=.012*(1-seg(u,3,4.5)); const tip=.45*seg(u,.2,1)*(1-seg(u,7,7.8)); r.setHandle(0,-tip,0);
+   r.pan=(u<3?.6*seg(u,1,2.4):.6*(1-seg(u,3,4.2))); r.tilt=0; r.roll=0; r.apply();
+   if(u<3)cap('前に傾けるとアームが回る ✕','bad'); else if(u<4.5)cap('パン軸を回る向きと反対へ','acc'); else cap('傾けても回らない ✓','good'); }});
+
+S.push({lv:'b',title:'電源・自動ロック・オートチューン',cam:deskCam(.5,.25,-.4),
+ lead:'RS 5 は電源と連動して軸のロックが自動で動きます。バランスの後は必ずオートチューン（モーターの自動調整）を行います。',
+ pts:['<b>電源ボタン長押し</b>：3軸のロックが自動で外れて展開。もう一度長押しでロックして電源OFF','<b>撮影の合間は電源ボタン1回押し</b>：軸をロックしてスリープ（もう1回で復帰）。2回押しはロックせずにスリープ','<b>オートチューン</b>：Mボタン＋トリガーを長押し（画面のキャリブレーションからも可）。実行中は台に触れない。緑で成功、赤で失敗','レンズ交換・縦位置への切替・付属品の変更のたびに「再バランス → オートチューン」','電源は必ずカメラを載せてから入れる（何も載せずに入れると暴れる）'],
+ src:['dji_faq','dronexl'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; addLabel('電源ボタン',deskRig.labelPts.power); addLabel('画面',deskRig.labelPts.screen,'acc'); },
+ update(t){ const u=t%9, r=deskRig; const f=1-seg(u,1.4,3); r.pan=-1.4*f; r.tilt=1.1*f; r.roll=0;
+   const tune=u>3.6&&u<6.6; if(tune){ r.pan+=.02*Math.sin(u*70); r.tilt+=.025*Math.sin(u*83); r.roll=.02*Math.sin(u*61); } r.showRings(tune); r.apply();
+   r.screen.material.emissive.setHex(tune?0x7a5a00:(u>6.6?0x0a6a3a:0x0a4a80));
+   cap(u<1.4?'電源OFF（ロック・折りたたみ）':u<3.6?'電源ボタン長押し → 自動で展開':tune?'M＋トリガー長押し → オートチューン中（触らない）':'成功（緑）✓',u<3.6?'acc':tune?'acc':'good'); }});
+
+S.push({lv:'b',title:'基本の構え：両手・肘・ひざ',cam:{p:[1.7,1.5,.4],t:[0,1.05,-1]},
+ lead:'ブレの原因の多くは「腕だけで持つ」こと。体全体で運ぶ構えを最初に身につけます。',
+ pts:['両手で持つ。右手でグリップ、左手は下から支える','肘を体の横に寄せる。腕ではなく体でジンバルを運ぶ','ひざを軽く曲げ、上半身の力を抜く','向きを変えるときは、腕ではなく腰から回る','ブリーフケースハンドル（持っていれば）を付けると低い位置でも安定する'],
+ drill:'構えたまま部屋を1周 ×3。録画して見返し、上下に揺れていないか確認する。',
+ src:['dronexl','dji_guide'],
+ setup(){ op.group.visible=true; placeOp(0,-1,0); addLabel('肘を体に寄せる',op.elR,'acc'); addLabel('左手は下から支える',op.hdL,'',24); addLabel('ひざを軽く曲げる',op.knR,'acc'); },
+ update(t){ op.pelvisY=.86+.004*Math.sin(t*1.6); opRig.setHandle(0,0,0); opRig.aim(0,0,0); cap(''); }});
+
+const modeState={mode:'PF'};
+S.push({lv:'b',title:'3つのモード（PF / PTF / FPV）とロック',cam:{p:[1.3,1.55,-2.3],t:[0,1.2,-.6]},inset:true,
+ lead:'側面のスイッチで追従のしかたを切り替えます。下のボタンで切り替えて、右下の「カメラの映像」がどう変わるかを見てください。',
+ pts:['<b>PF（パンだけ追従）</b>：水平が保たれ、上下はジョイスティック。イベント撮影の基本','<b>PTF（パン＋チルト追従）</b>：階段の上り下り、高さが変わる被写体、見上げ・見下ろし','<b>FPV（3軸すべて追従）</b>：傾きまで付いてくる演出用。被写体トラッキングは使えない','<b>ロック（トリガー長押し中）</b>：持ち手を動かしても、カメラの向きは固定'],
+ drill:'同じ動き（ゆっくり左を向く→階段を見上げる）を PF と PTF で撮り比べる。',
+ src:['dronexl','dji_faq','dji_guide'],
+ modes:[['PF','PF'],['PTF','PTF'],['FPV','FPV'],['LOCK','ロック']],
+ setup(){ op.group.visible=true; placeOp(0,-1,0); opRig.cs={yaw:0,pitch:0,roll:0,lockY:0,lockP:0}; addLabel('モード切替',opRig.labelPts.mode,'acc'); },
+ update(t,dt){ const u=t%9; const hy=.6*bump(u,0,3); const hp=.45*bump(u,3,6); const hr=.35*Math.sin(2*Math.PI*clamp01((u-6)/3));
+   follow(opRig,hy,hp,hr,modeState.mode,dt,.35);
+   cap((u<3?'手を左右に振る':u<6?'手を上下に傾ける':'手をひねる')+' ／ モード: '+(modeState.mode==='LOCK'?'ロック':modeState.mode),'acc'); }});
+
+S.push({lv:'b',title:'トリガー：センタリングとロック',cam:{p:[1.3,1.55,-2.3],t:[0,1.2,-.6]},inset:true,
+ lead:'人差し指のトリガーは、押し方で働きが変わります。いちばん使うのは「2回押し」です。',
+ pts:['<b>2回押し</b>：センタリング（カメラを正面に戻す）。向きが分からなくなったらこれ','<b>長押し</b>：ロック（初期設定。FPVに変更も可）','<b>3回押し</b>：セルフィー（180°反転）','<b>ジョイスティック</b>：上下でチルト、左右でパン（初期設定）'],
+ drill:'ジョイスティックで下を向ける → トリガー2回で戻す、を目をつぶってもできるまで。',
+ src:['dji_faq'],
+ setup(){ op.group.visible=true; placeOp(0,-1,0); opRig.cs={yaw:0,pitch:0,roll:0,lockY:0,lockP:0}; addLabel('トリガー',opRig.labelPts.trigger,'acc',14); addLabel('ジョイスティック',opRig.labelPts.joy); },
+ update(t,dt){ const u=t%11; let mode='PF', cmdP=0, hy=0;
+   if(u<2.5){ cmdP=-.4*seg(u,.3,1.8); cap('ジョイスティックで下に向ける','acc'); }
+   else if(u<3.4){ cmdP=-.4; cap('トリガー2回 → ','acc'); }
+   else if(u<4.4){ cmdP=0; cap('センタリング（正面に戻る）✓','good'); }
+   else if(u<8){ mode='LOCK'; hy=.6*Math.sin((u-4.4)*1.6); cap('トリガー長押し中 → ロック（向きが固定）','acc'); }
+   else { hy=.5*seg(u,8.3,9.5); cap('離すと PF の追従に戻る','acc'); }
+   if(u<3.4) opRig.cs.pitch=lerp(opRig.cs.pitch,cmdP,1-Math.exp(-dt/.25));
+   if(mode==='LOCK'){ opRig.cs.lockY=0; opRig.cs.lockP=0; }
+   follow(opRig,hy,0,0,mode,dt,u>=3.4&&u<4.4?.12:.35,cmdP); }});
+
+const PATHS={
+ push:u=>{ const s=seg(u,.12,.88); return {x:0,z:lerp(-1.6,1.0,s),yaw:0,moving:u>.12&&u<.88}; },
+ pull:u=>{ const s=seg(u,.12,.88); return {x:0,z:lerp(1.0,-1.6,s),yaw:0,moving:u>.12&&u<.88}; },
+ track:u=>{ const s=seg(u,.1,.9); return {x:lerp(-3.2,3.2,s),z:4.4,yaw:Math.PI/2,camYaw:-Math.PI/2,moving:u>.1&&u<.9}; },
+ reveal:u=>{ const s=seg(u,.2,.8); return {x:lerp(-1.75,-.25,s),z:-1.25,yaw:yawTo(lerp(-1.75,-.25,s),-1.25,0,6),moving:u>.2&&u<.8}; },
+ orbit:u=>{ const s=seg(u,.1,.9); const a=lerp(-1.1,1.1,s); const cx=-3.6,cz=-2.3,r=1.7; const x=cx+Math.cos(a)*r, z=cz+Math.sin(a)*r; return {x,z,yaw:yawTo(x,z,cx,cz),pitch:-.05,moving:u>.1&&u<.9}; },
+ low:u=>{ const s=seg(u,.12,.88); return {x:.0,z:lerp(-1.6,.9,s),yaw:0,inv:true,moving:u>.12&&u<.88}; },
+ boom:u=>{ const s=seg(u,.15,.8); return {x:4.6,z:1.2,yaw:yawTo(4.6,1.2,0,6),boom:s,moving:false}; },
+};
+function moveStep(o){ return Object.assign({inset:true,cam:{p:[-5.5,4.2,-4.8],t:[0,.8,2]},
+  setup(){ op.group.visible=true; lastPos=null; opRig.cs={yaw:0,pitch:0,roll:0}; opRig.zoom=0; opRig.apply(); },
+  update(t,dt){ const P=o.period||9; const u=(t%P)/P; const q=PATHS[o.path](u); placeOp(q.x,q.z,q.yaw); lastMoving=q.moving;
+    opRig.inverted=!!q.inv; let crouch=.07, anchorY=1.12, pitch=q.pitch||0, hp=0;
+    if(q.inv){ anchorY=.72; crouch=.24; }
+    if(q.boom!==undefined){ anchorY=lerp(.55,2.0,q.boom); crouch=lerp(.38,0,Math.min(1,q.boom*1.6)); }
+    if(o.high){ anchorY=1.95; crouch=0; pitch=-.28; }
+    op.anchor.position.set(0,anchorY,q.inv?.42:.32);
+    walkAnim(dt,crouch); opRig.setHandle(0,hp,0); opRig.aim(q.camYaw||0,pitch,0);
+    o.cap&&cap(o.cap(u),'acc'); }},o); }
+
+S.push(moveStep({lv:'b',title:'はじめての1ショット：プッシュイン',path:'push',
+ lead:'被写体に向かってまっすぐ歩くだけ。ジンバル撮影の基本形で、イベントの「入り」のカットに使えます。',
+ pts:['PFモード、焦点距離は24mm（広角ほど揺れが目立たない）','パンもチルトもしない。歩くことだけに集中','録画開始 → 2秒止まる → 歩く → 止まって2秒 → 停止（編集でつなぎやすい）','10〜20秒の短いクリップをたくさん撮る'],
+ drill:'廊下で5mのプッシュインを10本。毎回再生して見返す。',pass:'再生して、上下の揺れが気にならない。',
+ src:['dronexl','forum'],cap:u=>u<.12?'2秒止まる':u<.88?'まっすぐ前へ（パン・チルトしない）':'止まって2秒'}));
+
+S.push({lv:'b',title:'α7C II 動画の基本設定（イベント用・まずはこれ）',cam:{p:[DESK[0]-.32,DESK[1]+.3,DESK[2]-.32],t:[DESK[0],DESK[1]+.1,DESK[2]]},
+ lead:'写真と違うのは「シャッター速度をフレームレートで決める」こと。まずはこの表のとおりに設定すれば大きく外しません。',
+ html:`<table class="t">
+ <tr><th>記録方式</th><td>XAVC S 4K・10bit 4:2:2。24p（映画っぽい）か 30p（テレビ・スマホっぽい）</td></tr>
+ <tr><th>シャッター</th><td>フレームレートの約2倍：24p → 1/50、30p → 1/60（会場の照明に合わせた調整は中級で）</td></tr>
+ <tr><th>絞り</th><td>F2.8〜F4。歩き撮りはF4にするとピントに余裕が出る</td></tr>
+ <tr><th>ISO</th><td>Mモード＋ISO AUTO（上限を決めておく）</td></tr>
+ <tr><th>色</th><td>S-Cinetone（編集しなくても肌がきれい）</td></tr>
+ <tr><th>フォーカス</th><td>AF-C、被写体認識「人物」</td></tr>
+ <tr><th>手ブレ補正</th><td>スタンダード（アクティブ系は避ける）→ 中級で詰める</td></tr>
+ <tr><th>ジンバル連携</th><td>USB-Cケーブルでつなぐと、ジンバルの録画ボタンが使える場合がある。α7C IIで使える機能はDJIの互換性検索で確認。Bluetoothシャッターも用意されている</td></tr></table>
+ <div class="demo"><div class="row">シャッター速度の違い（24p）：1/50 は自然なブレ、1/500 はカクカク</div><canvas id="shutterCv" width="640" height="220"></canvas></div>`,
+ src:['dpr','vm','ul','dji_faq','compat'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; addLabel('録画ボタン',deskRig.labelPts.camRec,'acc'); addLabel('静止画/動画/S&Q 切換',deskRig.labelPts.modeDial,'',-26); addLabel('USB-C（ケーブル）',deskRig.labelPts.usb); },
+ mount(){ const cv=document.getElementById('shutterCv'); demos.shutter=shutterDemo(cv); },
+ update(t){ cap(''); }});
+
+/* ===== 中級 ===== */
+S.push({lv:'m',title:'忍者歩き と Z軸インジケーター',cam:{p:[4.4,1.5,-1.6],t:[0,1.05,-3.3]},
+ lead:'ジンバルは上下の揺れを補正しません。赤（ふつうの歩き）と緑（忍者歩き）の線は、カメラの高さの変化です（見やすいよう3倍に拡大）。',
+ pts:['ひざを曲げて重心を低く。かかと → つま先の順に転がすように着地','歩幅は小さく。上半身は「水平に滑る」イメージ','RS 5 の画面の<b>Z軸インジケーター</b>（上下の揺れの目安）を緑のゾーンに保つ','腕はショックアブソーバー。肘を伸ばしきらない'],
+ drill:'水を入れたコップを持って歩く練習 → 次にジンバルで同じ距離を歩いてZ軸表示を見る。',pass:'Z軸表示が緑のまま10m歩ける。',
+ src:['dronexl','forum'],
+ setup(){ op.group.visible=true; op2.group.visible=true; placeOp(.65,-3.3,0); op2.group.position.set(-.65,0,-3.3); op2.group.rotation.y=0; trail1.line.visible=true; trail2.line.visible=true; trail1.buf=[]; trail2.buf=[];
+   this.l1=addLabel('ふつうに歩く',op2.head,'bad',-18); this.l2=addLabel('忍者歩き',op.head,'good',-18); },
+ update(t,dt){ const n=t*2*Math.PI*.9, ni=t*2*Math.PI*.75;
+   op2.gait(n,.3,.09); op2.pelvisY=.9-.008+.028*Math.cos(2*n); op2.lean=.03; op2.anchor.position.set(0,op2.pelvisY+.24+.0*Math.cos(2*n),.32);
+   op.gait(ni,.18,.05); op.pelvisY=.8+.007*Math.cos(2*ni); op.lean=.1; op.anchor.position.set(0,.8+.24+.35*.007*Math.cos(2*ni)-.0,.32);
+   op2Rig.setHandle(0,0,0); op2Rig.aim(0,0,0); opRig.setHandle(0,0,0); opRig.aim(0,0,0);
+   [[trail2,opRig,.65],[trail1,op2Rig,-.65]].forEach(([tr,r,x])=>{ r.root.updateMatrixWorld(true); const p=r.lensFront.getWorldPosition(new V3()); tr.buf.unshift(p.y); if(tr.buf.length>tr.N)tr.buf.pop(); const base=tr.buf.reduce((a,b)=>a+b,0)/tr.buf.length;
+     const arr=tr.line.geometry.attributes.position.array; for(let i=0;i<tr.N;i++){ const y=tr.buf[Math.min(i,tr.buf.length-1)]??base; arr[i*3]=x; arr[i*3+1]=1.55+(y-base)*3; arr[i*3+2]=-3.0-i*.03; } tr.line.geometry.attributes.position.needsUpdate=true; });
+   cap('線 ＝ カメラの上下の揺れ（3倍表示）','acc'); }});
+
+const speedState={k:'normal'};
+const SPEEDS={slow:['ゆっくり',1.0],normal:['ふつう',.45],fast:['はやい',.18],sport:['スポーツ',.06]};
+S.push({lv:'m',title:'フォロー速度とジョイスティックの速さ',cam:{p:[1.3,1.55,-2.3],t:[0,1.2,-.6]},inset:true,
+ lead:'手の動きに対してカメラがどれだけ遅れて付いてくるか（追従速度）で、映像の印象が大きく変わります。下のボタンで比べてください。',
+ pts:['画面で「スムーズ／レスポンシブ」×「遅い・中・速い」を選べる','落ち着いた映像はスムーズの遅い〜中。速い動きはレスポンシブの速い（カクつきに注意）','ジョイスティックの速度・なめらかさは画面を上スワイプで調整。遅めにするとパンがきれい','<b>静音モードは「入」</b>がおすすめ（式典中のモーター音対策）'],
+ html:`<div class="demo"><canvas id="speedCv" width="640" height="200"></canvas></div>`,
+ drill:'同じ「手首をサッと振る」動作を、遅い・中・速いで撮って見比べる。',
+ src:['dronexl'],
+ modes:Object.entries(SPEEDS).map(([k,v])=>[k,v[0]]),modeKey:'speed',
+ setup(){ op.group.visible=true; placeOp(0,-1,0); opRig.cs={yaw:0,pitch:0,roll:0}; },
+ mount(){ demos.speed=speedGraph(document.getElementById('speedCv')); },
+ update(t,dt){ const u=t%6; const hy=u<.5?0:u<.75?.8*seg(u,.5,.75):u<3.5?.8:u<3.75?.8*(1-seg(u,3.5,3.75)):0;
+   follow(opRig,hy,0,0,'PF',dt,SPEEDS[speedState.k][1]); demos.speed&&demos.speed.push(hy,opRig.cs.yaw);
+   cap('追従: '+SPEEDS[speedState.k][0]+(speedState.k==='sport'?'（M長押し中）':''),'acc'); }});
+
+S.push(moveStep({lv:'m',title:'プルバック（後ろ歩き）',path:'pull',
+ lead:'被写体を正面に見たまま後ろへ下がります。登壇者の入場や、会場全体を見せる締めのカットに。',
+ pts:['歩幅を小さく、かかと → つま先で後ろへ','可能なら誘導役（スポッター）に肩や背中を軽く持ってもらう','会場では事前に通路の段差・ケーブル・人の動きを確認しておく'],
+ warn:'後ろ歩きは転倒の危険があります。人が多い場所では無理をしない。',
+ src:['dronexl'],cap:u=>u<.12?'被写体の正面で2秒':u<.88?'正面を向いたまま後ろへ':'止まって2秒'}));
+
+S.push(moveStep({lv:'m',title:'横移動（トラッキング）',path:'track',cam:{p:[-1,4.5,-1.5],t:[0,.8,4.6]},
+ lead:'ステージの前などを横に移動しながら撮るショット。体は進行方向に向けて普通に歩き、カメラだけを横に向けるのがコツです。',
+ pts:['体は進行方向を向いて前に歩く（カニ歩きより揺れにくい）','カメラはジョイスティックで被写体の方向（横）へ向けておく','手前に客席や柱を入れると奥行きが出る'],
+ drill:'壁の掲示物を被写体にして、横移動5mを往復10本。',
+ src:['dronexl'],cap:u=>'体は進行方向、カメラは横（ジョイスティック）'}));
+
+S.push(moveStep({lv:'m',title:'リビール（隠れていた被写体を見せる）',path:'reveal',cam:{p:[-4.2,2.6,-3.4],t:[-.8,1,1]},
+ lead:'柱や人の後ろから少しずつ体をずらし、被写体を見せていくショット。イベント冒頭のつかみに効きます。',
+ pts:['開始時は手前の物で画面の半分以上を隠す','動き始める前に2秒、見せ終わってから2秒止まる','大きく動かなくていい。体を少しずらすだけで十分'],
+ src:['dronexl'],cap:u=>u<.2?'柱で隠れた状態から':u<.8?'横にずれてステージを見せる':'見せきって2秒'}));
+
+S.push({lv:'m',title:'会場の光：フリッカー（ちらつき）対策',cam:{p:[-4,3,-3],t:[0,2,6]},
+ lead:'LEDや蛍光灯は電源の周波数で点滅しています。シャッター速度が合わないと、映像の明るさが波打ちます。東日本と西日本で答えが違うのがポイント。',
+ pts:['<b>東日本（50Hz）</b>：1/50 か 1/100','<b>西日本（60Hz）</b>：1/60 か 1/120','30pでも東日本なら 1/50 でOK（1/30より速ければ選べる）。60pは東日本 1/100、西日本 1/120','LEDビジョンや照明演出で縞が出たら、モニターを見ながらシャッター速度を微調整','露出は ISO AUTO に任せ、明暗差が大きいステージは露出補正で調整'],
+ html:`<div class="demo"><div class="row">地域<div class="seg"></div></div><div class="row">フレームレート<div class="seg"></div></div><div class="row">シャッター<div class="seg"></div></div><canvas width="640" height="200"></canvas><div class="verdict"></div><div class="row" style="margin-top:6px">※ 照明の点滅を計算した簡易モデルです（左の四角＝1コマの画面。縞はセンサーの読み出し時間を1/60秒と仮定）。実際の会場ではモニターで必ず確認してください。</div></div>`,
+ src:['giz','nikon'],
+ setup(){ cap('照明は電源の周波数で点滅している','acc'); },
+ mount(){ demos.flicker=flickerDemo(document.querySelector('#main .demo')); },
+ update(t){ const k=.75+.25*Math.abs(Math.sin(t*2*Math.PI*1.2)); stageLightA.intensity=12*k; stageLightB.intensity=10*k; }});
+
+S.push({lv:'m',title:'手ブレ補正とAFを詰める',cam:{p:[DESK[0]+.3,DESK[1]+.22,DESK[2]+.32],t:[DESK[0],DESK[1]+.1,DESK[2]]},
+ lead:'ここは情報源によって意見が分かれる部分です。両方の考え方を知ったうえで、自分の映像で決めます。',
+ pts:['Sony公式：三脚使用時は手ブレ補正を切。アクティブ／ダイナミックアクティブは画角が狭くなる','「ジンバル上では切る」派：補正同士が干渉して不自然な動きになる','「スタンダードは入れる」派：細かい振動が取れる。アクティブはジンバルと干渉しやすい','このレンズには光学式手ブレ補正（OS）が無く、ボディ内補正だけ。<b>まずスタンダードで撮り、ゆっくりパンしたときに画面が波打つ・揺り戻すなら「切」</b>','AFトランジション速度：遅めにするとピントの移動がなめらか','AF乗り移り感度：粘る側にすると、横切る人にピントを持っていかれにくい'],
+ drill:'同じゆっくりパンを「スタンダード」と「切」で撮り比べる。',
+ src:['ss','au','wc','af'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; addLabel('フォーカスリング',deskRig.labelPts.focus); addLabel('MENU',deskRig.labelPts.menu,'acc'); },
+ update(t){ deskRig.pan=.35*Math.sin(t*.5); deskRig.apply(); cap(''); }});
+
+/* ===== 上級 ===== */
+S.push(moveStep({lv:'a',title:'オービット（回り込み）',path:'orbit',cam:{p:[-.4,3.2,-5.6],t:[-3.2,.9,-2.3]},period:10,
+ lead:'被写体を中心に円を描くように動き、カメラは常に被写体へ向けます。受付や主役の紹介カットで映えます。',
+ pts:['PFモードで体ごと回す。足は交差させず、小さく横歩き','半径を一定に保つ（床の目印を決めておく）','被写体との距離が近いほど背景が大きく流れて、印象的になる','トラッキングモジュールがあれば被写体を自動で追える（PF/PTFのみ。FPVでは使えない）'],
+ src:['dji_faq'],cap:u=>'被写体を中心に円を描く'}));
+
+S.push(moveStep({lv:'a',title:'ローアングル（逆さ持ち）',path:'low',
+ lead:'ジンバルを逆さに持つ（アンダースラング）と、カメラを低い位置まで下げられます。床からステージを見上げる、子どもの目線などに。',
+ pts:['持ち手を上にして逆さに持ち、腕を伸ばしてカメラを下げる','低い位置の操作はブリーフケースハンドル（持っていれば）があると楽','逆さにしたとき、アームがトラッキングモジュールの視界を遮る場合：電源を切って逆さにし、電源を入れ直す（ロールモーターがレンズの後ろに来る）','腰を落として、上下の揺れを脚で吸収'],
+ src:['dji_faq','dji_guide'],cap:u=>'逆さ持ちで低い位置から前へ'}));
+
+S.push(moveStep({lv:'a',title:'ブーム（持ち上げ）とハイアングル',path:'boom',cam:{p:[7.5,2.6,-2.6],t:[3.2,1.2,2.5]},
+ lead:'その場でしゃがんだ低い位置から、ゆっくりカメラを持ち上げます。客席の頭越しにステージが現れる、イベントらしいカットです。',
+ pts:['PFならカメラは水平のまま上がる。ステージを見下ろしたいときはPTF','速度は一定に。最後まで上げきったら2秒止まる','腕を上げたままの撮影は長くて10秒程度に。腕が震えると映像も揺れる','周りの人の視界と安全を最優先に'],
+ src:['dronexl'],cap:u=>u<.15?'低い位置から':u<.8?'ゆっくり持ち上げる':'上で2秒止める'}));
+
+S.push({lv:'a',title:'スポーツモードとズーム操作',cam:{p:[1.3,1.55,-2.3],t:[0,1.2,-.6]},inset:true,
+ lead:'急に動く被写体を追う瞬間だけ追従を速くしたり、ジンバルからズームしたりする、一段上の操作です。',
+ pts:['<b>M長押し中だけスポーツモード</b>（追従が速くなる）。M長押し＋トリガー2回で固定、もう一度で解除','撮影中にズームリングは回さない（重心が崩れてバランスがずれる）','ジョイスティック横の切替スイッチでズーム操作に。Sonyの全画素超解像ズーム（Clear Image Zoom）を操作できる','4K60pは画角が約1.5倍に狭くなる（Super35）。24mmが約36mm相当になり、歩き撮りの揺れが目立ちやすい'],
+ src:['dji_faq','cre8','dpr','lr'],
+ modes:Object.entries(SPEEDS).map(([k,v])=>[k,v[0]]),modeKey:'speed',
+ setup(){ op.group.visible=true; placeOp(0,-1,0); opRig.cs={yaw:0,pitch:0,roll:0}; speedState.k='sport'; },
+ update(t,dt){ const hy=.7*Math.sin(t*2.4)*(.5+.5*Math.sin(t*.7)); follow(opRig,hy,0,0,'PF',dt,SPEEDS[speedState.k][1]); cap('速い動きを追う：追従 '+SPEEDS[speedState.k][0],'acc'); }});
+
+S.push({lv:'a',title:'Log撮影・色・記録方式',cam:{p:[DESK[0]-.3,DESK[1]+.18,DESK[2]+.3],t:[DESK[0],DESK[1]+.1,DESK[2]]},
+ lead:'編集まで自分でやるなら、記録の自由度を上げる選択肢があります。迷ったら S-Cinetone のままで十分です。',
+ pts:['<b>S-Log3</b>：明暗差の大きいステージで白飛び・黒つぶれに強い。ただし色の調整（カラーグレーディング）が必須','<b>ホワイトバランスは固定</b>（会場の照明に合わせる）にすると、カットごとの色が揃う','XAVC S-I（最大600Mbps）は高画質だが容量が大きく、速いSDカードが必要','4K30pは7Kからのオーバーサンプリングでいちばん高精細'],
+ src:['vm','lr','dpr'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; },
+ update(t){ deskRig.pan=.3*Math.sin(t*.4); deskRig.tilt=.15*Math.sin(t*.6); deskRig.apply(); cap(''); }});
+
+/* ===== 本番 ===== */
+S.push({lv:'e',title:'当日の動き方（会場マップ）',cam:{p:[0,15,-3.5],t:[0,0,2]},
+ lead:'イベントは撮り直しができません。「どこで・どのショットを撮るか」を先に決めておくと、慌てずに済みます。',
+ pts:['<b style="color:#60a5fa">A</b> 通路のプッシュイン（開演前・入場）','<b style="color:#f5b83d">B</b> 最前列の前の横移動（演目の合間だけ。演目中は端から）','<b style="color:#f472b6">C</b> 柱を使ったリビール（冒頭のつかみ）','<b style="color:#34d399">D</b> 壁際でブーム（客席越しにステージ）','開始前に会場を歩いて、動線・段差・ケーブル・電源を確認','撮影の合間は電源ボタン1回でスリープし、三脚を開いて置く（腕を休める・電池の節約）'],
+ src:['dji_faq'],
+ setup(){ mapGroup.visible=true; addLabel('A 通路',mapAnchors.A,'',0); addLabel('B 横移動',mapAnchors.B,'acc'); addLabel('C リビール',mapAnchors.C); addLabel('D ブーム',mapAnchors.D,'good'); },
+ update(t){ cap(''); }});
+
+const CHECK=[['前日',['ジンバルを満充電（65W PD充電器で約1時間）','カメラの予備バッテリーとSDカード（記録方式に合う速度のもの）','ジンバル・カメラのファームウェアを最新に','自宅でバランスを取り、プレートの位置を写真でメモ']],
+ ['会場に着いたら',['電源地域を確認（東日本 1/50・1/100 ／ 西日本 1/60・1/120）','レンズキャップを外し、付属品を全部付けて再バランス → オートチューン','静音モードを「入」','テスト撮影して、再生でピント・露出・ちらつきを確認','動線（A〜D）を歩いて確認']],
+ ['撮影中',['短いクリップ（10〜20秒）を、前後2秒止めて撮る','迷ったらトリガー2回でセンタリング','合間は電源ボタン1回でスリープ、三脚を開いて置く','人の視界と安全を優先']]];
+S.push({lv:'e',title:'持ち物・確認チェックリスト',cam:deskCam(.5,.25,-.45),
+ lead:'チェックはこの端末に保存されます（ブラウザによっては保存されないこともあります）。',
+ html:()=>`<div class="chk">${CHECK.map(([h,items],i)=>`<h4>${h}</h4>`+items.map((s,j)=>`<label><input type="checkbox" data-k="c${i}_${j}"><span>${s}</span></label>`).join('')).join('')}</div>`,
+ src:['dji_faq','giz'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; },
+ mount(){ let st={}; try{ st=JSON.parse(localStorage.getItem('rs5chk')||'{}'); }catch(e){}
+   document.querySelectorAll('.chk input').forEach(cb=>{ cb.checked=!!st[cb.dataset.k]; cb.onchange=()=>{ st[cb.dataset.k]=cb.checked; try{ localStorage.setItem('rs5chk',JSON.stringify(st)); }catch(e){} }; }); },
+ update(t){ deskRig.pan=.25*Math.sin(t*.5); deskRig.apply(); cap(''); }});
+
+
+/* ===== 明日の本番（囲町いけばな神輿まつり） ===== */
+const ROUTE_SVG=`<div class="map"><svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans JP, sans-serif">
+<rect x="0" y="0" width="400" height="300" fill="#0b0c0f"/>
+<rect x="120" y="70" width="170" height="105" rx="10" fill="#1f3a22"/><text x="205" y="128" fill="#86efac" font-size="12" text-anchor="middle">中野四季の森公園</text>
+<rect x="300" y="60" width="70" height="40" rx="6" fill="#2b2f38"/><text x="335" y="84" fill="#9aa0aa" font-size="10" text-anchor="middle">区役所</text>
+<rect x="95" y="215" width="70" height="38" rx="6" fill="#3a2430"/><text x="130" y="238" fill="#f9a8d4" font-size="10" text-anchor="middle">一葉式 本部</text>
+<circle cx="215" cy="262" r="20" fill="#3a3326"/><text x="215" y="266" fill="#f5b83d" font-size="10" text-anchor="middle">広場</text>
+<path d="M150 228 L55 228 L55 42 L330 42" fill="none" stroke="#ef4444" stroke-width="5" stroke-linejoin="round"/>
+<path d="M330 42 L330 195 L222 195 L218 240" fill="none" stroke="#60a5fa" stroke-width="4" stroke-dasharray="9 6" stroke-linejoin="round"/>
+<g font-size="11" font-weight="900">
+<circle cx="150" cy="228" r="11" fill="#ef4444"/><text x="150" y="232" fill="#fff" text-anchor="middle">1</text>
+<circle cx="190" cy="42" r="11" fill="#ef4444"/><text x="190" y="46" fill="#fff" text-anchor="middle">2</text>
+<circle cx="330" cy="42" r="11" fill="#ef4444"/><text x="330" y="46" fill="#fff" text-anchor="middle">3</text></g>
+<g font-size="10" font-weight="900" fill="#111">
+<rect x="160" y="246" width="18" height="16" rx="4" fill="#f5b83d"/><text x="169" y="258" text-anchor="middle">A</text>
+<rect x="30" y="128" width="18" height="16" rx="4" fill="#f5b83d"/><text x="39" y="140" text-anchor="middle">B</text>
+<rect x="250" y="52" width="18" height="16" rx="4" fill="#f5b83d"/><text x="259" y="64" text-anchor="middle">C</text>
+<rect x="352" y="22" width="18" height="16" rx="4" fill="#f5b83d"/><text x="361" y="34" text-anchor="middle">D</text>
+<rect x="340" y="140" width="18" height="16" rx="4" fill="#f5b83d"/><text x="349" y="152" text-anchor="middle">E</text>
+<rect x="244" y="250" width="18" height="16" rx="4" fill="#f5b83d"/><text x="253" y="262" text-anchor="middle">F</text></g>
+<text x="8" y="292" fill="#9aa0aa" font-size="9.5">赤＝区長と一緒（約20分）／青点線＝お別れ後に広場へ（約10分）。チラシの地図をもとにした模式図</text>
+</svg></div>
+<table class="t"><tr><th>A 出発</th><td>持ち上げる瞬間をロー → ブームで</td></tr><tr><th>B 西側の角</th><td>横から並走（体は前、カメラは横）</td></tr><tr><th>C 公園沿い</th><td>木や花を手前に入れて並走</td></tr><tr><th>D 区役所前</th><td>少し先回りして正面で待ち、区長のお見送りを撮る</td></tr><tr><th>E 戻り道</th><td>担ぎ手の背中越しに広場へ向かう後ろ姿</td></tr><tr><th>F 広場</th><td>先回りして、到着と「真ん中に置く瞬間」を正面から</td></tr></table>`;
+
+const TL=[['13:00','開会・お囃子','広場全体のワイド（PF、24mm）。お囃子の手元・表情（50〜70mm）',0],
+ ['13:30','家元が神輿の土台をつくる','家元の手元をゆっくり回り込み（オービット）',1],
+ ['14:00','来場者40名が一輪ずついける','花を挿す手元のプッシュイン。子どもの手元は特に',1],
+ ['14:05ごろ','区長が到着・最後の一輪 → 神輿完成','完成の瞬間を引き（全体）で確実に。ここは寄りすぎない',1],
+ ['14:10','司会の紹介・区長と家元のご挨拶（各3分ほど）','ジンバルを三脚で置いて固定。止めずに全編回す',1],
+ ['14:20','記念撮影（区長・家元と神輿）','カメラマンの横から「撮られている様子」を引きで',0],
+ ['14:25','出発（四季の森公園のまわり 約20分）','持ち上げる瞬間をロー → ブーム。その後は並走',1],
+ ['14:45','区役所前で区長をお見送り','少し先回りして正面から。握手・手を振る瞬間',1],
+ ['14:45〜','区役所前 → 広場へ（約10分）','背中越しを少し撮ったら先回りして広場へ',0],
+ ['14:55','神輿を広場の真ん中に置く','到着〜置く瞬間を正面から（先回りしておく）',1],
+ ['15:00〜','いけばな体験（30分×2回）・写真スポット','室内はシャッター1/50。子どもの顔の公開可否は主催者に確認',0],
+ ['16:00','終了','最後に広場全体のワイド（16時半ごろの日の入り前の光）',0]];
+const TL_HTML=`<div class="tl">${TL.map(([t,e,sh,m])=>`<div class="it"><div class="tm">${t}${m?'<span class="must">必須</span>':''}</div><div><b>${e}</b></div><div class="sh">📹 ${sh}</div></div>`).join('')}</div>`;
+
+function dayOp(){ op.group.visible=true; lastPos=null; opRig.cs={yaw:0,pitch:0,roll:0}; opRig.zoom=0; opRig.apply(); addLabel('あなた',op.head,'acc',-14); }
+function aimAt(tx,ty,tz){ const p=op.group.position; const body=op.group.rotation.y; const dx=tx-p.x, dz=tz-p.z; const yawW=Math.atan2(dx,dz); opRig.root.updateMatrixWorld(true); const c=opRig.lensFront.getWorldPosition(new V3()); const pitch=Math.atan2(ty-c.y,Math.hypot(dx,dz)); opRig.aim(yawW-body,pitch,0); }
+const SD=[];
+SD.push({lv:'d',title:'明日の流れと「必須カット」',cam:{p:[TX-9,7,-8],t:[TX,0,4]},
+ lead:'11/14（土）13:00〜16:00、囲町いけばな神輿まつり。時刻表に、各場面で撮るショットを書き込みました。<b>「必須」は撮り直しがきかない瞬間</b>です。カメラは1台なので、ここだけは確実に押さえましょう。',
+ html:TL_HTML+`<div class="box warn"><b class="h">いちばん大事な考え方</b>3時間ずっと回し続けるのではなく、「必須」の数分前から構えて、その瞬間だけ確実に撮る。合間は電源ボタン1回でジンバルをスリープ、腕を休める。</div>`,
+ src:['dji_faq'],
+ setup(){ mkPlace(0,0,0); setFlowers(1); addLabel('おまつり広場（ゴール）',townAnch.plaza,'acc'); addLabel('一葉式いけばな 東京中野本部（出発）',townAnch.hq); addLabel('四季の森公園 方面',townAnch.park,'good');
+   kucho.group.visible=true; kucho.group.position.copy(TW(-.6,0,-1.7)); kucho.group.rotation.y=Math.PI; iemoto.group.visible=true; iemoto.group.position.copy(TW(.6,0,-1.7)); iemoto.group.rotation.y=Math.PI; },
+ update(t){ if(userMoved||camTween)return; const a=t*.1; camera.position.set(TX+Math.sin(a)*11,7,Math.cos(a)*-11+3); controls.target.set(TX,0,3); cap(''); }});
+
+SD.push({lv:'d',title:'巡行ルートと撮影ポイント A〜F',cam:{p:[TX-9,7,-8],t:[TX,0,6]},
+ lead:'約1.3km・30〜35分、担ぎ手は4〜8名で交代しながら進みます。神輿と一緒に歩くので、地図の A〜F で何を撮るかを先に決めておきます。',
+ html:ROUTE_SVG+`<div class="box warn"><b class="h">安全とルール</b>神輿の前と後ろに警備員が付き、道路使用許可を取って歩きます。<b>前の警備員より前（車道側）には出ない</b>。前からのカットは歩道側の斜め前から。始まる前に、どこを歩いてよいか警備の方と主催の担当者に確認しておく。</div>`,
+ setup(){ mkPlace(0,0,0); setFlowers(1); addLabel('A 出発',townAnch.hq,'acc'); addLabel('C 公園沿い',townAnch.park,'acc'); addLabel('F 広場',townAnch.plaza,'acc'); },
+ update(t){ cap(''); }});
+
+SD.push({lv:'d',title:'13:00〜14:05 神輿づくり（家元・来場者の一輪）',inset:true,cam:{p:[TX-4.5,3.2,-4.5],t:[TX,.8,0]},
+ lead:'花が一輪ずつ増えていく過程が、この日の物語の中心です。ゆっくり回り込みながら、手元と全体を交互に撮ります。',
+ pts:['13:30 家元の土台づくり：50〜70mmで手元。ゆっくりオービット（回り込み）','14:00 来場者の一輪：花を挿す手元へゆっくりプッシュイン。子どもの手元は特に良いカット','時々24mmに戻して「神輿と人の輪」の全体も撮る（後で編集の軸になる）','<b>ズームを変えたら再バランス</b>は現実的でないので、この時間帯は「50mm前後に固定」して寄り引きは足で','14:05ごろ 区長の最後の一輪 → 完成の瞬間は<b>引きで確実に</b>'],
+ src:['dronexl','zy'],
+ setup(){ mkPlace(0,0,0); dayOp(); opRig.zoom=.55; opRig.apply(); iemoto.group.visible=true; iemoto.group.position.copy(TW(.2,0,-.95)); iemoto.group.rotation.y=0; addLabel('家元',iemoto.head,'',-14); },
+ update(t,dt){ const P=20, u=(t%P)/P; setFlowers(.15+.85*u); const a=lerp(-1.0,1.0,seg(u,.05,.95)), r=2.3; const x=Math.sin(a)*r, z=-Math.cos(a)*r;
+   op.group.position.copy(TW(x,0,z)); op.group.rotation.y=Math.atan2(-x,-z); lastMoving=true; walkAnim(dt,.08,.14,.04); opRig.setHandle(0,0,0); aimAt(TX,1.1,0);
+   cap(`花 ${Math.round((.15+.85*u)*40)}/40輪 ・ ゆっくり回り込む（50mm）`,'acc'); }});
+
+SD.push({lv:'d',title:'14:05〜14:25 区長到着・ご挨拶・記念撮影',inset:true,cam:{p:[TX-3.5,2.4,-5.5],t:[TX,1.2,-1.5]},
+ lead:'挨拶は「固定で全編」が正解。ジンバルを付属の三脚で立てて置けば、腕を休めながら安定して撮れます。',
+ pts:['14:05ごろ 区長到着〜最後の一輪：寄りすぎず、区長・家元・神輿が入る引きで','14:10 ご挨拶（各3分ほど）：三脚で固定し、止めずに回す。声が聞き取れるよう、話す人や会場スピーカーに近い位置を取る','14:20 記念撮影：カメラマンの横・少し後ろから「撮られている様子」を引きで。真正面はカメラマンに譲る','14:25 出発に向けて、記念撮影中に<b>出発位置（A）へ移動</b>しておく'],
+ setup(){ mkPlace(0,0,0); setFlowers(1); dayOp(); opRig.zoom=.75; opRig.apply();
+   kucho.group.visible=true; kucho.group.position.copy(TW(-.55,0,-1.6)); kucho.group.rotation.y=Math.PI; iemoto.group.visible=true; iemoto.group.position.copy(TW(.55,0,-1.6)); iemoto.group.rotation.y=Math.PI;
+   addLabel('区長',kucho.head,'acc',-14); addLabel('家元',iemoto.head,'',-14); },
+ update(t,dt){ const u=(t%10)/10; const x=lerp(-1.6,-.6,ez(u<.5?u*2:2-u*2)); op.group.position.copy(TW(x,0,-5.2)); op.group.rotation.y=0; lastMoving=false; walkAnim(dt,.05);
+   opRig.setHandle(0,0,0); aimAt(TX,1.25,-1.6); kucho.handR.set(-.24,.86+.15*Math.max(0,Math.sin(t*1.4)),.15); cap('ゆっくり横にスライド（60mm）。挨拶中は三脚で固定','acc'); }});
+
+SD.push({lv:'d',title:'14:25 出発の瞬間：ロー → ブーム',inset:true,cam:{p:[TX-5,2.2,-4.5],t:[TX,1,0]},
+ lead:'神輿が持ち上がる瞬間に合わせて、低い位置からカメラを持ち上げます。神輿が「立ち上がる」力強さが出ます。',
+ pts:['持ち上げる前から低く構えて録画を始めておく（掛け声の合図を待つ）','神輿が上がるのと同じ速さで、カメラもゆっくり上げる','上げきったら2秒止める → そのまま並走へ','担ぎ手の足元・肩に近づきすぎない（担ぎ手は前に進む）'],
+ src:['dronexl'],
+ setup(){ mkPlace(0,0,0); setFlowers(1); dayOp(); },
+ update(t,dt){ const u=(t%9)/9; const lift=seg(u,.25,.5); mkPlace(0,0,lift); const b=seg(u,.22,.62);
+   op.group.position.copy(TW(-1.9,0,-2.9)); op.group.rotation.y=Math.atan2(1.9,2.9); lastMoving=false; op.anchor.position.set(0,lerp(.55,1.65,b),.32); walkAnim(dt,lerp(.38,0,Math.min(1,b*1.6)));
+   opRig.setHandle(0,0,0); aimAt(TX,lerp(.9,1.6,lift),0); cap(u<.25?'低く構えて待つ':u<.62?'神輿と一緒にカメラを上げる':'上で2秒止める','acc'); }});
+
+const posState={k:'auto'};
+SD.push({lv:'d',title:'巡行の並走：前・横・後ろ・足元',inset:true,cam:{p:[TX-8,5,6],t:[TX,1,14]},
+ lead:'神輿と一緒に歩きながら、撮る位置を変えていきます。下のボタンで位置を選ぶと、右下の映像がどう変わるかが分かります。',
+ pts:['<b>横</b>（いちばん安全で使える）：歩道側を並んで歩き、体は進行方向、カメラだけ神輿に向ける（ジョイスティック）','<b>前</b>：歩道側の斜め前から後ろ歩き。<b>前の警備員より前に出ない</b>。人にぶつからないよう短めに','<b>後ろ</b>：担ぎ手の背中越しに進む先を見せる。歩きながら撮りやすい','<b>足元</b>：逆さ持ちで低く。担ぎ手の足並み・花の揺れ','各位置で10〜20秒。位置を変える間は録画を止めてよい','PFモード・24mm。Z軸インジケーターを見すぎず、足元の安全を優先'],
+ modes:[['auto','順番に'],['side','横'],['front','前'],['back','後ろ'],['low','足元']],modeKey:'pos',
+ src:['dronexl','dji_faq'],
+ setup(){ setFlowers(1); dayOp(); guards.forEach(g=>{g.group.visible=true;}); addLabel('警備員',guards[0].head,'bad',-14); addLabel('警備員',guards[1].head,'bad',-14); },
+ update(t,dt){ const P=16, u=(t%P)/P; const z=lerp(2,30,u); mkPlace(0,z,1); const ph=t*2*Math.PI*.9;
+   bearers.forEach(b=>{ b.gait(ph+(b===bearers[1]||b===bearers[2]?Math.PI:0),.22,.06); });
+   guards[0].group.position.copy(TW(0,0,z+3.2)); guards[1].group.position.copy(TW(0,0,z-3.4)); guards.forEach((g,i)=>{ g.group.rotation.y=0; g.gait(ph+i,.25,.06); });
+   let k=posState.k; if(k==='auto'){ k=['side','front','back','low'][Math.floor(t/4)%4]; }
+   opRig.inverted=false; let x,zz,yaw,anchorY=1.12,cr=.07;
+   if(k==='side'){ x=-3.0; zz=z-.3; yaw=0; }
+   else if(k==='front'){ x=-2.4; zz=z+3.0; yaw=Math.PI; }
+   else if(k==='back'){ x=.9; zz=z-4.2; yaw=0; }
+   else { x=-1.7; zz=z+2.2; yaw=Math.PI; opRig.inverted=true; anchorY=.72; cr=.24; }
+   op.group.position.copy(TW(x,0,zz)); op.group.rotation.y=yaw; op.anchor.position.set(0,anchorY,opRig.inverted?.42:.32); lastMoving=true; walkAnim(dt,cr);
+   opRig.setHandle(0,0,0); aimAt(TX,k==='low'?.9:1.5,z+(k==='back'?3:0));
+   if(!userMoved&&!camTween){ camera.position.set(TX-8,5,z-6); controls.target.set(TX,1,z+1); }
+   cap({side:'横：体は前、カメラは神輿へ',front:'前：歩道側の斜め前から（警備員より前に出ない）',back:'後ろ：背中越しに進む先を見せる',low:'足元：逆さ持ちで低く'}[k],'acc'); }});
+
+SD.push({lv:'d',title:'四季の森公園まわり〜区役所前のお見送り',inset:true,cam:{p:[TX+9,3,16],t:[TX+2,1,22]},
+ lead:'公園沿いは緑が多く、いちばん絵になる区間です。木の幹や葉を手前に入れると奥行きが出ます。14:45の区役所前では、区長とのお別れを正面から押さえます。',
+ pts:['公園沿い（C）：木の後ろから少し横にずれて、通り過ぎる神輿を見せる（リビール）','区役所前（D）の手前で<b>少し早足で先回り</b>し、正面で待つ','お見送りは「握手・手を振る」が一瞬。PFで構えて、動かずに撮る','お見送りが終わったら、背中越し（E）を少し撮って、すぐ広場へ先回り（F）'],
+ setup(){ setFlowers(1); dayOp(); addLabel('木を手前に入れる',townAnch.tree,'good'); },
+ update(t,dt){ const u=(t%12)/12; const z=lerp(10,32,u); mkPlace(0,z,1); const ph=t*2*Math.PI*.9; bearers.forEach((b,i)=>b.gait(ph+(i%3?Math.PI:0),.22,.06));
+   const oz=lerp(22.9,21.5,seg(u,.3,.6)); op.group.position.copy(TW(5.3,0,oz)); op.group.rotation.y=-Math.PI/2; lastMoving=false; walkAnim(dt,.08);
+   opRig.setHandle(0,0,0); aimAt(TX,1.5,z); cap(u<.3?'木の幹で隠れた状態から':'少し横にずれて神輿を見せる','acc'); }});
+
+SD.push({lv:'d',title:'14:55〜16:00 広場に戻ってから',inset:true,cam:{p:[TX+6,3,-6],t:[TX,1,0]},
+ lead:'神輿が広場の真ん中に置かれ、写真スポットになります。15:00からはいけばな体験（30分×2回）。最後は広場全体で締めます。',
+ pts:['14:55 置く瞬間：先回りして正面から。ゆっくりプッシュイン','写真スポットで撮影する人たち・笑顔・花のアップ（B-roll＝つなぎの素材）','15:00〜 いけばな体験は室内：シャッター1/50、F2.8。<b>子どもの顔を公開してよいかは主催者に確認</b>','マルシェ・お菓子・お囃子など、周りの様子も短く','終了前：ブームで広場全体のワイド（日の入りは16時半ごろ。光が柔らかくなる）'],
+ setup(){ mkPlace(0,0,0); setFlowers(1); dayOp(); },
+ update(t,dt){ const u=(t%9)/9; const b=seg(u,.15,.8); op.group.position.copy(TW(3.6,0,-3.6)); op.group.rotation.y=Math.atan2(-3.6,3.6); lastMoving=false;
+   op.anchor.position.set(0,lerp(.55,2.0,b),.32); walkAnim(dt,lerp(.38,0,Math.min(1,b*1.6))); opRig.setHandle(0,0,0); aimAt(TX,lerp(.9,.6,b),0); cap('締めのカット：ブームで広場全体へ','acc'); }});
+
+SD.push({lv:'d',title:'明日の設定と持ち物（中野＝東日本 50Hz）',cam:{p:[DESK[0]-.32,DESK[1]+.3,DESK[2]-.32],t:[DESK[0],DESK[1]+.1,DESK[2]]},
+ lead:'中野区は東日本（50Hz）。屋外と室内で設定を分けます。',
+ html:`<table class="t">
+ <tr><th>共通</th><td>XAVC S 4K・24p（または30p）・10bit 4:2:2、S-Cinetone、AF-C＋人物認識、手ブレ補正スタンダード、Mモード＋ISO AUTO</td></tr>
+ <tr><th>屋外（13〜15時）</th><td>シャッター1/50、F4。<b>晴れると明るすぎる</b>ので82mmのNDフィルター（可変NDが便利）があればそれで調整。無ければシャッターを1/200〜1/500に上げ、F5.6〜F8で対応（屋外の太陽光はちらつかない）</td></tr>
+ <tr><th>室内（いけばな体験）</th><td>シャッター1/50（東日本）、F2.8〜F4、ISO AUTO（上限は高め）。照明でちらつきが出たら1/100</td></tr>
+ <tr><th>焦点距離</th><td>歩きは24mm固定。神輿づくり中は50mm前後。ズームを変えたら重心が変わることを意識</td></tr>
+ <tr><th>カード</th><td>4K 100Mbpsで1時間あたり約45GB。128GB以上、できれば予備も</td></tr>
+ <tr><th>電池</th><td>カメラのバッテリーは最低2本（できれば3本）。ジンバルは満充電で</td></tr>
+ <tr><th>雨（小雨決行）</th><td>RS 5の端子は防水ではない。レインカバーかビニール袋、タオル</td></tr></table>`,
+ src:['giz','nikon','dji_faq','sigma'],
+ setup(){ deskRig.root.visible=true; deskRig.legs.visible=true; },
+ update(t){ deskRig.pan=.25*Math.sin(t*.5); deskRig.apply(); cap(''); }});
+
+const SHOTS=[['神輿づくり',['開会・お囃子のワイド','家元の手元（オービット）','来場者・子どもが一輪いける手元','区長の最後の一輪 → 完成（引き）']],
+ ['挨拶・出発',['区長と家元の挨拶（三脚で全編）','記念撮影の様子（引き）','出発の持ち上げ（ロー → ブーム）']],
+ ['巡行',['横から並走','前（歩道側の斜め前）','後ろ（背中越し）','足元（逆さ持ち）','公園の木を手前に','区役所前のお見送り']],
+ ['広場に戻って',['真ん中に置く瞬間','写真スポット・笑顔','いけばな体験（室内）','マルシェ・周りの様子','締めの広場ワイド（ブーム）']]];
+SD.push({lv:'d',title:'ショットリスト（撮れたらチェック）',cam:{p:[TX-9,7,-8],t:[TX,0,4]},
+ lead:'当日はこの画面を開いて、撮れたものからチェックしていけば撮り漏れを防げます（この端末に保存）。',
+ html:()=>`<div class="chk">${SHOTS.map(([h,items],i)=>`<h4>${h}</h4>`+items.map((x,j)=>`<label><input type="checkbox" data-k="s${i}_${j}"><span>${x}</span></label>`).join('')).join('')}</div>`,
+ setup(){ mkPlace(0,0,0); setFlowers(1); },
+ mount(){ let st={}; try{ st=JSON.parse(localStorage.getItem('rs5shots')||'{}'); }catch(e){}
+   document.querySelectorAll('.chk input').forEach(cb=>{ cb.checked=!!st[cb.dataset.k]; cb.onchange=()=>{ st[cb.dataset.k]=cb.checked; try{ localStorage.setItem('rs5shots',JSON.stringify(st)); }catch(e){} }; }); },
+ update(t){ if(userMoved||camTween)return; const a=t*.1; camera.position.set(TX+Math.sin(a)*11,7,Math.cos(a)*-11+3); controls.target.set(TX,0,3); cap(''); }});
+
+/* ===== 祭りの通し再生（チラシの地図をもとにした縮尺 約1/4 の模式） ===== */
+const FX=200, FK=.35;
+const fw=(sx,sy)=>new V3(FX+(sx-215)*FK,0,(sy-262)*FK);
+const FR=[fw(150,228),fw(55,228),fw(55,42),fw(330,42),fw(330,195),fw(222,195),fw(218,240),fw(215,262)];
+const FRL=[]; let FRT=0; for(let i=0;i<FR.length-1;i++){ const l=FR[i].distanceTo(FR[i+1]); FRL.push(l); FRT+=l; }
+const RED=FRL[0]+FRL[1]+FRL[2];
+function fAt(d){ d=Math.max(0,Math.min(FRT,d)); let i=0; while(i<FRL.length-1&&d>FRL[i]){ d-=FRL[i]; i++; } const a=FR[i], b=FR[i+1]; const t=Math.max(0,Math.min(1,d/FRL[i])); return {p:a.clone().lerp(b,t),dir:b.clone().sub(a).normalize()}; }
+const fest=new THREE.Group(); scene.add(fest); const fA={};
+{
+  const g=new THREE.Mesh(new THREE.PlaneGeometry(170,130),stdMat(0x6d6a63,{r:.95})); g.rotation.x=-Math.PI/2; g.position.set(FX-8,0,-40); fest.add(g);
+  for(let i=0;i<FR.length-1;i++){ const a=FR[i],b=FR[i+1]; const L=a.distanceTo(b); const r=new THREE.Mesh(new THREE.PlaneGeometry(6,L+6),stdMat(0x45464a,{r:.9})); r.rotation.x=-Math.PI/2; r.rotation.z=-Math.atan2(b.x-a.x,b.z-a.z); r.position.set((a.x+b.x)/2,.012,(a.z+b.z)/2); fest.add(r);
+    const ln=new THREE.Mesh(new THREE.PlaneGeometry(.35,L),basic(i<3?0xef4444:0x60a5fa)); ln.rotation.copy(r.rotation); ln.position.set((a.x+b.x)/2,.03,(a.z+b.z)/2); fest.add(ln); }
+  const pl=new THREE.Mesh(new THREE.CircleGeometry(6,40),stdMat(0xb4a690,{r:.9})); pl.rotation.x=-Math.PI/2; pl.position.set(FX,.02,0); fest.add(pl);
+  const pk=new THREE.Mesh(new THREE.PlaneGeometry(59.5,36.75),stdMat(0x3f6b3a,{r:1})); pk.rotation.x=-Math.PI/2; pk.position.set(FX-3.5,.015,-48.8); fest.add(pk);
+  const trunk=stdMat(0x5a3d26,{r:.9}), leaf=stdMat(0x3c7d3f,{r:.9});
+  let seed=3; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+  for(let i=0;i<34;i++){ const x=FX-31+rnd()*55, z=-65+rnd()*32; fest.add(cyl(.18,2.6,trunk,'y',x,1.3,z,6)); const c=new THREE.Mesh(new THREE.SphereGeometry(1.3+rnd()*.5,8,6),leaf); c.position.set(x,3.3,z); fest.add(c); }
+  const bm=stdMat(0x8a8d95,{r:.8});
+  [[-70,-40,14,40,22],[-70,-90,14,22,30],[0,-95,80,10,26],[66,-50,10,40,34],[25,12,30,8,18],[-55,8,20,10,16]].forEach(([x,z,w,d,h])=>fest.add(box(w,h,d,bm,FX+x,h/2,z)));
+  fest.add(box(20,7,12,stdMat(0xd9d2c3,{r:.8}),FX-24,3.5,-4)); // 一葉式いけばな東京中野本部
+  fest.add(box(16,18,20,stdMat(0xb7bcc6,{r:.8}),FX+52,9,-75)); // 区役所
+  [['hq',-24,8,-4],['ku',52,19,-75],['plaza',0,.5,5.5],['park',-3,1,-50]].forEach(([k,x,y,z])=>{ fA[k]=new THREE.Object3D(); fA[k].position.set(FX+x,y,z); fest.add(fA[k]); });
+  // お囃子と観客
+  const cols=[0x475569,0x9d174d,0x1e3a8a,0x14532d,0x6b21a8,0xb45309];
+  for(let i=0;i<26;i++){ const a=i/26*Math.PI*2; if(Math.abs(Math.sin(a))>.9&&Math.cos(a)<0)continue; const r=7+(i%2); const b=new THREE.Mesh(new THREE.CapsuleGeometry(.18,.8,4,8),stdMat(cols[i%6],{r:.85})); b.position.set(FX+Math.sin(a)*r,.6,Math.cos(a)*r); fest.add(b); }
+  fA.hayashi=new THREE.Group(); fest.add(fA.hayashi); for(let i=0;i<4;i++){ const b=new THREE.Mesh(new THREE.CapsuleGeometry(.18,.4,4,8),stdMat(0x7f1d1d,{r:.8})); b.position.set(FX+3.4+i*.7,.5,-2.6); fA.hayashi.add(b); }
+  fA.hayashiL=new THREE.Object3D(); fA.hayashiL.position.set(FX+4.5,1.3,-2.6); fest.add(fA.hayashiL);
+  for(let i=0;i<14;i++){ const b=new THREE.Mesh(new THREE.CapsuleGeometry(.18,.8,4,8),stdMat(cols[(i+2)%6],{r:.85})); b.position.set(FX-27+(i%7)*1.1,.6,-14.5-Math.floor(i/7)*1.1); fest.add(b); }
+}
+const START=FR[0].clone();
+// 時刻（13:00からの分）ごとの出来事
+const FE=[[-3,'開場前','会場を一周して動線・段差・ケーブルを確認',0],[0,'開会・お囃子（広場）','広場全体のワイド → お囃子の手元・表情',0],[25,'本部前へ移動','神輿づくりの場所へ先に移動',0],
+ [30,'家元が神輿の土台をつくる','家元の手元をゆっくり回り込み（50mm）',1],[60,'来場者40名が一輪ずつ','花を挿す手元へプッシュイン。子どもの手元も',1],[65,'区長到着・最後の一輪で完成','引きで完成の瞬間を確実に',1],
+ [70,'ご挨拶（区長・家元 各3分）','三脚で固定、止めずに全編',1],[80,'記念撮影','カメラマンの横から引きで「撮られている様子」',0],[84,'出発準備','A地点で低く構えて録画開始',0],
+ [85,'出発！','持ち上げる瞬間をロー → ブーム',1],[87,'巡行：四季の森公園のまわり','横 → 前 → 後ろ → 足元を順番に、各10〜20秒',0],[101,'区役所前へ先回り','早足で先回りして正面で待つ',0],
+ [105,'区役所前で区長をお見送り','握手・手を振る瞬間。動かずに撮る',1],[106,'広場へ（約10分）','背中越しを少し → 広場へ先回り',0],[115,'神輿を広場の真ん中へ','到着〜置く瞬間を正面から',1],
+ [120,'いけばな体験（30分×2回）','室内は1/50・F2.8。子どもの顔の公開可否は主催者に確認',0],[150,'写真スポット・周りの様子','笑顔・花のアップ・マルシェなど短く',0],[170,'終了前の締め','ブームで広場全体のワイド',0],[180,'終了','おつかれさまでした',0]];
+const fmt=m=>{ const t=Math.round(13*60+m); return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`; };
+const fState={m:-3,speed:1,playing:true};
+function fMikoshi(m){ // returns {pos,yaw,lift,phase}
+  if(m<85){ const lift=m<84.5?0:seg(m,84.5,85); return {p:START.clone(),yaw:Math.atan2(-1,0),lift,moving:false}; }
+  if(m<105){ const a=fAt(RED*(m-85)/20); return {p:a.p,yaw:Math.atan2(a.dir.x,a.dir.z),lift:1,moving:true}; }
+  if(m<115){ const a=fAt(RED+(FRT-RED)*(m-105)/10); return {p:a.p,yaw:Math.atan2(a.dir.x,a.dir.z),lift:1,moving:true}; }
+  const lift=m<116?1-seg(m,115,116):0; const end=FR[FR.length-1]; return {p:end.clone(),yaw:Math.PI,lift,moving:false}; }
+function fOperator(m,mk){ // returns {p,yaw,anchorY,crouch,aim:[x,y,z],inv,note}
+  const C=FR[FR.length-1];
+  const around=(c,r,a)=>new V3(c.x+Math.sin(a)*r,0,c.z+Math.cos(a)*r);
+  if(m<25){ const p=new V3(C.x-4.5,0,C.z+4.5); return {p,aim:[C.x+3,1.1,C.z-1.5]}; }
+  if(m<30){ const t=seg(m,25,30); return {p:new V3(C.x-4.5,0,C.z+4.5).lerp(around(START,3,Math.PI*.25),t),aim:[START.x,1,START.z]}; }
+  if(m<65){ const a=Math.PI*.25+Math.sin((m-30)/35*Math.PI*2)*.9; return {p:around(START,2.6,a),aim:[START.x,1,START.z]}; }
+  if(m<80){ const p=around(START,4.2,Math.PI*.15+(m<70?seg(m,65,70)*.3:.3)); return {p,aim:[START.x,1.3,START.z+1.6]}; }
+  if(m<84){ return {p:around(START,5,-.5),aim:[START.x,1.2,START.z]}; }
+  if(m<87){ const b=seg(m,84.6,86); return {p:around(START,3.2,-.9),aim:[mk.p.x,lerp(.9,1.6,mk.lift),mk.p.z],anchorY:lerp(.55,1.65,b),crouch:lerp(.38,0,Math.min(1,b*1.6))}; }
+  if(m<101||(m>=106&&m<108)){ const a=fAt(m<101?RED*(m-85)/20:RED+(FRT-RED)*(m-105)/10); const n=new V3(-a.dir.z,0,a.dir.x); const k=m>=106?'back':['side','front','back','low'][Math.floor((m-87)/3.5)%4];
+    if(k==='side') return {p:a.p.clone().addScaledVector(n,-3),yaw:Math.atan2(a.dir.x,a.dir.z),aim:[mk.p.x,1.5,mk.p.z],note:'横'};
+    if(k==='front') return {p:a.p.clone().addScaledVector(a.dir,3).addScaledVector(n,-2.4),aim:[mk.p.x,1.5,mk.p.z],note:'前（歩道側の斜め前）'};
+    if(k==='back') return {p:a.p.clone().addScaledVector(a.dir,-4.2).addScaledVector(n,.9),aim:[mk.p.x+a.dir.x*3,1.5,mk.p.z+a.dir.z*3],note:'後ろ'};
+    return {p:a.p.clone().addScaledVector(a.dir,2.2).addScaledVector(n,-1.7),aim:[mk.p.x,.9,mk.p.z],inv:true,anchorY:.72,crouch:.24,note:'足元'}; }
+  if(m<106){ const d=fAt(RED).p; const t=seg(m,101,103.5); const from=fAt(RED*(101-85)/20); const n=new V3(-from.dir.z,0,from.dir.x);
+    return {p:from.p.clone().addScaledVector(n,-3).lerp(d.clone().add(new V3(-3,0,-3.5)),t),aim:[d.x,1.4,d.z]}; }
+  if(m<115){ const t=seg(m,108,112.5); const a=fAt(RED+(FRT-RED)*(108-105)/10); return {p:a.p.clone().add(new V3(-2.5,0,0)).lerp(new V3(C.x-1.5,0,C.z+5),t),aim:[mk.p.x,1.4,mk.p.z]}; }
+  if(m<120){ return {p:new V3(C.x-1.5,0,C.z+5),aim:[C.x,1,C.z]}; }
+  if(m<150){ const t=seg(m,120,122); return {p:new V3(C.x-1.5,0,C.z+5).lerp(new V3(FX-24,0,3),t),aim:[FX-24,1.2,-4]}; }
+  if(m<170){ const a=Math.PI*.3+(m-150)/20*1.6; return {p:around(C,3,a),aim:[C.x,1,C.z]}; }
+  const b=seg(m,171,177); return {p:new V3(C.x+4.5,0,C.z+4.5),aim:[C.x,lerp(.9,.5,b),C.z],anchorY:lerp(.55,2.0,b),crouch:lerp(.38,0,Math.min(1,b*1.6))}; }
+let fLastIdx=-1;
+function fEventIdx(m){ let k=0; FE.forEach((e,i)=>{ if(m>=e[0]) k=i; }); return k; }
+function fUpdateCard(){ const k=fEventIdx(fState.m); if(k===fLastIdx)return; fLastIdx=k; document.querySelectorAll('.ftl .it').forEach((el,i)=>el.classList.toggle('now',i===k)); const e=FE[k];
+  document.getElementById('fEv').innerHTML=(e[3]?'<span class="must">必須</span>':'')+e[1]; }
+const festStep={lv:'d',title:'通しで見る：13:00〜16:00 祭りの流れ',inset:true,insetY:96,cam:{p:[FX-12,14,22],t:[FX-8,0,-20]},
+ lead:'当日の流れを早送り（1秒＝1分）で再生します。下のバーで好きな時刻に飛べて、「必須⏭」で次の必須の場面へ。<b>オレンジの文字が、その時刻にあなたがすること</b>、右下が「あなたのカメラに映る映像」です。',
+ html:()=>`<div class="tl ftl">${FE.map(([m,e,sh,must],i)=>`<div class="it" data-m="${m}"><div class="tm">${fmt(Math.max(m,0))}${m<0?' 前':''}${must?'<span class="must">必須</span>':''}</div><div><b>${e}</b></div><div class="sh">📹 ${sh}</div></div>`).join('')}</div>
+ <div class="box warn"><b class="h">この再生について</b>チラシの地図をもとにした模式図で、縮尺は約1/4です。道幅・建物・人の数は実際と違います。巡行中の位置（横→前→後ろ→足元）は一例です。</div>`,
+ modes:[[.5,'×30'],[1,'×60'],[3,'×180']],modeKey:'fspeed',
+ setup(){ document.getElementById('fest').style.display='block'; fest.visible=true; mk.visible=true; dayOp(); fLastIdx=-1;
+   kucho.group.visible=true; iemoto.group.visible=true;
+   addLabel('一葉式いけばな 東京中野本部',fA.hq); addLabel('区役所',fA.ku); addLabel('おまつり広場',fA.plaza,'acc'); addLabel('中野四季の森公園',fA.park,'good'); addLabel('お囃子',fA.hayashiL);
+   addLabel('区長',kucho.head,'acc',-14); addLabel('家元',iemoto.head,'',-14); },
+ mount(){ const r=document.getElementById('fRange'); r.value=fState.m; r.oninput=()=>{ fState.m=+r.value; };
+   document.querySelectorAll('.ftl .it').forEach(el=>el.onclick=()=>{ fState.m=+el.dataset.m; r.value=fState.m; });
+   document.getElementById('fNext').onclick=()=>{ const n=FE.find(e=>e[3]&&e[0]>fState.m+.2); fState.m=n?n[0]-.5:-3; r.value=fState.m; }; },
+ update(t,dt){ if(fState.playing&&playing){ fState.m+=dt*fState.speed; if(fState.m>182) fState.m=-3; document.getElementById('fRange').value=fState.m; }
+   const m=fState.m; document.getElementById('fTime').textContent=fmt(Math.max(0,m)); fUpdateCard();
+   setFlowers(m<30?0:m<60?.2*seg(m,30,60):m<65?.2+.77*seg(m,60,65):m<66?.97+.03*seg(m,65,66):1);
+   const M=fMikoshi(m); mkPlace(M.p.x-TX,M.p.z,M.lift,M.yaw); bearers.forEach(b=>b.group.visible=m>=78);
+   const ph=stepT*2*Math.PI*.9; bearers.forEach((b,i)=>b.gait(M.moving?ph+(i%3?Math.PI:0):0,M.moving?.22:0,M.moving?.06:0));
+   const fw2=new V3(Math.sin(M.yaw),0,Math.cos(M.yaw));
+   guards.forEach((g,i)=>{ g.group.visible=m>=84&&m<116; const s=i?-3.4:3.2; g.group.position.copy(M.p).addScaledVector(fw2,s); g.group.rotation.y=M.yaw; g.gait(M.moving?ph+i:0,M.moving?.25:0,M.moving?.06:0); });
+   // 家元
+   iemoto.group.position.copy(m<115?START.clone().add(new V3(.4,0,1.4)):new V3(FX-24,0,3)); iemoto.group.rotation.y=Math.PI*.9;
+   // 区長：14:05到着（区役所方面から）→ 巡行 → 14:45 区役所前でお別れ
+   let kp; if(m<63){ kucho.group.visible=false; kp=START.clone(); } else if(m<65){ kucho.group.visible=true; kp=START.clone().add(new V3(12,0,-6)).lerp(START.clone().add(new V3(-.5,0,1.5)),seg(m,63,65)); }
+   else if(m<85){ kp=START.clone().add(new V3(-.5,0,1.5)); } else if(m<105){ kp=M.p.clone().addScaledVector(fw2,2).add(new V3(fw2.z*1.4,0,-fw2.x*1.4)); } else { kp=fAt(RED).p.clone().add(new V3(3,0,-1.5)); kucho.group.visible=m<112; }
+   kucho.group.position.copy(kp); kucho.group.rotation.y=m>=85&&m<105?M.yaw:Math.PI; kucho.gait(m>=85&&m<105?ph:0,m>=85&&m<105?.25:0,.06);
+   kucho.handR.set(-.24,.86+((m>=70&&m<73)||(m>=105&&m<107)?.4*Math.max(0,Math.sin(stepT*4)):0),.15);
+   // あなた
+   const O=fOperator(m,M); op.group.position.copy(O.p); op.group.position.y=0;
+   op.group.rotation.y=O.yaw!==undefined?O.yaw:Math.atan2(O.aim[0]-O.p.x,O.aim[2]-O.p.z);
+   opRig.inverted=!!O.inv; op.anchor.position.set(0,O.anchorY||1.12,O.inv?.42:.32);
+   const pp=op.group.position; lastMoving=!!(lastPos&&Math.hypot(pp.x-lastPos.x,pp.z-lastPos.z)>dt*.05); walkAnim(dt,O.crouch??.07);
+   opRig.zoom=(m>=30&&m<84)?.55:0; opRig.apply(); opRig.setHandle(0,0,0); aimAt(O.aim[0],O.aim[1],O.aim[2]);
+   document.getElementById('fTodo').textContent='あなた：'+FE[fEventIdx(m)][2]+(O.note?`（今は「${O.note}」）`:'');
+   if(!userMoved&&!camTween){ const f=M.p.clone().lerp(O.p,.4); const cp=new V3(f.x+9,11,f.z+15); camera.position.lerp(cp,1-Math.exp(-dt*2)); controls.target.lerp(new V3(f.x,.8,f.z),1-Math.exp(-dt*2)); }
+   cap(''); }};
+const fsState={k:1};
+SD.unshift(festStep);
+
+S.unshift(...SD);
+
+/* ---------------- UI ---------------- */
+const levelsEl=document.getElementById('levels'), stepsEl=document.getElementById('steps'), mainEl=document.getElementById('main');
+let cur=0, curLv='p', stepT=0;
+function renderLevels(){ levelsEl.innerHTML=''; Object.entries(LV).forEach(([k,[name,col]])=>{ const b=document.createElement('button'); const n=S.filter(s=>s.lv===k).length; b.textContent=`${name} ${n}`; if(k===curLv){b.className='on'; b.style.background=col; b.style.borderColor=col;} b.onclick=()=>go(S.findIndex(s=>s.lv===k)); levelsEl.appendChild(b); }); }
+function renderSteps(){ stepsEl.innerHTML=''; stepsEl.style.setProperty('--lv',LV[curLv][1]); S.forEach((s,i)=>{ if(s.lv!==curLv)return; const n=S.filter((x,j)=>x.lv===curLv&&j<=i).length; const b=document.createElement('button'); b.innerHTML=`<b>${n}</b>${s.title}`; if(i===cur)b.className='on'; b.onclick=()=>go(i); stepsEl.appendChild(b); if(i===cur)setTimeout(()=>b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}),30); }); }
+const modeBar=document.getElementById('modeBar'), modeSeg=document.getElementById('modeSeg');
+function renderModes(s){ if(!s.modes){modeBar.style.display='none';modeSeg.innerHTML='';return;} modeBar.style.display='block'; modeSeg.innerHTML='';
+  const st=s.modeKey==='speed'?speedState:s.modeKey==='pos'?posState:s.modeKey==='fspeed'?fState:modeState, key=s.modeKey==='speed'||s.modeKey==='pos'?'k':s.modeKey==='fspeed'?'speed':'mode';
+  s.modes.forEach(([v,label])=>{ const b=document.createElement('button'); b.textContent=label; if(st[key]===v)b.className='on'; b.onclick=()=>{ st[key]=v; if(key==='mode'){ opRig.cs.lockY=opRig.cs.yaw; opRig.cs.lockP=opRig.cs.pitch; } demos.speed&&demos.speed.clear(); renderModes(s); }; modeSeg.appendChild(b); }); }
+function renderCard(s){ const [lvName,col]=LV[s.lv]; const idx=S.filter((x,j)=>x.lv===s.lv&&j<=cur).length;
+  const html=typeof s.html==='function'?s.html():(s.html||'');
+  mainEl.innerHTML=`<div class="card"><span class="tag" style="background:${col}">${lvName} ${idx}</span><h2>${s.title}</h2><p class="lead">${s.lead||''}</p>
+  ${s.pts?`<ul class="pts">${s.pts.map(p=>`<li>${p}</li>`).join('')}</ul>`:''}${html}
+  ${s.warn?`<div class="box warn"><b class="h">注意</b>${s.warn}</div>`:''}
+  ${s.drill?`<div class="box drill"><b class="h">練習メニュー</b>${s.drill}</div>`:''}
+  ${s.pass?`<div class="box pass"><b class="h">合格ライン</b>${s.pass}</div>`:''}
+  ${s.src?`<div class="src">出典：${s.src.map(k=>`<a href="${SRC[k][1]}" target="_blank" rel="noopener">${SRC[k][0]}</a>`).join('')}</div>`:''}
+  <div class="navbtns"><button id="prevB">← 前へ</button><button id="nextB">次へ →</button></div></div>`;
+  document.getElementById('prevB').onclick=()=>go(Math.max(0,cur-1)); document.getElementById('nextB').onclick=()=>go(Math.min(S.length-1,cur+1)); }
+function resetWorld(){
+  clearLabels(); cap(''); arrow1.visible=arrow2.visible=false; trail1.line.visible=trail2.line.visible=false; mapGroup.visible=false;
+  deskRig.reset(); deskRig.root.visible=false; deskRig.root.position.set(...DESK); deskRig.legs.visible=true;
+  opRig.reset(); op2Rig.reset(); op.group.visible=false; op2.group.visible=false; op.pelvisY=.9; op.lean=.06; op.gait(0,0,0); op2.gait(0,0,0); op.anchor.position.set(0,1.12,.32); op2.anchor.position.set(0,1.12,.32); op.group.rotation.set(0,0,0);
+  hidePeople(); document.getElementById('fest').style.display='none'; stageLightA.intensity=12; stageLightB.intensity=10; for(const k in demos) delete demos[k]; lastMoving=false; lastPos=null;
+}
+function go(i){ cur=i; const s=S[i]; curLv=s.lv; stepT=0; resetWorld(); s.setup&&s.setup.call(s); renderLevels(); renderSteps(); renderCard(s); renderModes(s); s.mount&&s.mount.call(s); if(s.cam)goCam(s.cam.p,s.cam.t); insetOn=!!s.inset; const side=document.getElementById('side'); if(side.scrollHeight>side.clientHeight+5) side.scrollTo({top:0,behavior:'smooth'}); else window.scrollTo({top:0,behavior:'smooth'});
+  const n=S.filter((x,j)=>x.lv===s.lv&&j<=i).length, tot=S.filter(x=>x.lv===s.lv).length; document.getElementById('bbTitle').innerHTML=`<b style="background:${LV[s.lv][1]}">${LV[s.lv][0]} ${n}/${tot}</b>${s.title}`; }
+document.getElementById('bbPrev').onclick=()=>go(Math.max(0,cur-1)); document.getElementById('bbNext').onclick=()=>go(Math.min(S.length-1,cur+1));
+document.getElementById('bSize').onclick=()=>stageEl.classList.toggle('big');
+window.addEventListener('keydown',e=>{ if(e.target.closest&&e.target.closest('input,textarea'))return; if(e.key==='ArrowRight')go(Math.min(S.length-1,cur+1)); if(e.key==='ArrowLeft')go(Math.max(0,cur-1)); if(e.key===' '){ e.preventDefault(); document.getElementById('bPlay').click(); } });
+let insetOn=false;
+let playing=true; document.getElementById('bPlay').onclick=e=>{ playing=!playing; e.target.textContent=playing?'❚❚ 一時停止':'▶ 再生'; };
+document.getElementById('bView').onclick=()=>{ const s=S[cur]; if(s.cam)goCam(s.cam.p,s.cam.t); };
+
+// footer sources
+document.getElementById('foot').innerHTML='<details class="srcs"><summary>参考にした情報源（'+Object.keys(SRC).length+'件）</summary>'+Object.values(SRC).map(([n,u])=>`<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join(' ／ ')+'</details><p>3Dモデルは説明用の簡易モデルで、実機の形状・寸法・会場の配置とは異なります。ボタン操作は初期設定の場合です。</p><p class="kbd">PC：← → キーでステップ移動、スペースで一時停止</p>';
+
+/* ---------------- loop ---------------- */
+const insetEl=document.getElementById('inset');
+let W=1,H=1;
+function resize(){ W=stageEl.clientWidth; H=stageEl.clientHeight; renderer.setSize(W,H,false); camera.aspect=W/H; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(stageEl); resize();
+const clock=new THREE.Clock();
+function frame(){
+  const dt=Math.min(clock.getDelta(),.05); if(playing) stepT+=dt;
+  const s=S[cur];
+  if(camTween){ camTween.k+=dt/camTween.dur; const k=ez(camTween.k); camera.position.lerpVectors(camTween.fp,camTween.tp,k); controls.target.lerpVectors(camTween.ft,camTween.tt,k); if(camTween.k>=1)camTween=null; }
+  if(playing||true){ s.update&&s.update.call(s,stepT,playing?dt:0); }
+  if(op.group.visible) op.update(); if(op2.group.visible) op2.update(); dayPeople.forEach(p=>{ if(p.group.visible) p.update(); });
+  speaker.handR.set(-.24,.86+.12*Math.max(0,Math.sin(stepT*1.3)),.12); speaker.update(); guest.update();
+  controls.update();
+  renderer.setScissorTest(false); renderer.setViewport(0,0,W,H); renderer.render(scene,camera);
+  if(insetOn&&op.group.visible){ const iw=Math.round(W>=900?Math.min(W*.42,560):Math.min(W*.48,300)), ih=Math.round(iw*9/16), m=10; const x=W-iw-m, y=m+(s.insetY||(s.modes?40:0));
+    opRig.vcam.aspect=16/9; opRig.vcam.updateProjectionMatrix(); renderer.setScissorTest(true); renderer.setScissor(x,y,iw,ih); renderer.setViewport(x,y,iw,ih);
+    const ov=op.group.visible; renderer.render(scene,opRig.vcam); renderer.setScissorTest(false);
+    insetEl.style.display='block'; insetEl.style.left=x+'px'; insetEl.style.top=(H-y-ih)+'px'; insetEl.style.width=iw+'px'; insetEl.style.height=ih+'px'; }
+  else insetEl.style.display='none';
+  updateLabels(W,H);
+  for(const k in demos){ const d=demos[k]; if(typeof d==='function') d(stepT); else d.draw&&d.draw(); }
+  requestAnimationFrame(frame);
+}
+camera.position.set(2,2,-7); controls.target.set(0,1,-5);
+go(0); frame(); window.__ok=true; setTimeout(()=>{const h=document.getElementById('hint'); h.style.transition='opacity .6s'; h.style.opacity='0';},6000);
+</script>
+<script>
+setTimeout(function(){ if(!window.__ok){ var el=document.getElementById('err'); if(el) el.style.display='flex'; } },8000);
+</script>
+</body>
+</html>
