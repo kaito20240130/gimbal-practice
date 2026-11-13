@@ -45,6 +45,16 @@ header .sub{font-size:11.5px;color:var(--mute)}
 #fMap{position:absolute;right:10px;top:54px;width:150px;height:90px;border-radius:8px;background:rgba(11,12,15,.82);border:1px solid var(--line)}
 #fBig{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:min(86%,520px);text-align:center;background:rgba(15,16,19,.9);border:2px solid var(--d);border-radius:14px;padding:12px 14px;opacity:0;transition:opacity .35s;pointer-events:none}
 #fBig.on{opacity:1}
+#fView{position:absolute;right:10px;top:10px;display:flex;gap:4px;pointer-events:auto}
+#fView button{font:inherit;font-size:12px;font-weight:700;color:var(--text);background:rgba(23,25,30,.92);border:1px solid var(--line);border-radius:8px;padding:6px 9px;cursor:pointer}
+#fView button.on{background:var(--d);color:#111;border-color:var(--d)}
+#fRec{position:absolute;left:0;right:0;display:none;justify-content:space-between;gap:10px;padding:4px 10px;font-size:12px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;pointer-events:none;text-shadow:0 1px 3px #000}
+#fRec .dot{color:#ef4444;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+#fest.fp #fRec{display:flex}
+#fest.fp #fMap{display:none}
+@media (max-width:979px){ #fView{top:10px;right:52px} #fView button{padding:6px 7px;font-size:11px} #fClock{right:190px;flex-wrap:nowrap} #fEv{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0} #fClock b{font-size:18px} #fTodo{max-width:calc(100% - 20px)} }
+@media (min-width:980px){ #fClock{right:260px} }
 #fBig .t{font-size:30px;font-weight:900;color:var(--d);font-variant-numeric:tabular-nums}
 #fBig .e{font-size:18px;font-weight:900;margin-top:2px}
 #fBig .y{font-size:13px;color:var(--accent);margin-top:6px;font-weight:700}
@@ -146,6 +156,7 @@ details.srcs summary{cursor:pointer;color:var(--text);font-weight:700}
   <div id="fest"><div id="fClock"><b id="fTime">13:00</b><span id="fEv"></span></div><div id="fTodo"></div>
     <div id="fBar"><button id="fPrev" title="前の場面">◀</button><input type="range" id="fRange" min="-3" max="182" step="0.1" value="-3"><button id="fNext2" title="次の場面">▶</button></div>
     <canvas id="fMap" width="300" height="180"></canvas>
+    <div id="fView"></div><div id="fRec"><span class="dot">●</span> REC <b id="fTc">00:00</b><span id="fSet"></span></div>
     <div id="fBig"><div class="t"></div><div class="e"></div><div class="y"></div></div></div>
   <div id="err">3Dの読み込みに失敗しました。通信環境を確認して再読み込みしてください。</div>
   <button id="bSize" title="3Dの大きさ">⤢</button>
@@ -995,13 +1006,13 @@ const FR=[fw(215,980),fw(110,980),fw(110,800),fw(530,800),fw(530,900),fw(480,900
 const FRL=[]; let FRT=0; for(let i=0;i<FR.length-1;i++){ const l=FR[i].distanceTo(FR[i+1]); FRL.push(l); FRT+=l; }
 const RED=FRL[0]+FRL[1]+FRL[2];
 function fAt(d){ d=Math.max(0,Math.min(FRT,d)); let i=0; while(i<FRL.length-1&&d>FRL[i]){ d-=FRL[i]; i++; } const a=FR[i], b=FR[i+1]; const t=Math.max(0,Math.min(1,d/FRL[i])); return {p:a.clone().lerp(b,t),dir:b.clone().sub(a).normalize()}; }
-const fest=new THREE.Group(); scene.add(fest); const fA={};
+const fest=new THREE.Group(); scene.add(fest); const fA={}; const fLines=[];
 const fBox=(x1,y1,x2,y2,h,mat)=>{ const a=fw(x1,y1), b=fw(x2,y2); const m=box(Math.abs(b.x-a.x),h,Math.abs(b.z-a.z),mat,(a.x+b.x)/2,h/2,(a.z+b.z)/2); fest.add(m); return m; };
 const fFlat=(x1,y1,x2,y2,mat,y=.015)=>{ const a=fw(x1,y1), b=fw(x2,y2); const m=new THREE.Mesh(new THREE.PlaneGeometry(Math.abs(b.x-a.x),Math.abs(b.z-a.z)),mat); m.rotation.x=-Math.PI/2; m.position.set((a.x+b.x)/2,y,(a.z+b.z)/2); fest.add(m); return m; };
 {
   fFlat(60,740,600,1060,stdMat(0x77746c,{r:.95}),0);
   for(let i=0;i<FR.length-1;i++){ const a=FR[i],b=FR[i+1]; const L=a.distanceTo(b); const r=new THREE.Mesh(new THREE.PlaneGeometry(6,L+6),stdMat(0x45464a,{r:.9})); r.rotation.x=-Math.PI/2; r.rotation.z=-Math.atan2(b.x-a.x,b.z-a.z); r.position.set((a.x+b.x)/2,.012,(a.z+b.z)/2); fest.add(r);
-    const ln=new THREE.Mesh(new THREE.PlaneGeometry(.45,L),basic(i<3?0xef4444:0x60a5fa)); ln.rotation.copy(r.rotation); ln.position.set((a.x+b.x)/2,.03,(a.z+b.z)/2); fest.add(ln); }
+    const ln=new THREE.Mesh(new THREE.PlaneGeometry(.45,L),basic(i<3?0xef4444:0x60a5fa)); ln.rotation.copy(r.rotation); ln.position.set((a.x+b.x)/2,.03,(a.z+b.z)/2); fest.add(ln); fLines.push(ln); }
   const pl=new THREE.Mesh(new THREE.CircleGeometry(6,40),stdMat(0xc9b998,{r:.9})); pl.rotation.x=-Math.PI/2; pl.position.set(FX,.02,0); fest.add(pl);
   fFlat(298,815,470,893,stdMat(0x4f8a45,{r:1}));                      // 中野四季の森公園
   const trunk=stdMat(0x5a3d26,{r:.9}), leaf=stdMat(0x3c7d3f,{r:.9}), leaf2=stdMat(0x8a7a2a,{r:.9});
@@ -1030,7 +1041,7 @@ const FE=[[-3,'開場前','会場を一周して動線・段差・ケーブル�
  [105,'区役所前で区長をお見送り','握手・手を振る瞬間。動かずに撮る',1],[106,'広場へ（約10分）','背中越しを少し → 広場へ先回り',0],[115,'神輿を広場の真ん中へ','到着〜置く瞬間を正面から',1],
  [120,'いけばな体験（30分×2回）','室内は1/50・F2.8。子どもの顔の公開可否は主催者に確認',0],[150,'写真スポット・周りの様子','笑顔・花のアップ・マルシェなど短く',0],[170,'終了前の締め','ブームで広場全体のワイド',0],[180,'終了','おつかれさまでした',0]];
 const fmt=m=>{ const t=Math.round(13*60+m); return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`; };
-const fState={m:-3,speed:1,playing:true,mode:'chapter',hold:0};
+const fState={m:-3,speed:1,playing:true,mode:'chapter',hold:0,view:'over',tc:0};
 function fMikoshi(m){ // returns {pos,yaw,lift,phase}
   if(m<85){ const lift=m<84.5?0:seg(m,84.5,85); return {p:START.clone(),yaw:Math.atan2(-1,0),lift,moving:false}; }
   if(m<105){ const a=fAt(RED*(m-85)/20); return {p:a.p,yaw:Math.atan2(a.dir.x,a.dir.z),lift:1,moving:true}; }
@@ -1075,10 +1086,10 @@ function fDrawMap(M,O){ const c=document.getElementById('fMap'); const g=fmc(); 
   g.setLineDash([]); g.fillStyle='#fb7185'; g.beginPath(); g.arc(px(M.p.x),py(M.p.z),9,0,7); g.fill(); g.fillStyle='#f5b83d'; g.beginPath(); g.arc(px(O.p.x),py(O.p.z),7,0,7); g.fill();
   g.font='bold 18px sans-serif'; g.fillStyle='#fff'; g.fillText('●神輿',8,H-10); g.fillStyle='#f5b83d'; g.fillText('●あなた',W*.5,H-10); }
 const festStep={lv:'d',title:'通しで見る：13:00〜16:00 祭りの流れ',inset:true,insetY:96,cam:{p:[FX-12,14,22],t:[FX-8,0,-20]},
- lead:'当日の流れを<b>場面ごと</b>に再生します（1場面およそ10秒。必須の場面はゆっくり）。場面が変わると、時刻と「あなたがすること」が大きく出ます。<b>ミニ地図</b>で神輿（ピンク）とあなた（黄色）の位置、右下の枠で「あなたのカメラに映る映像」を確認できます。◀ ▶ で場面を移動、下の時刻表をタップでもその場面へ。「連続」にすると1秒＝1分で通して流れます。',
+ lead:'右上で<b>視点</b>を選べます：<b>俯瞰</b>（全体）／<b>三人称</b>（撮影するあなたを後ろから）／<b>一人称</b>（あなたのカメラのモニター。録画される映像そのもの）。下の「連続×10」にすると、ほぼ本番に近い速さ（約18分）で通して流れます。<br>当日の流れを<b>場面ごと</b>に再生します（1場面およそ10秒。必須の場面はゆっくり）。場面が変わると、時刻と「あなたがすること」が大きく出ます。<b>ミニ地図</b>で神輿（ピンク）とあなた（黄色）の位置、右下の枠で「あなたのカメラに映る映像」を確認できます。◀ ▶ で場面を移動、下の時刻表をタップでもその場面へ。「連続」にすると1秒＝1分で通して流れます。',
  html:()=>`<div class="tl ftl">${FE.map(([m,e,sh,must],i)=>`<div class="it" data-m="${m}"><div class="tm">${fmt(Math.max(m,0))}${m<0?' 前':''}${must?'<span class="must">必須</span>':''}</div><div><b>${e}</b></div><div class="sh">📹 ${sh}</div></div>`).join('')}</div>
  <div class="box warn"><b class="h">この再生について</b>チラシの地図をもとにした模式図で、縮尺は約1/4です。道幅・建物・人の数は実際と違います。巡行中の位置（横→前→後ろ→足元）は一例です。</div>`,
- modes:[['chapter','場面ごと'],['cont','連続']],modeKey:'fmode',
+ modes:[['chapter','場面ごと'],['c10','連続×10'],['c30','×30'],['c60','×60']],modesShort:[['chapter','場面'],['c10','×10'],['c30','×30'],['c60','×60']],modeKey:'fmode',
  setup(){ document.getElementById('fest').style.display='block'; fest.visible=true; mk.visible=true; dayOp(); fLastIdx=-1; fState.snap=true;
    scene.background.set(0xbcd3e6); scene.fog.color.set(0xbcd3e6); scene.fog.near=70; scene.fog.far=260;
    if(window.innerWidth<980&&!stageEl.classList.contains('big')){ stageEl.classList.add('big'); autoBig=true; } addLabel('神輿',mk.anchor,'acc');
@@ -1087,11 +1098,13 @@ const festStep={lv:'d',title:'通しで見る：13:00〜16:00 祭りの流れ',i
    addLabel('区長',kucho.head,'',-14).maxD=28; addLabel('家元',iemoto.head,'',-14).maxD=28; addLabel('大学キャンパス',fA.campus).maxD=120; addLabel('中野セントラルパーク',fA.cp).maxD=120; },
  mount(){ const r=document.getElementById('fRange'); r.value=fState.m; r.oninput=()=>{ fState.m=+r.value; fState.snap=true; };
    document.querySelectorAll('.ftl .it').forEach(el=>el.onclick=()=>{ fState.m=+el.dataset.m; r.value=fState.m; fState.snap=true; userMoved=false; });
+   const fv=document.getElementById('fView'); const views=window.innerWidth<980?[['over','俯瞰'],['tp','3人称'],['fp','1人称']]:[['over','俯瞰'],['tp','三人称'],['fp','一人称']];
+   const drawV=()=>{ fv.innerHTML=''; views.forEach(([k,l])=>{ const b=document.createElement('button'); b.textContent=l; if(fState.view===k)b.className='on'; b.onclick=()=>{ fState.view=k; fState.snap=true; userMoved=false; document.getElementById('fest').classList.toggle('fp',k==='fp'); drawV(); }; fv.appendChild(b); }); }; drawV(); document.getElementById('fest').classList.toggle('fp',fState.view==='fp');
    document.getElementById('fPrev').onclick=()=>fGoChapter(fEventIdx(fState.m)-(fState.m-FE[fEventIdx(fState.m)][0]<1.5?1:0));
    document.getElementById('fNext2').onclick=()=>fGoChapter(fEventIdx(fState.m)+1);
    document.querySelectorAll('.ftl .it').forEach((el,i)=>el.onclick=()=>fGoChapter(i)); },
  update(t,dt){ if(fBigT>0){ fBigT-=rdt; if(fBigT<=0) document.getElementById('fBig').classList.remove('on'); }
-   if(fState.playing&&playing){ if(fState.mode==='chapter'){ if(fState.hold>0) fState.hold-=dt; else { const k=fEventIdx(fState.m); const L=fChapterEnd(k)-FE[k][0]; const T=FE[k][3]?11:7; fState.m+=dt*L/T; } } else fState.m+=dt*1;
+   if(fState.playing&&playing){ if(fState.mode==='chapter'){ if(fState.hold>0) fState.hold-=dt; else { const k=fEventIdx(fState.m); const L=fChapterEnd(k)-FE[k][0]; const T=FE[k][3]?11:7; fState.m+=dt*L/T; } } else fState.m+=dt*({c10:1/6,c30:.5,c60:1}[fState.mode]||1);
      if(fState.m>182){ fState.m=-3; fLastIdx=-1; fState.snap=true; } document.getElementById('fRange').value=fState.m; }
    const m=fState.m; document.getElementById('fTime').textContent=fmt(Math.max(0,m)); fUpdateCard();
    setFlowers(m<30?0:m<60?.2*seg(m,30,60):m<65?.2+.77*seg(m,60,65):m<66?.97+.03*seg(m,65,66):1);
@@ -1113,7 +1126,13 @@ const festStep={lv:'d',title:'通しで見る：13:00〜16:00 祭りの流れ',i
    const pp=op.group.position; lastMoving=!!(lastPos&&Math.hypot(pp.x-lastPos.x,pp.z-lastPos.z)>dt*.05); walkAnim(dt,O.crouch??.07);
    opRig.zoom=(m>=30&&m<84)?.55:0; opRig.apply(); opRig.setHandle(0,0,0); aimAt(O.aim[0],O.aim[1],O.aim[2]);
    document.getElementById('fTodo').textContent='あなた：'+FE[fEventIdx(m)][2]+(O.note?`（今は「${O.note}」）`:''); fDrawMap(M,O);
-   if(!userMoved&&!camTween){ const f=M.p.clone().lerp(O.p,.4); const near=!M.moving; const cp=near?new V3(f.x+4,11,f.z+11):new V3(f.x+5,24,f.z+15); const k=fState.snap?1:1-Math.exp(-rdt*2.5); fState.snap=false; camera.position.lerp(cp,k); controls.target.lerp(new V3(f.x,.8,f.z),k); }
+   { const fwd=new V3(Math.sin(op.group.rotation.y),0,Math.cos(op.group.rotation.y)); const aimP=new V3(O.aim[0],O.aim[1],O.aim[2]);
+     const ad=new V3(aimP.x-O.p.x,0,aimP.z-O.p.z); if(ad.lengthSq()<1e-4) ad.copy(fwd); ad.normalize(); fState.tpPos=O.p.clone().addScaledVector(ad,-2.6).add(new V3(-ad.z*.9,2.3+(O.anchorY?O.anchorY-1.12:0)*.5,ad.x*.9)); fState.tpTgt=aimP;
+     const recMoving=lastMoving||M.moving; fState.tc+=rdt*(fState.playing&&playing?1:0); if(fEventIdx(m)!==fState.tcIdx){ fState.tcIdx=fEventIdx(m); fState.tc=0; }
+     const tc=Math.floor(fState.tc); document.getElementById('fTc').textContent=`${String(Math.floor(tc/60)).padStart(2,'0')}:${String(tc%60).padStart(2,'0')}`;
+     document.getElementById('fSet').textContent=`4K 24p ・ 1/50 ・ F${opRig.zoom>.3?'2.8':'4'} ・ ${Math.round(24+46*opRig.zoom)}mm ・ ${opRig.inverted?'逆さ持ち':'PF'}`; }
+   if(fState.view==='tp'){ const k=fState.snap?1:1-Math.exp(-rdt*3); camera.position.lerp(fState.tpPos,k); controls.target.lerp(fState.tpTgt,k); fState.snapTp=false; }
+   if(fState.view!=='tp'&&!userMoved&&!camTween){ const f=M.p.clone().lerp(O.p,.4); const near=!M.moving; const cp=near?new V3(f.x+4,11,f.z+11):new V3(f.x+5,24,f.z+15); const k=fState.snap?1:1-Math.exp(-rdt*2.5); fState.snap=false; camera.position.lerp(cp,k); controls.target.lerp(new V3(f.x,.8,f.z),k); }
    cap(''); }};
 const fsState={k:1};
 SD.unshift(festStep);
@@ -1128,7 +1147,7 @@ function renderSteps(){ stepsEl.innerHTML=''; stepsEl.style.setProperty('--lv',L
 const modeBar=document.getElementById('modeBar'), modeSeg=document.getElementById('modeSeg');
 function renderModes(s){ if(!s.modes){modeBar.style.display='none';modeSeg.innerHTML='';return;} modeBar.style.display='block'; modeSeg.innerHTML='';
   const st=s.modeKey==='speed'?speedState:s.modeKey==='pos'?posState:s.modeKey==='fmode'?fState:modeState, key=s.modeKey==='speed'||s.modeKey==='pos'?'k':'mode';
-  s.modes.forEach(([v,label])=>{ const b=document.createElement('button'); b.textContent=label; if(st[key]===v)b.className='on'; b.onclick=()=>{ st[key]=v; if(key==='mode'){ opRig.cs.lockY=opRig.cs.yaw; opRig.cs.lockP=opRig.cs.pitch; } demos.speed&&demos.speed.clear(); renderModes(s); }; modeSeg.appendChild(b); }); }
+  ((window.innerWidth<980&&s.modesShort)||s.modes).forEach(([v,label])=>{ const b=document.createElement('button'); b.textContent=label; if(st[key]===v)b.className='on'; b.onclick=()=>{ st[key]=v; if(key==='mode'){ opRig.cs.lockY=opRig.cs.yaw; opRig.cs.lockP=opRig.cs.pitch; } demos.speed&&demos.speed.clear(); renderModes(s); }; modeSeg.appendChild(b); }); }
 function renderCard(s){ const [lvName,col]=LV[s.lv]; const idx=S.filter((x,j)=>x.lv===s.lv&&j<=cur).length;
   const html=typeof s.html==='function'?s.html():(s.html||'');
   mainEl.innerHTML=`<div class="card"><span class="tag" style="background:${col}">${lvName} ${idx}</span><h2>${s.title}</h2><p class="lead">${s.lead||''}</p>
@@ -1171,12 +1190,26 @@ function frame(){
   if(op.group.visible) op.update(); if(op2.group.visible) op2.update(); dayPeople.forEach(p=>{ if(p.group.visible) p.update(); });
   speaker.handR.set(-.24,.86+.12*Math.max(0,Math.sin(stepT*1.3)),.12); speaker.update(); guest.update();
   controls.update();
+  const fpMode=(s===festStep&&fState.view==='fp'); fLines.forEach(l=>l.visible=!fpMode);
+  labelLayer.style.display=fpMode?'none':'block';
+  if(fpMode){ // 一人称：16:9のモニター表示＋右下に俯瞰
+    renderer.setScissorTest(true); renderer.setScissor(0,0,W,H); renderer.setViewport(0,0,W,H); renderer.setClearColor(0x000000); renderer.clear();
+    let vw=W, vh=Math.round(W*9/16); if(vh>H-150){ vh=H-150; vw=Math.round(vh*16/9); } const vx=Math.round((W-vw)/2), vy=Math.round(H-vh-(W<980?120:70));
+    const bob=lastMoving?.006*Math.sin(stepT*11):0; opRig.vcam.position.y=bob;
+    opRig.vcam.aspect=16/9; opRig.vcam.updateProjectionMatrix(); renderer.setScissor(vx,vy,vw,vh); renderer.setViewport(vx,vy,vw,vh); renderer.render(scene,opRig.vcam); opRig.vcam.position.y=0;
+    const rec=document.getElementById('fRec'); rec.style.top=(H-vy-vh)+'px'; rec.style.left=vx+'px'; rec.style.width=vw+'px'; rec.style.right='auto';
+    const iw=Math.round(W>=900?Math.min(W*.24,320):Math.min(W*.42,200)), ih=Math.round(iw*.62), m=10; const x=W-iw-m, y=m+(W<980?44:44);
+    renderer.setScissor(x,y,iw,ih); renderer.setViewport(x,y,iw,ih); const pa=camera.aspect; camera.aspect=iw/ih; camera.updateProjectionMatrix(); renderer.render(scene,camera); camera.aspect=pa; camera.updateProjectionMatrix(); renderer.setScissorTest(false);
+    insetEl.style.display='block'; insetEl.querySelector('span').textContent='俯瞰'; insetEl.style.left=x+'px'; insetEl.style.top=(H-y-ih)+'px'; insetEl.style.width=iw+'px'; insetEl.style.height=ih+'px';
+  } else {
+  insetEl.querySelector('span').textContent='カメラの映像';
   renderer.setScissorTest(false); renderer.setViewport(0,0,W,H); renderer.render(scene,camera);
   if(insetOn&&op.group.visible){ const iw=Math.round(W>=900?Math.min(W*.42,560):Math.min(W*.48,300)), ih=Math.round(iw*9/16), m=10; const x=W-iw-m, y=m+(s.insetY||(s.modes?40:0));
     opRig.vcam.aspect=16/9; opRig.vcam.updateProjectionMatrix(); renderer.setScissorTest(true); renderer.setScissor(x,y,iw,ih); renderer.setViewport(x,y,iw,ih);
     const ov=op.group.visible; renderer.render(scene,opRig.vcam); renderer.setScissorTest(false);
     insetEl.style.display='block'; insetEl.style.left=x+'px'; insetEl.style.top=(H-y-ih)+'px'; insetEl.style.width=iw+'px'; insetEl.style.height=ih+'px'; }
   else insetEl.style.display='none';
+  }
   updateLabels(W,H);
   for(const k in demos){ const d=demos[k]; if(typeof d==='function') d(stepT); else d.draw&&d.draw(); }
   requestAnimationFrame(frame);
