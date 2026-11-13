@@ -115,7 +115,7 @@ details.srcs summary{cursor:pointer;color:var(--text);font-weight:700}
   #side{height:100vh;overflow-y:auto}
   #bbar,#bSize{display:none}
   #hint{right:10px}
-  nav#steps,nav#levels{flex-wrap:wrap}
+  nav#levels{flex-wrap:wrap}
   nav#steps button{max-width:none}
   main{padding:0 14px 20px}
   .opts{grid-template-columns:1fr}
@@ -420,7 +420,7 @@ const labelLayer=document.getElementById('labels'); let labels=[];
 function clearLabels(){ labels.forEach(l=>l.el.remove()); labels=[]; }
 function addLabel(text,obj,cls='',dy=0){ const el=document.createElement('div'); el.className='lbl '+cls; el.textContent=text; labelLayer.appendChild(el); const L={el,obj,dy}; labels.push(L); return L; }
 const tmpV=new V3();
-function updateLabels(w,h){ for(const l of labels){ if(!l.obj||l.hidden){l.el.style.display='none';continue;} l.obj.getWorldPosition(tmpV); tmpV.project(camera);
+function updateLabels(w,h){ for(const l of labels){ if(!l.obj||l.hidden){l.el.style.display='none';continue;} let vis=true; for(let o=l.obj;o;o=o.parent){ if(!o.visible){vis=false;break;} } if(!vis){l.el.style.display='none';continue;} l.obj.getWorldPosition(tmpV); if(l.maxD&&tmpV.distanceTo(camera.position)>l.maxD){l.el.style.display='none';continue;} tmpV.project(camera);
   if(tmpV.z>1||Math.abs(tmpV.x)>1.2||Math.abs(tmpV.y)>1.2){l.el.style.display='none';continue;} l.el.style.display='block';
   l.el.style.transform=`translate(${(tmpV.x*.5+.5)*w}px,${(-tmpV.y*.5+.5)*h+l.dy}px) translate(-50%,-100%)`; } }
 
@@ -851,28 +851,30 @@ S.push({lv:'e',title:'持ち物・確認チェックリスト',cam:deskCam(.5,.2
 
 
 /* ===== 明日の本番（囲町いけばな神輿まつり） ===== */
-const ROUTE_SVG=`<div class="map"><svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans JP, sans-serif">
-<rect x="0" y="0" width="400" height="300" fill="#0b0c0f"/>
-<rect x="120" y="70" width="170" height="105" rx="10" fill="#1f3a22"/><text x="205" y="128" fill="#86efac" font-size="12" text-anchor="middle">中野四季の森公園</text>
-<rect x="300" y="60" width="70" height="40" rx="6" fill="#2b2f38"/><text x="335" y="84" fill="#9aa0aa" font-size="10" text-anchor="middle">区役所</text>
-<rect x="95" y="215" width="70" height="38" rx="6" fill="#3a2430"/><text x="130" y="238" fill="#f9a8d4" font-size="10" text-anchor="middle">一葉式 本部</text>
-<circle cx="215" cy="262" r="20" fill="#3a3326"/><text x="215" y="266" fill="#f5b83d" font-size="10" text-anchor="middle">広場</text>
-<path d="M150 228 L55 228 L55 42 L330 42" fill="none" stroke="#ef4444" stroke-width="5" stroke-linejoin="round"/>
-<path d="M330 42 L330 195 L222 195 L218 240" fill="none" stroke="#60a5fa" stroke-width="4" stroke-dasharray="9 6" stroke-linejoin="round"/>
-<g font-size="11" font-weight="900">
-<circle cx="150" cy="228" r="11" fill="#ef4444"/><text x="150" y="232" fill="#fff" text-anchor="middle">1</text>
-<circle cx="190" cy="42" r="11" fill="#ef4444"/><text x="190" y="46" fill="#fff" text-anchor="middle">2</text>
-<circle cx="330" cy="42" r="11" fill="#ef4444"/><text x="330" y="46" fill="#fff" text-anchor="middle">3</text></g>
-<g font-size="10" font-weight="900" fill="#111">
-<rect x="160" y="246" width="18" height="16" rx="4" fill="#f5b83d"/><text x="169" y="258" text-anchor="middle">A</text>
-<rect x="30" y="128" width="18" height="16" rx="4" fill="#f5b83d"/><text x="39" y="140" text-anchor="middle">B</text>
-<rect x="250" y="52" width="18" height="16" rx="4" fill="#f5b83d"/><text x="259" y="64" text-anchor="middle">C</text>
-<rect x="352" y="22" width="18" height="16" rx="4" fill="#f5b83d"/><text x="361" y="34" text-anchor="middle">D</text>
-<rect x="340" y="140" width="18" height="16" rx="4" fill="#f5b83d"/><text x="349" y="152" text-anchor="middle">E</text>
-<rect x="244" y="250" width="18" height="16" rx="4" fill="#f5b83d"/><text x="253" y="262" text-anchor="middle">F</text></g>
-<text x="8" y="292" fill="#9aa0aa" font-size="9.5">赤＝区長と一緒（約20分）／青点線＝お別れ後に広場へ（約10分）。チラシの地図をもとにした模式図</text>
+const ROUTE_SVG=`<div class="map"><svg viewBox="70 735 510 315" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans JP, sans-serif">
+<rect x="70" y="735" width="510" height="315" fill="#0b0c0f"/>
+<rect x="298" y="815" width="172" height="78" rx="8" fill="#1f3a22"/><text x="384" y="858" fill="#86efac" font-size="13" text-anchor="middle">中野四季の森公園</text>
+<rect x="125" y="815" width="160" height="150" rx="6" fill="#23252b"/><text x="205" y="925" fill="#9aa0aa" font-size="11" text-anchor="middle">大学キャンパス</text>
+<rect x="312" y="910" width="156" height="52" rx="6" fill="#23252b"/><text x="390" y="941" fill="#9aa0aa" font-size="11" text-anchor="middle">中野セントラルパーク</text>
+<rect x="495" y="745" width="65" height="40" rx="6" fill="#2b2f38"/><text x="527" y="770" fill="#cbd5e1" font-size="11" text-anchor="middle">区役所</text>
+<rect x="175" y="990" width="80" height="32" rx="6" fill="#3a2430"/><text x="215" y="1010" fill="#f9a8d4" font-size="10.5" text-anchor="middle">一葉式 本部</text>
+<circle cx="293" cy="1012" r="17" fill="#3a3326"/><text x="293" y="1016" fill="#f5b83d" font-size="10.5" text-anchor="middle">広場</text>
+<path d="M215 980 L110 980 L110 800 L530 800" fill="none" stroke="#ef4444" stroke-width="6" stroke-linejoin="round"/>
+<path d="M530 800 L530 900 L480 900 L480 975 L305 975 L293 1006" fill="none" stroke="#60a5fa" stroke-width="5" stroke-dasharray="11 7" stroke-linejoin="round"/>
+<g font-size="12" font-weight="900">
+<circle cx="215" cy="980" r="12" fill="#ef4444"/><text x="215" y="984" fill="#fff" text-anchor="middle">1</text>
+<circle cx="300" cy="800" r="12" fill="#ef4444"/><text x="300" y="804" fill="#fff" text-anchor="middle">2</text>
+<circle cx="530" cy="800" r="12" fill="#ef4444"/><text x="530" y="804" fill="#fff" text-anchor="middle">3</text></g>
+<g font-size="11" font-weight="900" fill="#111">
+<rect x="236" y="983" width="20" height="17" rx="4" fill="#f5b83d"/><text x="246" y="996" text-anchor="middle">A</text>
+<rect x="84" y="880" width="20" height="17" rx="4" fill="#f5b83d"/><text x="94" y="893" text-anchor="middle">B</text>
+<rect x="370" y="772" width="20" height="17" rx="4" fill="#f5b83d"/><text x="380" y="785" text-anchor="middle">C</text>
+<rect x="546" y="805" width="20" height="17" rx="4" fill="#f5b83d"/><text x="556" y="818" text-anchor="middle">D</text>
+<rect x="490" y="930" width="20" height="17" rx="4" fill="#f5b83d"/><text x="500" y="943" text-anchor="middle">E</text>
+<rect x="316" y="995" width="20" height="17" rx="4" fill="#f5b83d"/><text x="326" y="1008" text-anchor="middle">F</text></g>
+<text x="78" y="1042" fill="#9aa0aa" font-size="10.5">赤＝区長と一緒（約20分）／青点線＝お別れ後に広場へ（約10分）。チラシの地図をもとにした模式図</text>
 </svg></div>
-<table class="t"><tr><th>A 出発</th><td>持ち上げる瞬間をロー → ブームで</td></tr><tr><th>B 西側の角</th><td>横から並走（体は前、カメラは横）</td></tr><tr><th>C 公園沿い</th><td>木や花を手前に入れて並走</td></tr><tr><th>D 区役所前</th><td>少し先回りして正面で待ち、区長のお見送りを撮る</td></tr><tr><th>E 戻り道</th><td>担ぎ手の背中越しに広場へ向かう後ろ姿</td></tr><tr><th>F 広場</th><td>先回りして、到着と「真ん中に置く瞬間」を正面から</td></tr></table>`;
+<table class="t"><tr><th>A 出発</th><td>持ち上げる瞬間をロー → ブームで</td></tr><tr><th>B 西側の直線</th><td>横から並走（体は前、カメラは横）</td></tr><tr><th>C 北側（②四季の森公園のまわり）</th><td>公園の木を手前に入れて並走</td></tr><tr><th>D 区役所前</th><td>少し先回りして正面で待ち、区長のお見送りを撮る</td></tr><tr><th>E 戻り道</th><td>担ぎ手の背中越しに広場へ向かう後ろ姿</td></tr><tr><th>F 広場</th><td>先回りして、到着と「真ん中に置く瞬間」を正面から</td></tr></table>`;
 
 const TL=[['13:00','開会・お囃子','広場全体のワイド（PF、24mm）。お囃子の手元・表情（50〜70mm）',0],
  ['13:30','家元が神輿の土台をつくる','家元の手元をゆっくり回り込み（オービット）',1],
@@ -994,34 +996,38 @@ SD.push({lv:'d',title:'ショットリスト（撮れたらチェック）',cam:
    document.querySelectorAll('.chk input').forEach(cb=>{ cb.checked=!!st[cb.dataset.k]; cb.onchange=()=>{ st[cb.dataset.k]=cb.checked; try{ localStorage.setItem('rs5shots',JSON.stringify(st)); }catch(e){} }; }); },
  update(t){ if(userMoved||camTween)return; const a=t*.1; camera.position.set(TX+Math.sin(a)*11,7,Math.cos(a)*-11+3); controls.target.set(TX,0,3); cap(''); }});
 
-/* ===== 祭りの通し再生（チラシの地図をもとにした縮尺 約1/4 の模式） ===== */
-const FX=200, FK=.35;
-const fw=(sx,sy)=>new V3(FX+(sx-215)*FK,0,(sy-262)*FK);
-const FR=[fw(150,228),fw(55,228),fw(55,42),fw(330,42),fw(330,195),fw(222,195),fw(218,240),fw(215,262)];
+/* ===== 祭りの通し再生（チラシの地図の座標を測って作った模式。縮尺 約1/4） ===== */
+const FX=200, FK=.28, GX=293, GY=1008; // GX,GY = チラシ上のゴール（おまつり広場）
+const fw=(sx,sy)=>new V3(FX+(sx-GX)*FK,0,(sy-GY)*FK);
+const FR=[fw(215,980),fw(110,980),fw(110,800),fw(530,800),fw(530,900),fw(480,900),fw(480,975),fw(305,975),fw(293,1008)];
 const FRL=[]; let FRT=0; for(let i=0;i<FR.length-1;i++){ const l=FR[i].distanceTo(FR[i+1]); FRL.push(l); FRT+=l; }
 const RED=FRL[0]+FRL[1]+FRL[2];
 function fAt(d){ d=Math.max(0,Math.min(FRT,d)); let i=0; while(i<FRL.length-1&&d>FRL[i]){ d-=FRL[i]; i++; } const a=FR[i], b=FR[i+1]; const t=Math.max(0,Math.min(1,d/FRL[i])); return {p:a.clone().lerp(b,t),dir:b.clone().sub(a).normalize()}; }
 const fest=new THREE.Group(); scene.add(fest); const fA={};
+const fBox=(x1,y1,x2,y2,h,mat)=>{ const a=fw(x1,y1), b=fw(x2,y2); const m=box(Math.abs(b.x-a.x),h,Math.abs(b.z-a.z),mat,(a.x+b.x)/2,h/2,(a.z+b.z)/2); fest.add(m); return m; };
+const fFlat=(x1,y1,x2,y2,mat,y=.015)=>{ const a=fw(x1,y1), b=fw(x2,y2); const m=new THREE.Mesh(new THREE.PlaneGeometry(Math.abs(b.x-a.x),Math.abs(b.z-a.z)),mat); m.rotation.x=-Math.PI/2; m.position.set((a.x+b.x)/2,y,(a.z+b.z)/2); fest.add(m); return m; };
 {
-  const g=new THREE.Mesh(new THREE.PlaneGeometry(170,130),stdMat(0x6d6a63,{r:.95})); g.rotation.x=-Math.PI/2; g.position.set(FX-8,0,-40); fest.add(g);
+  fFlat(60,740,600,1060,stdMat(0x77746c,{r:.95}),0);
   for(let i=0;i<FR.length-1;i++){ const a=FR[i],b=FR[i+1]; const L=a.distanceTo(b); const r=new THREE.Mesh(new THREE.PlaneGeometry(6,L+6),stdMat(0x45464a,{r:.9})); r.rotation.x=-Math.PI/2; r.rotation.z=-Math.atan2(b.x-a.x,b.z-a.z); r.position.set((a.x+b.x)/2,.012,(a.z+b.z)/2); fest.add(r);
-    const ln=new THREE.Mesh(new THREE.PlaneGeometry(.35,L),basic(i<3?0xef4444:0x60a5fa)); ln.rotation.copy(r.rotation); ln.position.set((a.x+b.x)/2,.03,(a.z+b.z)/2); fest.add(ln); }
-  const pl=new THREE.Mesh(new THREE.CircleGeometry(6,40),stdMat(0xb4a690,{r:.9})); pl.rotation.x=-Math.PI/2; pl.position.set(FX,.02,0); fest.add(pl);
-  const pk=new THREE.Mesh(new THREE.PlaneGeometry(59.5,36.75),stdMat(0x3f6b3a,{r:1})); pk.rotation.x=-Math.PI/2; pk.position.set(FX-3.5,.015,-48.8); fest.add(pk);
-  const trunk=stdMat(0x5a3d26,{r:.9}), leaf=stdMat(0x3c7d3f,{r:.9});
+    const ln=new THREE.Mesh(new THREE.PlaneGeometry(.45,L),basic(i<3?0xef4444:0x60a5fa)); ln.rotation.copy(r.rotation); ln.position.set((a.x+b.x)/2,.03,(a.z+b.z)/2); fest.add(ln); }
+  const pl=new THREE.Mesh(new THREE.CircleGeometry(6,40),stdMat(0xc9b998,{r:.9})); pl.rotation.x=-Math.PI/2; pl.position.set(FX,.02,0); fest.add(pl);
+  fFlat(298,815,470,893,stdMat(0x4f8a45,{r:1}));                      // 中野四季の森公園
+  const trunk=stdMat(0x5a3d26,{r:.9}), leaf=stdMat(0x3c7d3f,{r:.9}), leaf2=stdMat(0x8a7a2a,{r:.9});
   let seed=3; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
-  for(let i=0;i<34;i++){ const x=FX-31+rnd()*55, z=-65+rnd()*32; fest.add(cyl(.18,2.6,trunk,'y',x,1.3,z,6)); const c=new THREE.Mesh(new THREE.SphereGeometry(1.3+rnd()*.5,8,6),leaf); c.position.set(x,3.3,z); fest.add(c); }
-  const bm=stdMat(0x8a8d95,{r:.8});
-  [[-70,-40,14,40,22],[-70,-90,14,22,30],[0,-95,80,10,26],[66,-50,10,40,34],[25,12,30,8,18],[-55,8,20,10,16]].forEach(([x,z,w,d,h])=>fest.add(box(w,h,d,bm,FX+x,h/2,z)));
-  fest.add(box(20,7,12,stdMat(0xd9d2c3,{r:.8}),FX-24,3.5,-4)); // 一葉式いけばな東京中野本部
-  fest.add(box(16,18,20,stdMat(0xb7bcc6,{r:.8}),FX+52,9,-75)); // 区役所
-  [['hq',-24,8,-4],['ku',52,19,-75],['plaza',0,.5,5.5],['park',-3,1,-50]].forEach(([k,x,y,z])=>{ fA[k]=new THREE.Object3D(); fA[k].position.set(FX+x,y,z); fest.add(fA[k]); });
-  // お囃子と観客
+  for(let i=0;i<40;i++){ const p=fw(305+rnd()*160,820+rnd()*68); fest.add(cyl(.18,2.6,trunk,'y',p.x,1.3,p.z,6)); const c=new THREE.Mesh(new THREE.SphereGeometry(1.2+rnd()*.5,8,6),i%5?leaf:leaf2); c.position.set(p.x,3.3,p.z); fest.add(c); }
+  for(let k=0;k<14;k++){ const p=fw(120+k*29,812); fest.add(cyl(.15,2.4,trunk,'y',p.x,1.2,p.z,6)); const c=new THREE.Mesh(new THREE.SphereGeometry(1.1,8,6),leaf); c.position.set(p.x,3,p.z); fest.add(c); }
+  const campus=stdMat(0xa9a59a,{r:.85}), office=stdMat(0x8f97a3,{r:.7}), gray=stdMat(0x7d8088,{r:.8});
+  fBox(125,815,205,885,4,campus); fBox(215,830,285,890,3.5,campus); fBox(125,900,200,965,4.5,campus);          // 大学キャンパス（帝京平成・明治）
+  fBox(312,910,375,962,6,office); fBox(390,910,468,962,5,office);                                           // 中野セントラルパーク
+  fBox(495,740,560,788,7,stdMat(0xb7bcc6,{r:.8}));                                                          // 区役所
+  fBox(180,990,250,1022,3.5,stdMat(0xe2d8c6,{r:.8}));                                                          // 一葉式いけばな東京中野本部
+  fBox(330,995,420,1050,5,gray); fBox(60,780,95,1000,5,gray); fBox(545,820,600,1000,5,gray); fBox(130,745,300,785,5,gray);
+  [['hq',215,1006,5],['ku',528,764,9],['plaza',293,1028,.5],['park',384,854,1.5],['campus',165,850,6],['cp',420,936,8]].forEach(([k,x,y,h])=>{ const p=fw(x,y); fA[k]=new THREE.Object3D(); fA[k].position.set(p.x,h,p.z); fest.add(fA[k]); });
   const cols=[0x475569,0x9d174d,0x1e3a8a,0x14532d,0x6b21a8,0xb45309];
-  for(let i=0;i<26;i++){ const a=i/26*Math.PI*2; if(Math.abs(Math.sin(a))>.9&&Math.cos(a)<0)continue; const r=7+(i%2); const b=new THREE.Mesh(new THREE.CapsuleGeometry(.18,.8,4,8),stdMat(cols[i%6],{r:.85})); b.position.set(FX+Math.sin(a)*r,.6,Math.cos(a)*r); fest.add(b); }
-  fA.hayashi=new THREE.Group(); fest.add(fA.hayashi); for(let i=0;i<4;i++){ const b=new THREE.Mesh(new THREE.CapsuleGeometry(.18,.4,4,8),stdMat(0x7f1d1d,{r:.8})); b.position.set(FX+3.4+i*.7,.5,-2.6); fA.hayashi.add(b); }
-  fA.hayashiL=new THREE.Object3D(); fA.hayashiL.position.set(FX+4.5,1.3,-2.6); fest.add(fA.hayashiL);
-  for(let i=0;i<14;i++){ const b=new THREE.Mesh(new THREE.CapsuleGeometry(.18,.8,4,8),stdMat(cols[(i+2)%6],{r:.85})); b.position.set(FX-27+(i%7)*1.1,.6,-14.5-Math.floor(i/7)*1.1); fest.add(b); }
+  for(let i=0;i<26;i++){ const a=i/26*Math.PI*2; if(Math.cos(a)>.7)continue; const r=7+(i%2); const b=new THREE.Mesh(new THREE.CapsuleGeometry(.18,.8,4,8),stdMat(cols[i%6],{r:.85})); b.position.set(FX+Math.sin(a)*r,.6,Math.cos(a)*r); fest.add(b); }
+  fA.hayashi=new THREE.Group(); fest.add(fA.hayashi); for(let i=0;i<4;i++){ const b=new THREE.Mesh(new THREE.CapsuleGeometry(.18,.4,4,8),stdMat(0x7f1d1d,{r:.8})); b.position.set(FX+3.4+i*.7,.5,2.6); fA.hayashi.add(b); }
+  fA.hayashiL=new THREE.Object3D(); fA.hayashiL.position.set(FX+4.5,1.3,2.6); fest.add(fA.hayashiL);
+  const st0=fw(215,980); for(let i=0;i<14;i++){ const b=new THREE.Mesh(new THREE.CapsuleGeometry(.18,.8,4,8),stdMat(cols[(i+2)%6],{r:.85})); b.position.set(st0.x-3+(i%7)*1.1,.6,st0.z-3.4-Math.floor(i/7)*1.1); fest.add(b); }
 }
 const START=FR[0].clone();
 // 時刻（13:00からの分）ごとの出来事
@@ -1044,7 +1050,7 @@ function fOperator(m,mk){ // returns {p,yaw,anchorY,crouch,aim:[x,y,z],inv,note}
   if(m<25){ const p=new V3(C.x-4.5,0,C.z+4.5); return {p,aim:[C.x+3,1.1,C.z-1.5]}; }
   if(m<30){ const t=seg(m,25,30); return {p:new V3(C.x-4.5,0,C.z+4.5).lerp(around(START,3,Math.PI*.25),t),aim:[START.x,1,START.z]}; }
   if(m<65){ const a=Math.PI*.25+Math.sin((m-30)/35*Math.PI*2)*.9; return {p:around(START,2.6,a),aim:[START.x,1,START.z]}; }
-  if(m<80){ const p=around(START,4.2,Math.PI*.15+(m<70?seg(m,65,70)*.3:.3)); return {p,aim:[START.x,1.3,START.z+1.6]}; }
+  if(m<80){ const p=START.clone().add(new V3(-3.2+(m<70?seg(m,65,70)*.8:.8),0,-3.0)); return {p,aim:[START.x,1.25,START.z-1.4]}; }
   if(m<84){ return {p:around(START,5,-.5),aim:[START.x,1.2,START.z]}; }
   if(m<87){ const b=seg(m,84.6,86); return {p:around(START,3.2,-.9),aim:[mk.p.x,lerp(.9,1.6,mk.lift),mk.p.z],anchorY:lerp(.55,1.65,b),crouch:lerp(.38,0,Math.min(1,b*1.6))}; }
   if(m<101||(m>=106&&m<108)){ const a=fAt(m<101?RED*(m-85)/20:RED+(FRT-RED)*(m-105)/10); const n=new V3(-a.dir.z,0,a.dir.x); const k=m>=106?'back':['side','front','back','low'][Math.floor((m-87)/3.5)%4];
@@ -1053,10 +1059,10 @@ function fOperator(m,mk){ // returns {p,yaw,anchorY,crouch,aim:[x,y,z],inv,note}
     if(k==='back') return {p:a.p.clone().addScaledVector(a.dir,-4.2).addScaledVector(n,.9),aim:[mk.p.x+a.dir.x*3,1.5,mk.p.z+a.dir.z*3],note:'後ろ'};
     return {p:a.p.clone().addScaledVector(a.dir,2.2).addScaledVector(n,-1.7),aim:[mk.p.x,.9,mk.p.z],inv:true,anchorY:.72,crouch:.24,note:'足元'}; }
   if(m<106){ const d=fAt(RED).p; const t=seg(m,101,103.5); const from=fAt(RED*(101-85)/20); const n=new V3(-from.dir.z,0,from.dir.x);
-    return {p:from.p.clone().addScaledVector(n,-3).lerp(d.clone().add(new V3(-3,0,-3.5)),t),aim:[d.x,1.4,d.z]}; }
+    return {p:from.p.clone().addScaledVector(n,-3).lerp(d.clone().add(new V3(3.2,0,4.2)),t),aim:[d.x-1,1.4,d.z-1.5]}; }
   if(m<115){ const t=seg(m,108,112.5); const a=fAt(RED+(FRT-RED)*(108-105)/10); return {p:a.p.clone().add(new V3(-2.5,0,0)).lerp(new V3(C.x-1.5,0,C.z+5),t),aim:[mk.p.x,1.4,mk.p.z]}; }
   if(m<120){ return {p:new V3(C.x-1.5,0,C.z+5),aim:[C.x,1,C.z]}; }
-  if(m<150){ const t=seg(m,120,122); return {p:new V3(C.x-1.5,0,C.z+5).lerp(new V3(FX-24,0,3),t),aim:[FX-24,1.2,-4]}; }
+  if(m<150){ const t=seg(m,120,122); const door=fw(215,986); return {p:new V3(C.x-1.5,0,C.z+5).lerp(door.clone().add(new V3(0,0,-2.5)),t),aim:[door.x,1.2,door.z+3]}; }
   if(m<170){ const a=Math.PI*.3+(m-150)/20*1.6; return {p:around(C,3,a),aim:[C.x,1,C.z]}; }
   const b=seg(m,171,177); return {p:new V3(C.x+4.5,0,C.z+4.5),aim:[C.x,lerp(.9,.5,b),C.z],anchorY:lerp(.55,2.0,b),crouch:lerp(.38,0,Math.min(1,b*1.6))}; }
 let fLastIdx=-1;
@@ -1068,13 +1074,15 @@ const festStep={lv:'d',title:'通しで見る：13:00〜16:00 祭りの流れ',i
  html:()=>`<div class="tl ftl">${FE.map(([m,e,sh,must],i)=>`<div class="it" data-m="${m}"><div class="tm">${fmt(Math.max(m,0))}${m<0?' 前':''}${must?'<span class="must">必須</span>':''}</div><div><b>${e}</b></div><div class="sh">📹 ${sh}</div></div>`).join('')}</div>
  <div class="box warn"><b class="h">この再生について</b>チラシの地図をもとにした模式図で、縮尺は約1/4です。道幅・建物・人の数は実際と違います。巡行中の位置（横→前→後ろ→足元）は一例です。</div>`,
  modes:[[.5,'×30'],[1,'×60'],[3,'×180']],modeKey:'fspeed',
- setup(){ document.getElementById('fest').style.display='block'; fest.visible=true; mk.visible=true; dayOp(); fLastIdx=-1;
+ setup(){ document.getElementById('fest').style.display='block'; fest.visible=true; mk.visible=true; dayOp(); fLastIdx=-1; fState.snap=true;
+   scene.background.set(0xbcd3e6); scene.fog.color.set(0xbcd3e6); scene.fog.near=70; scene.fog.far=260;
+   if(window.innerWidth<980&&!stageEl.classList.contains('big')){ stageEl.classList.add('big'); autoBig=true; } addLabel('神輿',mk.anchor,'acc');
    kucho.group.visible=true; iemoto.group.visible=true;
-   addLabel('一葉式いけばな 東京中野本部',fA.hq); addLabel('区役所',fA.ku); addLabel('おまつり広場',fA.plaza,'acc'); addLabel('中野四季の森公園',fA.park,'good'); addLabel('お囃子',fA.hayashiL);
-   addLabel('区長',kucho.head,'acc',-14); addLabel('家元',iemoto.head,'',-14); },
- mount(){ const r=document.getElementById('fRange'); r.value=fState.m; r.oninput=()=>{ fState.m=+r.value; };
-   document.querySelectorAll('.ftl .it').forEach(el=>el.onclick=()=>{ fState.m=+el.dataset.m; r.value=fState.m; });
-   document.getElementById('fNext').onclick=()=>{ const n=FE.find(e=>e[3]&&e[0]>fState.m+.2); fState.m=n?n[0]-.5:-3; r.value=fState.m; }; },
+   addLabel('一葉式いけばな東京中野本部',fA.hq); addLabel('区役所（③お別れ）',fA.ku); addLabel('おまつり広場',fA.plaza,'acc'); addLabel('中野四季の森公園',fA.park,'good'); addLabel('お囃子',fA.hayashiL);
+   addLabel('区長',kucho.head,'',-14).maxD=28; addLabel('家元',iemoto.head,'',-14).maxD=28; addLabel('大学キャンパス',fA.campus).maxD=120; addLabel('中野セントラルパーク',fA.cp).maxD=120; },
+ mount(){ const r=document.getElementById('fRange'); r.value=fState.m; r.oninput=()=>{ fState.m=+r.value; fState.snap=true; };
+   document.querySelectorAll('.ftl .it').forEach(el=>el.onclick=()=>{ fState.m=+el.dataset.m; r.value=fState.m; fState.snap=true; userMoved=false; });
+   document.getElementById('fNext').onclick=()=>{ const n=FE.find(e=>e[3]&&e[0]>fState.m+.2); fState.m=n?n[0]-.5:-3; r.value=fState.m; fState.snap=true; userMoved=false; }; },
  update(t,dt){ if(fState.playing&&playing){ fState.m+=dt*fState.speed; if(fState.m>182) fState.m=-3; document.getElementById('fRange').value=fState.m; }
    const m=fState.m; document.getElementById('fTime').textContent=fmt(Math.max(0,m)); fUpdateCard();
    setFlowers(m<30?0:m<60?.2*seg(m,30,60):m<65?.2+.77*seg(m,60,65):m<66?.97+.03*seg(m,65,66):1);
@@ -1083,10 +1091,10 @@ const festStep={lv:'d',title:'通しで見る：13:00〜16:00 祭りの流れ',i
    const fw2=new V3(Math.sin(M.yaw),0,Math.cos(M.yaw));
    guards.forEach((g,i)=>{ g.group.visible=m>=84&&m<116; const s=i?-3.4:3.2; g.group.position.copy(M.p).addScaledVector(fw2,s); g.group.rotation.y=M.yaw; g.gait(M.moving?ph+i:0,M.moving?.25:0,M.moving?.06:0); });
    // 家元
-   iemoto.group.position.copy(m<115?START.clone().add(new V3(.4,0,1.4)):new V3(FX-24,0,3)); iemoto.group.rotation.y=Math.PI*.9;
+   iemoto.group.position.copy(m<115?START.clone().add(new V3(.6,0,-1.4)):fw(222,986)); iemoto.group.rotation.y=m<65?Math.PI*.6:Math.PI;
    // 区長：14:05到着（区役所方面から）→ 巡行 → 14:45 区役所前でお別れ
-   let kp; if(m<63){ kucho.group.visible=false; kp=START.clone(); } else if(m<65){ kucho.group.visible=true; kp=START.clone().add(new V3(12,0,-6)).lerp(START.clone().add(new V3(-.5,0,1.5)),seg(m,63,65)); }
-   else if(m<85){ kp=START.clone().add(new V3(-.5,0,1.5)); } else if(m<105){ kp=M.p.clone().addScaledVector(fw2,2).add(new V3(fw2.z*1.4,0,-fw2.x*1.4)); } else { kp=fAt(RED).p.clone().add(new V3(3,0,-1.5)); kucho.group.visible=m<112; }
+   let kp; if(m<63){ kucho.group.visible=false; kp=START.clone(); } else if(m<65){ kucho.group.visible=true; kp=START.clone().add(new V3(12,0,-6)).lerp(START.clone().add(new V3(-.6,0,-1.4)),seg(m,63,65)); }
+   else if(m<85){ kp=START.clone().add(new V3(-.6,0,-1.4)); } else if(m<105){ kp=M.p.clone().addScaledVector(fw2,2).add(new V3(fw2.z*1.4,0,-fw2.x*1.4)); } else { kp=fAt(RED).p.clone().add(new V3(1.5,0,-3.2)); kucho.group.visible=m<112; }
    kucho.group.position.copy(kp); kucho.group.rotation.y=m>=85&&m<105?M.yaw:Math.PI; kucho.gait(m>=85&&m<105?ph:0,m>=85&&m<105?.25:0,.06);
    kucho.handR.set(-.24,.86+((m>=70&&m<73)||(m>=105&&m<107)?.4*Math.max(0,Math.sin(stepT*4)):0),.15);
    // あなた
@@ -1096,7 +1104,7 @@ const festStep={lv:'d',title:'通しで見る：13:00〜16:00 祭りの流れ',i
    const pp=op.group.position; lastMoving=!!(lastPos&&Math.hypot(pp.x-lastPos.x,pp.z-lastPos.z)>dt*.05); walkAnim(dt,O.crouch??.07);
    opRig.zoom=(m>=30&&m<84)?.55:0; opRig.apply(); opRig.setHandle(0,0,0); aimAt(O.aim[0],O.aim[1],O.aim[2]);
    document.getElementById('fTodo').textContent='あなた：'+FE[fEventIdx(m)][2]+(O.note?`（今は「${O.note}」）`:'');
-   if(!userMoved&&!camTween){ const f=M.p.clone().lerp(O.p,.4); const cp=new V3(f.x+9,11,f.z+15); camera.position.lerp(cp,1-Math.exp(-dt*2)); controls.target.lerp(new V3(f.x,.8,f.z),1-Math.exp(-dt*2)); }
+   if(!userMoved&&!camTween){ const f=M.p.clone().lerp(O.p,.4); const cp=new V3(f.x+5,26,f.z+15); const k=fState.snap?1:1-Math.exp(-rdt*2.5); fState.snap=false; camera.position.lerp(cp,k); controls.target.lerp(new V3(f.x,.8,f.z),k); }
    cap(''); }};
 const fsState={k:1};
 SD.unshift(festStep);
@@ -1126,14 +1134,14 @@ function resetWorld(){
   clearLabels(); cap(''); arrow1.visible=arrow2.visible=false; trail1.line.visible=trail2.line.visible=false; mapGroup.visible=false;
   deskRig.reset(); deskRig.root.visible=false; deskRig.root.position.set(...DESK); deskRig.legs.visible=true;
   opRig.reset(); op2Rig.reset(); op.group.visible=false; op2.group.visible=false; op.pelvisY=.9; op.lean=.06; op.gait(0,0,0); op2.gait(0,0,0); op.anchor.position.set(0,1.12,.32); op2.anchor.position.set(0,1.12,.32); op.group.rotation.set(0,0,0);
-  hidePeople(); document.getElementById('fest').style.display='none'; stageLightA.intensity=12; stageLightB.intensity=10; for(const k in demos) delete demos[k]; lastMoving=false; lastPos=null;
+  hidePeople(); document.getElementById('fest').style.display='none'; scene.background.set(0x101114); scene.fog.color.set(0x101114); scene.fog.near=14; scene.fog.far=34; if(autoBig){ stageEl.classList.remove('big'); autoBig=false; } stageLightA.intensity=12; stageLightB.intensity=10; for(const k in demos) delete demos[k]; lastMoving=false; lastPos=null;
 }
 function go(i){ cur=i; const s=S[i]; curLv=s.lv; stepT=0; resetWorld(); s.setup&&s.setup.call(s); renderLevels(); renderSteps(); renderCard(s); renderModes(s); s.mount&&s.mount.call(s); if(s.cam)goCam(s.cam.p,s.cam.t); insetOn=!!s.inset; const side=document.getElementById('side'); if(side.scrollHeight>side.clientHeight+5) side.scrollTo({top:0,behavior:'smooth'}); else window.scrollTo({top:0,behavior:'smooth'});
   const n=S.filter((x,j)=>x.lv===s.lv&&j<=i).length, tot=S.filter(x=>x.lv===s.lv).length; document.getElementById('bbTitle').innerHTML=`<b style="background:${LV[s.lv][1]}">${LV[s.lv][0]} ${n}/${tot}</b>${s.title}`; }
 document.getElementById('bbPrev').onclick=()=>go(Math.max(0,cur-1)); document.getElementById('bbNext').onclick=()=>go(Math.min(S.length-1,cur+1));
 document.getElementById('bSize').onclick=()=>stageEl.classList.toggle('big');
 window.addEventListener('keydown',e=>{ if(e.target.closest&&e.target.closest('input,textarea'))return; if(e.key==='ArrowRight')go(Math.min(S.length-1,cur+1)); if(e.key==='ArrowLeft')go(Math.max(0,cur-1)); if(e.key===' '){ e.preventDefault(); document.getElementById('bPlay').click(); } });
-let insetOn=false;
+let insetOn=false; let rdt=.016; let autoBig=false;
 let playing=true; document.getElementById('bPlay').onclick=e=>{ playing=!playing; e.target.textContent=playing?'❚❚ 一時停止':'▶ 再生'; };
 document.getElementById('bView').onclick=()=>{ const s=S[cur]; if(s.cam)goCam(s.cam.p,s.cam.t); };
 
@@ -1147,7 +1155,7 @@ function resize(){ W=stageEl.clientWidth; H=stageEl.clientHeight; renderer.setSi
 new ResizeObserver(resize).observe(stageEl); resize();
 const clock=new THREE.Clock();
 function frame(){
-  const dt=Math.min(clock.getDelta(),.05); if(playing) stepT+=dt;
+  const dt=Math.min(clock.getDelta(),.05); rdt=dt; if(playing) stepT+=dt;
   const s=S[cur];
   if(camTween){ camTween.k+=dt/camTween.dur; const k=ez(camTween.k); camera.position.lerpVectors(camTween.fp,camTween.tp,k); controls.target.lerpVectors(camTween.ft,camTween.tt,k); if(camTween.k>=1)camTween=null; }
   if(playing||true){ s.update&&s.update.call(s,stepT,playing?dt:0); }

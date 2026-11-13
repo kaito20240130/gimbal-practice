@@ -197,7 +197,7 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), D=Math.PI/180;
 
 /* ============== SENSORS ============== */
-const S={ok:false,motion:false,orient:false, gUp:{x:0,y:1,z:0}, av:0, v:0, z:0, roll:0, roll0:null, yawRate:0, lastT:0, steps:0, lastStep:0, stepPeak:false, ori:null, listeners:new Set(), hz:0, n:0, t0:0};
+const S={ok:false,motion:false,orient:false, gUp:{x:0,y:1,z:0}, av:0, v:0, z:0, vm:0, x:0, xm:0, roll:0, roll0:null, yawRate:0, lastT:0, steps:0, lastStep:0, stepPeak:false, ori:null, listeners:new Set(), hz:0, n:0, t0:0};
 function onMotion(e){
   const now=performance.now(); const dt=S.lastT?Math.min(.05,(now-S.lastT)/1000):.016; S.lastT=now; S.n++; if(!S.t0)S.t0=now; S.hz=S.n/((now-S.t0)/1000+1e-3);
   const ig=e.accelerationIncludingGravity, a=e.acceleration, rr=e.rotationRate;
@@ -211,7 +211,7 @@ function onMotion(e){
   if(!a||a.x==null){ av=0; }
   S.av=av;
   // leaky double integration -> vertical displacement (m)
-  { const al=1-Math.exp(-dt/.6); S.v=S.v*.985+av*dt; S.vm=(S.vm||0)+(S.v-S.vm)*al; const vh=S.v-S.vm; S.x=(S.x||0)*.985+vh*dt; S.xm=(S.xm||0)+(S.x-S.xm)*al; S.z=S.x-S.xm; }
+  { const al=1-Math.exp(-dt/.6); S.v=S.v*.985+av*dt; S.vm=(S.vm||0)+(S.v-S.vm)*al; const vh=S.v-S.vm; S.x=(S.x||0)*.985+vh*dt; S.xm=(S.xm||0)+(S.x-S.xm)*al; S.z=S.x-S.xm; if(!isFinite(S.z)){ S.v=S.vm=S.x=S.xm=S.z=0; } }
   // roll relative to device "up" axis in screen plane
   { const sg=uy<0?-1:1; S.roll=Math.atan2(ux*sg,uy*sg)/D; }
   if(rr&&rr.alpha!=null){ S.yawRate=(rr.beta*ux+rr.gamma*uy+rr.alpha*uz); }
@@ -347,8 +347,8 @@ function initWalk(){
   lm(-97.5,-25,40,22,14,0xe2d8c6); lm(185,-280,60,50,45,0xb7bcc6); // 一葉式本部 / 区役所
   // mikoshi
   const mk=new THREE.Group(); scene.add(mk);
-  { mk.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(1,.25,1),M(0x22140e)),{position:new THREE.Vector3(0,.12,0)}));
-    mk.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(.78,.5,.78),M(0x8b1e1e)),{position:new THREE.Vector3(0,.5,0)}));
+  { const b1=new THREE.Mesh(new THREE.BoxGeometry(1,.25,1),M(0x22140e)); b1.position.set(0,.12,0); mk.add(b1);
+    const b2=new THREE.Mesh(new THREE.BoxGeometry(.78,.5,.78),M(0x8b1e1e)); b2.position.set(0,.5,0); mk.add(b2);
     const roof=new THREE.Mesh(new THREE.ConeGeometry(.78,.45,4),M(0x22140e)); roof.rotation.y=Math.PI/4; roof.position.y=.98; mk.add(roof);
     const fc=[0xf9a8d4,0xfde047,0xf8fafc,0xfb7185,0xc4b5fd,0xfdba74]; for(let i=0;i<90;i++){ const th=Math.random()*6.28, ph=Math.random()*1.3; const f=new THREE.Mesh(new THREE.SphereGeometry(.06+Math.random()*.05,6,5),M(fc[i%6])); f.position.set(.62*Math.sin(ph)*Math.cos(th),.95+.4*Math.cos(ph),.62*Math.sin(ph)*Math.sin(th)); mk.add(f); }
     for(const x of [-.42,.42]){ const p=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,3.4,8),M(0xd9c7a0)); p.rotation.x=Math.PI/2; p.position.set(x,.16,0); mk.add(p); }
@@ -360,7 +360,7 @@ function initWalk(){
   const st={running:false,mode:'PF',speed:'mid',mkSpeed:1.0,mkD:0,pos:new THREE.Vector3(),heading:0,yaw:0,pitch:0,roll:0,walking:false,fov:24,rec:null,yaw0:null,lastStepSeen:0,mouse:{yaw:0,pitch:0},z0:0};
   const TAU={slow:.9,mid:.45,fast:.15};
   const POINTS=[['A',60],['B',230],['C',560],['D',800],['E',900],['F',total-8]];
-  function jump(d){ st.mkD=d; const a=at(d); const side=new THREE.Vector3(-a.dir.z,0,a.dir.x); st.pos.copy(a.p).addScaledVector(side,-4.5).addScaledVector(a.dir,-2); st.heading=Math.atan2(-a.dir.x,-a.dir.z)+.6*0; st.yaw0=null; }
+  function jump(d){ st.mkD=d; const a=at(d); const side=new THREE.Vector3(-a.dir.z,0,a.dir.x); st.pos.copy(a.p).addScaledVector(side,-3.5).addScaledVector(a.dir,-7); const to=a.p.clone().sub(st.pos); st.heading=Math.atan2(-to.x,-to.z); st.yaw=st.heading; st.yaw0=null; st.mouse.yaw=0; }
   jump(60);
   // UI
   const seg=(el,items,key,fmt)=>{ el.innerHTML=''; items.forEach(([v,l])=>{ const b=document.createElement('button'); b.textContent=l; if(st[key]===v)b.className='on'; b.onclick=()=>{ st[key]=v; seg(el,items,key); }; el.appendChild(b); }); };
@@ -412,7 +412,7 @@ function initWalk(){
     st.mkD+=st.mkSpeed*dt*(st.mkD<total?1:0); const m=at(st.mkD); mk.position.set(m.p.x,1.24+.03*Math.sin(now/110),m.p.z); mk.rotation.y=Math.atan2(m.dir.x,m.dir.z);
     // camera: real vertical bob from sensor passes straight through (gimbal can't fix it)
     const bob=S.motion?S.z:(v>0?.025*Math.sin(now/160):0);
-    cam.position.set(st.pos.x,1.35+bob,st.pos.z); cam.rotation.set(st.pitch,st.yaw,st.roll,'YXZ'); cam.fov=2*Math.atan(12/st.fov)/D*1.0; cam.updateProjectionMatrix();
+    cam.position.set(st.pos.x,1.35+bob,st.pos.z); cam.rotation.set(st.pitch,st.yaw,st.roll,'YXZ'); { const hf=2*Math.atan(18/st.fov); const asp=w/h; cam.fov=(asp<1? 2*Math.atan(Math.tan(hf/2)/asp) : 2*Math.atan(12/st.fov))/D; cam.fov=Math.min(cam.fov,110); } cam.updateProjectionMatrix();
     renderer.render(scene,cam); drawMini();
     // framing
     const mp=mk.position.clone().add(new THREE.Vector3(0,.4,0)).project(cam); const dist=mk.position.distanceTo(cam.position); const inFrame=mp.z<1&&Math.abs(mp.x)<.4&&Math.abs(mp.y)<.5;
@@ -421,7 +421,7 @@ function initWalk(){
     if(st.rec){ const r=st.rec; r.frames++; if(inFrame&&dist<60) r.inFrame++; r.zs.push(bob*100); r.rolls.push(st.roll/D); r.yawRates.push(yawRate); r.dist+=mv; }
     const k=st.rec?`<b>計測中</b> ${((now-st.rec.t0)/1000).toFixed(0)}秒<br>枠内 ${(st.rec.inFrame/Math.max(1,st.rec.frames)*100).toFixed(0)}%<br>`:'';
     $('#wstats').innerHTML=k+`神輿まで ${dist.toFixed(0)}m<br>上下 ${(bob*100).toFixed(1)}cm<br>${pe?'センサー操作':'マウス／キー操作'}`;
-    $('#wcoach').textContent=dist>40?'神輿に近づこう（地図のピンク）':''; }
+    $('#wcoach').textContent=dist>40?'神輿に近づこう（地図のピンク）':inFrame?'':(mp.z>1?'神輿は後ろ ↻ 体ごと振り向く':mp.x<0?'← 神輿は左':'神輿は右 →'); }
   return { start(){ last=0; cancelAnimationFrame(raf2); raf2=requestAnimationFrame(frame); }, stop(){ cancelAnimationFrame(raf2); if(st.rec) finishWalk(); } };
 }
 </script>
