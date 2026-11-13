@@ -168,7 +168,7 @@ a{color:var(--accent)}
     <b>場所別のおすすめ</b><br>
     ・家：廊下で「1カットの型」「忍者歩き」。座って「なめらかパン」<br>
     ・公園：木を目印に「被写体を見ながら歩く」。ベンチの横で「ロー→ブーム」<br>
-    ・センサーが反応しないとき：iPhoneは 設定 → Safari → モーションと画面の向きのアクセス をオン
+    ・センサーが反応しないとき：iPhoneは許可の確認で「許可」を押す（拒否した場合はタブを閉じて開き直す）。Androidは Chrome の最新版で開く
   </div>
 </section>
 
@@ -244,7 +244,7 @@ async function enableSensors(){
   try{
     if(!window.isSecureContext){ st.textContent='https のページで開いてください。'; return false; }
     if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
-      const r=await DeviceMotionEvent.requestPermission(); if(r!=='granted'){ st.textContent='許可されませんでした。設定 → Safari → モーションと画面の向きのアクセス をオンにして再読み込みしてください。'; return false; }
+      const r=await DeviceMotionEvent.requestPermission(); if(r!=='granted'){ st.textContent='許可されませんでした。iPhoneはSafariでこのページのタブを閉じて開き直し、もう一度「許可」を押してください。'; return false; }
       if(typeof DeviceOrientationEvent.requestPermission==='function'){ try{ await DeviceOrientationEvent.requestPermission(); }catch(e){} }
     }
     if(!S.ok){ window.addEventListener('devicemotion',onMotion); window.addEventListener('deviceorientation',onOrient); }
