@@ -1138,7 +1138,7 @@ let playing=true; document.getElementById('bPlay').onclick=e=>{ playing=!playing
 document.getElementById('bView').onclick=()=>{ const s=S[cur]; if(s.cam)goCam(s.cam.p,s.cam.t); };
 
 // footer sources
-document.getElementById('foot').innerHTML='<details class="srcs"><summary>参考にした情報源（'+Object.keys(SRC).length+'件）</summary>'+Object.values(SRC).map(([n,u])=>`<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join(' ／ ')+'</details><p>3Dモデルは説明用の簡易モデルで、実機の形状・寸法・会場の配置とは異なります。ボタン操作は初期設定の場合です。</p><p class="kbd">PC：← → キーでステップ移動、スペースで一時停止</p>';
+document.getElementById('foot').innerHTML='<details class="srcs"><summary>参考にした情報源（'+Object.keys(SRC).length+'件）</summary>'+Object.values(SRC).map(([n,u])=>`<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join(' ／ ')+'</details><p>3Dモデルは説明用の簡易モデルで、実機の形状・寸法・会場の配置とは異なります。ボタン操作は初期設定の場合です。</p><p class="kbd">PC：← → キーでステップ移動、スペースで一時停止</p><p><a href="index.html" style="color:var(--accent)">📱 スマホのセンサーで練習する（ジンバル練習ラボ）</a></p>';
 
 /* ---------------- loop ---------------- */
 const insetEl=document.getElementById('inset');
