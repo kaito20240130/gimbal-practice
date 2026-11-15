@@ -78,7 +78,7 @@ table.m{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px} table
 #targetBox{position:absolute;right:6px;top:6px;width:27%;border:2px solid var(--accent);border-radius:6px;overflow:hidden;background:#000;display:none}
 #targetBox.on{display:block}
 #targetBox img{display:block;width:100%}
-#targetBox small{position:absolute;left:0;right:0;bottom:0;font-size:10px;font-weight:900;text-align:center;background:#000a;color:var(--accent)}
+#targetBox small{position:absolute;left:0;right:0;bottom:0;font-size:10px;font-weight:900;text-align:center;background:#000a;color:var(--accent);white-space:nowrap}
 #swapImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;pointer-events:none}
 #swapImg.on{display:block}
 #swapLabel{position:absolute;left:50%;top:8px;transform:translateX(-50%);font-size:12px;font-weight:900;background:var(--accent);color:#111;border-radius:6px;padding:1px 8px;display:none}
@@ -100,8 +100,14 @@ table.m{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px} table
 .opts button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
 .opts button:disabled{opacity:.35}
 .lock{font-size:12px;color:var(--mute);padding:6px 0}
+select{font:inherit;font-size:14px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%}
+#studio.setview #meters,#studio.setview #hist,#studio.setview #bBefore,#studio.setview #bZebra,#studio.setview #targetBox{display:none}
+#studio.setview #photoWrap::after{content:'セットを外から見ています（ドラッグで回す）';position:absolute;left:8px;top:8px;font-size:11.5px;font-weight:700;background:#000a;border-radius:6px;padding:2px 8px}
+details.why summary{cursor:pointer;list-style:none}
+details.why summary::-webkit-details-marker{display:none}
 #actbar{flex:none;display:flex;gap:8px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}
-#actbar button{flex:1}
+#actbar button{flex:1;white-space:nowrap}
+#actbar .big{flex:1.5}
 #actbar .big{padding:11px;font-size:15px}
 #actbar .ghost{padding:10px 8px;font-size:13.5px}
 #stat{font-size:12px;color:var(--mute);text-align:center;padding:2px 0 0}
@@ -149,6 +155,7 @@ table.m{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px} table
   #photoArea{grid-column:1;grid-row:3 / 5;align-items:center}
   #photoWrap{height:min(78dvh,100%);}
   #lower{grid-column:2;grid-row:3}
+  #plan{height:min(40dvh,400px)}
   #actbar{grid-column:2;grid-row:4}
 }
 </style>
@@ -171,14 +178,14 @@ table.m{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px} table
     <div id="swapLabel">見本</div>
     <div id="meters"></div>
     <canvas id="hist" width="168" height="60"></canvas>
-    <div id="targetBox"><img id="targetImg" alt="見本"><small>見本（長押しで大きく）</small></div>
+    <div id="targetBox"><img id="targetImg" alt="見本"><small>見本・長押し</small></div>
     <div id="ovBtns"><button id="bBefore">前と比べる</button><button id="bZebra">ゼブラ</button><button id="bView">3Dで見る</button></div>
     <div id="phoneMsg"></div>
     <div id="phoneHud"><div class="meterlab"><span>影側が暗い</span><span id="phoneVal">--</span><span>明るい</span></div><div class="meter"><div class="zone" id="phoneZone"></div><div class="needle" id="phoneNeedle"></div></div></div>
     <div id="prog"><i></i></div>
   </div></div>
   <div id="lower">
-    <div id="planWrap"><svg id="plan" viewBox="-1.55 -1.5 3.1 3.05"></svg><div id="planHint">上から見た配置図（ドラッグで動かす）</div></div>
+    <div id="planWrap"><svg id="plan" viewBox="-1.55 -1.5 3.1 3.05"></svg><div id="planHint">上から見た配置図（ライト・反射板・背景をドラッグ）</div></div>
     <div class="ttabs" id="ttabs"></div>
     <div class="tpanel" id="tpanel"></div>
   </div>

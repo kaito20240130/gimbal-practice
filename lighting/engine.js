@@ -266,7 +266,7 @@ function makeGlassDrink(kind) {
   const lh = kind === 'icecoffee' ? 0.095 : 0.1;
   const lgeo = new THREE.CylinderGeometry(R0 - T + (R1 - R0) * (lh / H) - 0.0004, R0 - T - 0.0004, lh - 0.008, 72); lgeo.translate(0, 0.008 + (lh - 0.008) / 2, 0);
   const liquid = kind === 'icecoffee'
-    ? phys({ color: '#d9a06c', transmission: 1, roughness: 0.06, thickness: 0.06, ior: 1.34, attenuationColor: new THREE.Color('#8a4210'), attenuationDistance: 0.02 })
+    ? phys({ color: '#e8b488', transmission: 1, roughness: 0.06, thickness: 0.06, ior: 1.34, attenuationColor: new THREE.Color('#a0541c'), attenuationDistance: 0.035 })
     : phys({ color: '#ffe2b8', transmission: 1, roughness: 0.06, thickness: 0.06, ior: 1.34, attenuationColor: new THREE.Color('#ffb54a'), attenuationDistance: 0.05 });
   patchSpec(liquid);
   g.add(new THREE.Mesh(lgeo, liquid));
@@ -403,11 +403,11 @@ export class Studio {
     this.apply(this.setup);
   }
   _buildStatic() {
-    this.bgMat = phys({ color: '#f3f2ee', roughness: 0.95 });
-    this.bgMesh = new THREE.Mesh(sweepGeometry(0.45), this.bgMat); this.bgMesh.receiveShadow = true; this.scene.add(this.bgMesh);
+    this.bgMat = phys({ color: '#f3f2ee', roughness: 0.95 }); this.bgMat.shadowSide = THREE.DoubleSide;
+    this.bgMesh = new THREE.Mesh(sweepGeometry(0.45), this.bgMat); this.bgMesh.receiveShadow = true; this.bgMesh.castShadow = true; this.scene.add(this.bgMesh); // 背景紙は後ろからの光をさえぎる
     this.wallMat = std({ color: '#d8d8d6', roughness: 0.95 });
-    this.wall = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.8), this.wallMat); this.wall.receiveShadow = true; this.wall.visible = false; this.scene.add(this.wall);
-    this.woodMat = std({ map: woodTex(17), roughness: 0.55 }); this.woodMat.map.wrapS = this.woodMat.map.wrapT = THREE.RepeatWrapping; this.woodMat.map.repeat.set(3, 3);
+    this.wall = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.8), this.wallMat); this.wall.receiveShadow = true; this.wall.castShadow = true; this.wallMat.shadowSide = THREE.DoubleSide; this.wall.visible = false; this.scene.add(this.wall);
+    this.woodMat = std({ map: woodTex(17), roughness: 0.55 }); this.woodMat.shadowSide = THREE.DoubleSide; this.woodMat.map.wrapS = this.woodMat.map.wrapT = THREE.RepeatWrapping; this.woodMat.map.repeat.set(3, 3);
     this.contact = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, color: '#000', alphaMap: canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, '#fff'); gr.addColorStop(0.55, '#666'); gr.addColorStop(1, '#000'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }, false) }));
     this.contact.rotation.x = -Math.PI / 2; this.contact.position.y = 0.0006; this.contact.renderOrder = 1; this.contact.visible = false;
     // セット表示用：光源のパネルと反射板・カメラ
@@ -419,7 +419,7 @@ export class Studio {
     camBody.traverse(m => { m.layers.set(1); }); this.camModel = camBody; this.scene.add(camBody);
   }
   _buildLights() {
-    const mk = () => { const s = new THREE.SpotLight(0xffffff, 1, 0, 1.0, 0.35, 2); s.castShadow = true; s.shadow.mapSize.set(this.mobile ? 1024 : 2048, this.mobile ? 1024 : 2048); s.shadow.bias = -0.00004; s.shadow.normalBias = 0.0015; s.shadow.camera.near = 0.08; s.shadow.camera.far = 8; s.shadow.radius = 2; this.scene.add(s); this.scene.add(s.target); return s; };
+    const mk = () => { const s = new THREE.SpotLight(0xffffff, 1, 0, 1.0, 0.35, 2); s.castShadow = true; s.shadow.mapSize.set(this.mobile ? 1024 : 2048, this.mobile ? 1024 : 2048); s.shadow.bias = -0.00006; s.shadow.normalBias = 0.0028; s.shadow.camera.near = 0.08; s.shadow.camera.far = 8; s.shadow.radius = 2; this.scene.add(s); this.scene.add(s.target); return s; };
     this.keySpot = mk(); this.fillSpot = mk(); this.fillSpot.shadow.mapSize.set(1024, 1024);
     const sun = new THREE.DirectionalLight(0xffffff, 1); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); const sc = sun.shadow.camera; sc.left = -1; sc.right = 1; sc.top = 1; sc.bottom = -1; sc.near = 0.1; sc.far = 12; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.001; this.scene.add(sun); this.scene.add(sun.target);
     this.keySun = sun; this.fillSun = sun.clone(); this.fillSun.castShadow = false; this.scene.add(this.fillSun); this.scene.add(this.fillSun.target);
@@ -632,7 +632,10 @@ export class Studio {
   _renderSampleTo(rtS, rtPrev, rtOut, n, camera) {
     this._jitter(n);
     const r = this.renderer;
+    // 1画素の中でカメラも少しずつずらして平均する（ふちのギザギザを消す）
+    const W = rtS.width, H = rtS.height; camera.setViewOffset(W, H, halton(n + 1, 5) - 0.5, halton(n + 1, 7) - 0.5, W, H);
     r.setRenderTarget(rtS); r.setClearColor(0x000000, 1); r.clear(); r.render(this.scene, camera);
+    camera.clearViewOffset();
     this.quad.material = this.accumMat; this.accumMat.uniforms.tPrev.value = rtPrev.texture; this.accumMat.uniforms.tNew.value = rtS.texture; this.accumMat.uniforms.w.value = 1 / (n + 1);
     r.setRenderTarget(rtOut); r.render(this.quadScene, this.quadCam);
   }
@@ -701,6 +704,7 @@ export class Studio {
     const k = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) k[i] = Math.max(px[i * 4], px[i * 4 + 1], px[i * 4 + 2]);
     return k;
   }
+  behindBg(l, setup) { if (!l) return false; const p = polar(l.az, l.el, l.dist, this.center ? this.center.y : 0.08); return p.z < -setup.bg.dist + 0.03 && Math.abs(p.x) < 0.9 && p.y < 1.6; }
   keyAngle(setup) { const l = setup.key; const T = LIGHTS[l.type]; return T.directional ? 0.0093 : 2 * Math.atan(Math.max(T.w, T.h) / 2 / l.dist); }
   // 今の画面を小さく撮る（採点用。蓄積が終わった状態で呼ぶ）
   shootCurrent(opt = {}) { return this.shoot(this.setup, opt); }

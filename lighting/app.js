@@ -99,10 +99,10 @@ holdBtn($('#targetBox'), () => { if (!ST.targetBig) return; $('#swapImg').src = 
 $('#bZebra').onclick = () => { studio.zebra = !studio.zebra; $('#bZebra').classList.toggle('on', studio.zebra); studio.dirty = true; };
 $('#bView').onclick = () => {
   studio.view = studio.view === 'photo' ? 'set' : 'photo'; $('#bView').textContent = studio.view === 'set' ? '写真に戻る' : '3Dで見る'; $('#bView').classList.toggle('on', studio.view === 'set');
-  if (studio.view === 'set') orbitSet(); studio.reset(); ST.measured = null;
+  if (studio.view === 'set') orbitSet(); studio.reset(); ST.measured = null; $('#studio').classList.toggle('setview', studio.view === 'set');
 };
-let orb = { a: 0.75, e: 0.55, r: 2.2 };
-function orbitSet() { const c = studio.center; studio.setCam.position.set(c.x + orb.r * Math.cos(orb.e) * Math.sin(orb.a), c.y + orb.r * Math.sin(orb.e), c.z + orb.r * Math.cos(orb.e) * Math.cos(orb.a)); studio.setCam.lookAt(c.x, c.y + 0.1, c.z - 0.2); studio.reset(); }
+let orb = { a: 0.6, e: 0.62, r: 3.0 };
+function orbitSet() { const c = studio.center; studio.setCam.position.set(c.x + orb.r * Math.cos(orb.e) * Math.sin(orb.a), c.y + orb.r * Math.sin(orb.e), c.z + orb.r * Math.cos(orb.e) * Math.cos(orb.a)); studio.setCam.lookAt(c.x, c.y + 0.05, c.z - 0.1); studio.reset(); }
 (() => {
   let drag = null; const cv = $('#cv');
   cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); });
@@ -123,8 +123,8 @@ function planSVG(s, { sel = null, interactive = false } = {}) {
   const P = []; const keyC = '#f5b83d', fillC = '#60a5fa';
   [0.3, 0.6, 1, 2].forEach(d => { P.push(`<circle cx="0" cy="0" r="${R(d)}" fill="none" stroke="#2b2f38" stroke-width="0.008" stroke-dasharray="0.03 0.03"/>`); P.push(`<text x="${R(d) * 0.707 + 0.02}" y="${-R(d) * 0.707}" font-size="0.07" fill="#5b616c">${d}m</text>`); });
   const yb = -R(s.bg.dist);
-  P.push(`<line x1="-1.45" x2="1.45" y1="${yb}" y2="${yb}" stroke="${s.bg.type === 'black' ? '#666' : '#cfcfcf'}" stroke-width="0.035"/><text x="-1.42" y="${yb - 0.05}" font-size="0.085" fill="#9aa0aa">背景（${BGS[s.bg.type].name}）</text>`);
-  P.push(`<g transform="translate(0,1.33)"><rect x="-0.09" y="-0.05" width="0.18" height="0.1" rx="0.02" fill="#444"/><rect x="-0.04" y="-0.11" width="0.08" height="0.07" fill="#333"/><text x="0.13" y="0.03" font-size="0.085" fill="#9aa0aa">カメラ</text></g>`);
+  P.push(`<line x1="-1.45" x2="1.45" y1="${yb}" y2="${yb}" stroke="${s.bg.type === 'black' ? '#666' : '#cfcfcf'}" stroke-width="0.035"/><text x="-1.42" y="${yb - 0.05}" font-size="0.095" fill="#9aa0aa">背景（${BGS[s.bg.type].name}）</text>`);
+  P.push(`<g transform="translate(0,1.33)"><rect x="-0.09" y="-0.05" width="0.18" height="0.1" rx="0.02" fill="#444"/><rect x="-0.04" y="-0.11" width="0.08" height="0.07" fill="#333"/><text x="0.13" y="0.03" font-size="0.1" fill="#9aa0aa">カメラ</text></g>`);
   // 影の向き
   if (s.key) { const a = (s.key.az + 180) * D2R; P.push(`<line x1="0" y1="0" x2="${0.32 * Math.sin(a)}" y2="${0.32 * Math.cos(a)}" stroke="#555" stroke-width="0.05" stroke-linecap="round" opacity="0.8"/><text x="${0.42 * Math.sin(a) - 0.04}" y="${0.42 * Math.cos(a) + 0.03}" font-size="0.075" fill="#777">影</text>`); }
   const obj = OBJECTS[s.obj];
@@ -135,7 +135,7 @@ function planSVG(s, { sel = null, interactive = false } = {}) {
     P.push(`<line x1="${x}" y1="${y}" x2="0" y2="0" stroke="${col}" stroke-width="0.01" stroke-dasharray="0.04 0.03" opacity="0.6"/>`);
     if (sel === id) P.push(`<circle cx="${x}" cy="${y}" r="0.14" fill="${col}" opacity="0.18"/>`);
     P.push(`<g transform="translate(${x},${y}) rotate(${ang})"><rect x="${-len / 2}" y="-0.035" width="${len}" height="0.07" rx="0.02" fill="${col}"/></g>`);
-    P.push(`<text x="${x}" y="${y + 0.14}" font-size="0.08" fill="${col}" text-anchor="middle" font-weight="700">${label}・${T.short}</text>`);
+    P.push(`<text x="${x}" y="${y + 0.14}" font-size="0.1" fill="${col}" text-anchor="middle" font-weight="700">${label}・${T.short}</text>`);
   };
   light(s.key, keyC, 'メイン', 'key'); light(s.fill, fillC, '補助', 'fill');
   s.refl.forEach((r, i) => {
@@ -146,7 +146,7 @@ function planSVG(s, { sel = null, interactive = false } = {}) {
     const col = { white: '#f2f2ee', silver: '#b8bec8', gold: '#d9b36a', black: '#0a0a0a' }[r.type];
     if (sel === 'refl' + i) P.push(`<circle cx="${x}" cy="${y}" r="0.14" fill="#fff" opacity="0.14"/>`);
     P.push(`<g transform="translate(${x},${y}) rotate(${ang})"><rect x="${-len / 2}" y="-0.025" width="${len}" height="0.05" rx="0.01" fill="${col}" stroke="#888" stroke-width="0.008"/></g>`);
-    P.push(`<text x="${x}" y="${y + 0.12}" font-size="0.075" fill="#cfcfcf" text-anchor="middle">${REFL[r.type].name}${r.lift ? '（台）' : ''}</text>`);
+    P.push(`<text x="${x}" y="${y + 0.12}" font-size="0.095" fill="#cfcfcf" text-anchor="middle">${REFL[r.type].name}${r.lift ? '（台）' : ''}</text>`);
   });
   return P.join('');
 }
@@ -191,23 +191,25 @@ function staticPlan(s) { return `<svg viewBox="-1.55 -1.5 3.1 3.05" style="backg
     if (!drag.moved) beginChange(); drag.moved = true;
     ST.setup = s; if (!raf) { raf = true; requestAnimationFrame(() => { raf = false; studio.apply(ST.setup); ST.measured = null; renderPlan(); }); }
   });
-  const up = () => { if (!drag) return; if (drag.moved) { setSetup(ST.setup); doCommit(); } drag = null; };
+  const up = () => { if (!drag) return; if (drag.moved) { setSetup(ST.setup); doCommit(); if (studio.behindBg(ST.setup.key, ST.setup) || studio.behindBg(ST.setup.fill, ST.setup)) flash('ライトが背景紙の後ろにあります。背景紙が光をさえぎるので、背景を遠ざけてください'); } drag = null; };
   svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
 })();
 
 /* ================= 道具パネル ================= */
-const TABS = [['light', 'ライト'], ['refl', '反射板'], ['bg', '背景・部屋'], ['cam', 'カメラ']];
+const TABS = [['obj', '被写体'], ['light', 'ライト'], ['refl', '反射板'], ['bg', '背景・部屋'], ['cam', 'カメラ']];
 function tabAllowed(t) {
   if (!ST.tools) return true;
   if (t === 'light') return true;
   if (t === 'refl') return can('refl');
   if (t === 'bg') return can('bg') || can('room');
   if (t === 'cam') return can('cam.ev');
+  if (t === 'obj') return !ST.tools;
   return false;
 }
 function renderTools() {
   if (ST.mode === 'phone') { $('#ttabs').innerHTML = ''; $('#tpanel').innerHTML = phonePanel(); return; }
   if (!tabAllowed(ST.tab)) ST.tab = 'light';
+  if (ST.tab === 'obj' && ST.tools) ST.tab = 'light';
   $('#ttabs').innerHTML = TABS.filter(([t]) => tabAllowed(t)).map(([t, n]) => `<button data-t="${t}" class="${ST.tab === t ? 'on' : ''}">${n}</button>`).join('');
   $$('#ttabs button').forEach(b => b.onclick = () => { ST.tab = b.dataset.t; renderTools(); });
   const s = ST.setup; let h = '';
@@ -248,10 +250,9 @@ function renderTools() {
     h += slider('cEv', '露出（α7C II・ISO100・1/160秒のとき）', s.cam.ev, -2, 2, 1 / 3, v => evFmt(+v), can('cam.ev'));
     h += `<div class="ctl"><label>カメラの高さ</label>${opts('cEl', [[8, '真横'], [30, '斜め上'], [55, '高め'], [88, '真上']], s.cam.el, okCam)}</div>`;
     h += slider('cF', '焦点距離（被写体の大きさは同じまま）', s.cam.focal, 24, 70, 1, v => `${v}mm`, okCam);
-    if (okCam) {
-      const groups = {}; Object.entries(OBJECTS).forEach(([k, v]) => (groups[v.group] = groups[v.group] || []).push([k, v.name]));
-      h += `<div class="ctl"><label>被写体</label>${Object.entries(groups).map(([g, l]) => `<div class="mute" style="margin-top:4px">${g}</div>${opts('cObj_' + g, l, s.obj)}`).join('')}</div>`;
-    }
+  } else if (ST.tab === 'obj') {
+    const groups = {}; Object.entries(OBJECTS).forEach(([k, v]) => (groups[v.group] = groups[v.group] || []).push([k, v.name]));
+    h += Object.entries(groups).map(([g, l]) => `<div class="mute" style="margin-top:6px">${g}</div>${opts('cObj_' + g, l, s.obj)}`).join('');
   }
   $('#tpanel').innerHTML = h;
   bindTools();
@@ -292,8 +293,8 @@ function fmtOf(id, v) {
 /* ================= 下のボタン ================= */
 function renderAct() {
   const a = $('#actbar');
-  if (ST.mode === 'match') a.innerHTML = `<button class="ghost" id="aUndo">元に戻す</button><button class="big" id="aJudge">判定する（残り${ST.checks}回）</button><button class="ghost" id="aGive">答え</button>`;
-  else if (ST.mode === 'fix') a.innerHTML = `<button class="ghost" id="aUndo">元に戻す</button><button class="big" id="aCheck">これで直った？</button><button class="ghost" id="aHint">ヒント</button>`;
+  if (ST.mode === 'match') a.innerHTML = `<button class="ghost" id="aUndo">元に戻す</button><button class="big" id="aJudge">判定（あと${ST.checks}回）</button><button class="ghost" id="aGive">答え</button>`;
+  else if (ST.mode === 'fix') a.innerHTML = `<button class="ghost" id="aUndo">元に戻す</button><button class="big" id="aCheck">直ったか確認</button><button class="ghost" id="aHint">ヒント</button>`;
   else if (ST.mode === 'lab') a.innerHTML = `<button class="ghost" id="aUndo">元に戻す</button><button class="big" id="aSeen" ${ST.moves < 1 ? 'disabled style="opacity:.45"' : ''}>${ST.moves < 1 ? 'まず動かしてみる' : '試した → 答え合わせ'}</button>`;
   else if (ST.mode === 'phone') a.innerHTML = `<button class="ghost" id="aSensor">センサーを有効にする</button><button class="big" id="aPhone">スタート</button>`;
   else a.innerHTML = `<button class="ghost" id="aUndo">元に戻す</button><button class="ghost" id="aReset">最初に戻す</button>`;
@@ -375,7 +376,7 @@ function matchDone(score, pass, lastHint) {
   const rec = { score, pass, moves: ST.moves, checks: 3 - ST.checks + (pass ? 1 : 0), date: today() };
   if (!prev || (pass && !prev.pass) || (pass === prev.pass && score > prev.score)) DB.best[id] = rec;
   markToday('match:' + id); save();
-  const curURL = ST.lastURL || $('#cv').toDataURL('image/jpeg', 0.85);
+  const curURL = studio.shoot(ST.setup, { w: 240, h: 300, samples: 24, url: true }).url; // 見本と同じ撮り方で並べる
   sheet(`<h2>${pass ? '合格！' : 'ここまで'} ${score}点</h2>
     <div class="mute">変更 ${ST.moves}回 ・ 判定 ${rec.checks}回</div>
     ${!pass && lastHint ? `<div class="why"><b>最後に一番効いた違い</b><br>${lastHint}</div>` : ''}
@@ -435,13 +436,13 @@ function labReveal() {
   DB.pred[step.id] = { ok, date: today() }; markToday('lab:' + step.id); save();
   sheet(`<h2>${ok ? '予想どおり' : '予想と違った'}</h2><p><b>答え：</b>${esc(p.opts[p.a])}</p><div class="why">${esc(p.explain)}</div>
     <h3>このステップで覚えること</h3><ul class="l">${step.learn.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
-    <div class="row" style="margin-top:12px"><button class="big" id="shNext" style="flex:1">お題へ進む</button><button class="ghost" id="shStay">もう少し触る</button></div>`,
-    () => { $('#shNext').onclick = () => { closeSheet(); closeStudio(); const t = step.tasks.find(t => !(DB.best[t.id] && DB.best[t.id].pass)) || step.tasks[0]; startMatch(step, t); }; $('#shStay').onclick = () => { closeSheet(); ST.mode = 'free'; renderAct(); }; });
+    <div class="row" style="margin-top:12px"><button class="big" id="shNext" style="flex:1">${planQueue.length ? 'プランの次へ' : 'お題へ進む'}</button><button class="ghost" id="shStay">もう少し触る</button></div>`,
+    () => { $('#shNext').onclick = () => { closeSheet(); closeStudio(); if (nextPlan()) return; const t = step.tasks.find(t => !(DB.best[t.id] && DB.best[t.id].pass)) || step.tasks[0]; startMatch(step, t); }; $('#shStay').onclick = () => { closeSheet(); ST.mode = 'free'; renderAct(); }; });
 }
 
 function nextFromStudio() {
   const step = ST.step; closeStudio();
-  if (planQueue.length) { const f = planQueue.shift(); f(); return; }
+  if (nextPlan()) return; if (ST.inPlan) { ST.inPlan = false; tab('home'); flashHome('今日のプランはここまでです。おつかれさまでした！'); return; }
   if (step) openStep(step.id);
 }
 
@@ -505,7 +506,7 @@ function phoneTick() {
     const last = P.round >= PHONE_ROUNDS.length - 1;
     setTimeout(() => sheet(`<h2>${esc(P.R.title)}：${res.t.toFixed(1)}秒</h2>
       ${P.R.refl === 'silver' ? '<div class="why">銀は、効く角度が白よりずっと狭かったはずです。本番で銀を使うときは、被写体の影側を見ながら少しずつ動かします。</div>' : P.R.goal === 'zone' ? '<div class="why">「いちばん効く向き」から少し外すと、効きを弱められます（フェザリング）。反射板を離すのと同じくらいよく使う調整です。</div>' : '<div class="why">白は効く角度が広く、だいたい向いていれば効きます。被写体を見ながら探すと速く見つかります。</div>'}
-      <button class="big" id="shNext">${last ? 'おわり' : '次のラウンド'}</button>`, () => $('#shNext').onclick = () => { closeSheet(); if (last) { closeStudio(); ST.phoneResults = []; if (planQueue.length) planQueue.shift()(); } else startPhone(P.round + 1); }), 600);
+      <button class="big" id="shNext">${last ? 'おわり' : '次のラウンド'}</button>`, () => $('#shNext').onclick = () => { closeSheet(); if (last) { closeStudio(); ST.phoneResults = []; nextPlan(); } else startPhone(P.round + 1); }), 600);
   }
 }
 function stopPhone() { ST.phone = null; $('#phoneHud').classList.remove('on'); }
@@ -515,7 +516,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 const rnd = (a, b) => a + Math.random() * (b - a);
 function quizObjects() { const objs = new Set(); unlockedSteps().forEach(s => { objs.add(s.obj); s.tasks.forEach(t => objs.add(t.target.obj)); }); return [...objs].filter(o => !['icecoffee', 'juice', 'phone', 'glassbottle', 'tumbler', 'ring'].includes(o)); }
 function quizTypes() { const u = new Set(unlockedSteps().map(s => s.id)); return QUIZ_TYPES.filter(q => u.has(q.from)); }
-function baseQ(obj) { return { ...defaultSetup(), obj, room: 'white', bg: { type: pick(['white', 'white', 'gray']), dist: 0.5 }, cam: { el: 30, focal: 50, ev: 0 }, key: { type: 'softbox', az: -60, el: 35, dist: 0.8, pow: 0 }, refl: [] }; }
+function baseQ(obj) { return { ...defaultSetup(), obj, room: 'white', bg: { type: pick(['white', 'white', 'gray']), dist: 1.1 }, cam: { el: 30, focal: 50, ev: 0 }, key: { type: 'softbox', az: -60, el: 35, dist: 0.8, pow: 0 }, refl: [] }; }
 function makeQuestion(type) {
   const obj = pick(quizObjects());
   if (type === 'dir') {
@@ -559,7 +560,7 @@ async function showQuiz() {
   if (QZ.i >= QZ.list.length) {
     markToday('quiz'); save();
     v.innerHTML = `<h1>クイズ結果</h1><div class="card"><div style="font-size:28px;font-weight:900">${QZ.ok} / ${QZ.list.length}</div><div class="mute">見本合わせで「見本を読む」ときに、この目がそのまま使えます。</div></div><button class="big" id="qAgain">もう1回</button><p></p><button class="ghost" id="qBack">ホームへ</button>`;
-    $('#qAgain').onclick = startQuiz; $('#qBack').onclick = () => { if (planQueue.length) planQueue.shift()(); else tab('home'); };
+    $('#qAgain').onclick = startQuiz; $('#qBack').textContent = planQueue.length ? 'プランの次へ' : 'ホームへ'; $('#qBack').onclick = () => { if (!nextPlan()) tab('home'); };
     return;
   }
   v.innerHTML = `<h1>クイズ ${QZ.i + 1}/${QZ.list.length}</h1><div class="busy"><div class="spin"></div>写真を撮っています…</div>`;
@@ -597,11 +598,11 @@ function renderReal() {
   <div class="ctl"><label>3Dの見本と比べる（任意）</label><select id="rcTarget" style="width:100%"><option value="">比べない</option>${tasks.map(([id, n]) => `<option value="${id}" ${RC.target === id ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div>
   <h2>2. 被写体を指で囲む</h2>
   <div class="mute">写真の上をドラッグして、被写体がちょうど入る四角を作ります。</div>
-  <div id="rcWrap"><canvas id="rcCv"></canvas><div id="rcBox"></div></div>
+  <div id="rcWrap"><canvas id="rcCv" width="400" height="300"></canvas><div id="rcBox"></div>${RC.img ? '' : '<div class="mute" style="position:absolute;inset:0;display:grid;place-items:center;pointer-events:none">ここに写真が出ます</div>'}</div>
   <button class="big" id="rcGo" style="margin-top:10px" ${RC.img ? '' : 'disabled'}>3. 測る</button>
   <div id="rcOut"></div>
   <h2>撮るときのコツ</h2><ul class="l"><li>カメラはM・ISO100・1/160秒・f/8、ホワイトバランスは太陽光で固定。</li><li>JPEGで撮った写真をそのまま使う（加工した写真は測れません）。</li><li>被写体が画面の真ん中あたりに、ある程度大きく写るように。</li></ul>`;
-  $('#rcFile').onchange = e => { const f = e.target.files[0]; if (!f) return; if (RC.url) URL.revokeObjectURL(RC.url); const url = RC.url = URL.createObjectURL(f); const im = new Image(); im.onload = () => { RC.img = im; RC.box = null; RC.res = null; drawRC(); $('#rcGo').disabled = false; $('#rcOut').innerHTML = ''; }; im.src = url; };
+  $('#rcFile').onchange = e => { const f = e.target.files[0]; if (!f) return; if (RC.url) URL.revokeObjectURL(RC.url); const url = RC.url = URL.createObjectURL(f); const im = new Image(); im.onload = () => { RC.img = im; RC.box = null; RC.res = null; renderReal(); $('#rcGo').disabled = false; $('#rcOut').innerHTML = ''; }; im.src = url; };
   $$('#rcBg button').forEach(b => b.onclick = () => { RC.bg = b.dataset.v; $$('#rcBg button').forEach(x => x.classList.toggle('on', x === b)); });
   $('#rcTarget').onchange = e => RC.target = e.target.value;
   $('#rcGo').onclick = () => runRC();
@@ -674,6 +675,12 @@ async function runRC() {
 
 /* ================= ホーム・ステップ・手順 ================= */
 let planQueue = [];
+// プランの続きへ。今日もう終わった項目は飛ばす。続きがなければ false
+function nextPlan() {
+  const done = doneToday();
+  while (planQueue.length) { const it = planQueue.shift(); if (!done[it.dk || it.k]) { it.go(); return true; } }
+  return false;
+}
 // 今日のプランは、その日の最初に決めたら1日変えない（終わった項目が消えたり入れ替わったりしないように）
 function planItem(k) {
   const [kind, id] = k.split(':'); const stOf = tid => realSteps.find(s => s.tasks.some(t => t.id === tid) || s.fixes.some(f => f.id === tid));
@@ -705,23 +712,24 @@ function todaysPlan() {
   return DB.today.plan.map(k => { const it = planItem(k); return it && { ...it, k, done: !!done[it.dk || k] }; }).filter(Boolean);
 }
 function renderHome() {
+  if (!DB.seenIntro) { setTimeout(() => { DB.seenIntro = true; save(); }, 0); }
   const cur = currentStep(); const plan = todaysPlan(); const total = plan.reduce((a, b) => a + b.min, 0);
   const allP = realSteps.map(stepProgress); const done = allP.reduce((a, b) => a + b.done, 0), all = allP.reduce((a, b) => a + b.total, 0);
   $('#v-home').innerHTML = `
   <div class="top"><a href="index.html">‹ ジンバル練習へ</a><span class="mute">${done}/${all} クリア</span></div>
   <h1>ライティング練習ラボ</h1>
-  <div class="why"><b>この練習の目的</b><br>反射板やライトがなくても、3Dのスタジオで<b>写真から光を読む目</b>と、<b>どこを動かすと何が変わるか</b>、<b>本番の手順</b>を身につけます。実物でしか覚えられない手の動きは、各ステップの「家で実物で確かめる」で補います。</div>
+  ${DB.seenIntro ? `<details class="why"><summary><b>この練習の目的</b></summary>` : `<div class="why"><b>この練習の目的</b><br>`}反射板やライトがなくても、3Dのスタジオで<b>写真から光を読む目</b>と、<b>どこを動かすと何が変わるか</b>、<b>本番の手順</b>を身につけます。実物でしか覚えられない手の動きは、各ステップの「家で実物で確かめる」で補います。${DB.seenIntro ? '</details>' : '</div>'}
   <h2>今日の練習プラン（約${total}分）</h2>
-  <div class="mute">いまのステップ：<b style="color:var(--text)">${cur.lv}・${esc(cur.title)}</b>。上から順に。終わった項目には✓がつきます。</div>
+  <div class="mute">いまのステップ：<b style="color:var(--text)">${cur.lv}・${esc(cur.title)}</b>。終わった項目には✓がつきます。</div>
+  <button class="big" id="hStart" style="margin-top:10px">${plan.every(p => p.done) ? '今日のプランは完了 ✓' : plan.some(p => p.done) ? 'プランの続きから' : 'プランを通しで始める'}</button>
   <div class="plan">${plan.map((p, i) => `<button class="drill ${p.done ? 'done' : ''}" data-i="${i}"><span class="no">${p.done ? '✓' : i + 1}</span><span><b><span class="tag ${p.tag}">${p.tagN}</span>${esc(p.t)}</b><small>${esc(p.d)}</small></span><span class="mute">${p.min}分</span></button>`).join('')}</div>
-  <button class="big" id="hStart" style="margin-top:12px">プランを通しで始める</button>
   <h2>自由に触る</h2>
   <div class="row"><button class="ghost" id="hFree">自由ラボ</button><button class="ghost" id="hPhone">スマホが反射板</button><button class="ghost" id="hSteps">ステップ一覧</button><button class="ghost" id="hGear">機材の準備と設定</button><button class="ghost" id="hReal">📷 実物チェック</button></div>
   <div class="card" style="font-size:13px"><b>家で実物で確かめる（任意）</b><br><span class="mute">いまのステップ「${esc(cur.title)}」の実物練習：${esc(cur.real.items)}。手順はステップのページにあります。</span></div>`;
-  $$('#v-home .drill').forEach(b => b.onclick = () => { planQueue = []; plan[+b.dataset.i].go(); });
-  $('#hStart').onclick = () => { const rest = plan.filter(p => !p.done); if (!rest.length) { flashHome('今日のプランは全部終わりました。おつかれさまでした！'); return; } planQueue = rest.slice(1).map(p => p.go); rest[0].go(); };
-  $('#hFree').onclick = () => { planQueue = []; openStudio({ mode: 'free', title: '自由ラボ', setup: defaultSetup(), brief: '<span class="mute">配置図でライトや反射板をドラッグ。下のタブで種類・高さ・背景・カメラを変えられます。</span>' }); };
-  $('#hPhone').onclick = () => { planQueue = []; startPhone(0); };
+  $$('#v-home .drill').forEach(b => b.onclick = () => { planQueue = []; ST.inPlan = false; plan[+b.dataset.i].go(); });
+  $('#hStart').onclick = () => { const rest = plan.filter(p => !p.done); if (!rest.length) { flashHome('今日のプランは全部終わりました。おつかれさまでした！'); return; } planQueue = rest.slice(1); ST.inPlan = true; rest[0].go(); };
+  $('#hFree').onclick = () => { planQueue = []; ST.inPlan = false; openStudio({ mode: 'free', title: '自由ラボ', setup: defaultSetup(), brief: '<span class="mute">配置図でライトや反射板をドラッグ。下のタブで種類・高さ・背景・カメラを変えられます。</span>' }); };
+  $('#hPhone').onclick = () => { planQueue = []; ST.inPlan = false; startPhone(0); };
   $('#hSteps').onclick = () => tab('steps');
   $('#hReal').onclick = () => tab('real');
   $('#hGear').onclick = () => { tab('guide'); setTimeout(() => { const el = $('#gearSetup'); if (el) el.scrollIntoView(); }, 30); };
@@ -755,9 +763,9 @@ function openStep(id) {
   <div class="mute" style="margin-top:8px">3Dで分かったことが実物でも同じかを確かめる時間です。違ったところがあれば、それが実物ならではのポイントです。</div><button class="ghost sm" id="sReal" style="margin-top:8px">📷 撮った写真を実物チェックで測る</button></div>`;
   $('#stBack').onclick = e => { e.preventDefault(); renderSteps(); };
   $('#sReal').onclick = () => { RC.target = s.tasks[0] ? s.tasks[0].id : ''; tab('real'); };
-  $('#sLab').onclick = () => { planQueue = []; startLab(s); };
-  $$('#v-steps [data-t]').forEach(b => b.onclick = () => { planQueue = []; startMatch(s, s.tasks[+b.dataset.t]); });
-  $$('#v-steps [data-f]').forEach(b => b.onclick = () => { planQueue = []; startFix(s, s.fixes[+b.dataset.f]); });
+  $('#sLab').onclick = () => { planQueue = []; ST.inPlan = false; startLab(s); };
+  $$('#v-steps [data-t]').forEach(b => b.onclick = () => { planQueue = []; ST.inPlan = false; startMatch(s, s.tasks[+b.dataset.t]); });
+  $$('#v-steps [data-f]').forEach(b => b.onclick = () => { planQueue = []; ST.inPlan = false; startFix(s, s.fixes[+b.dataset.f]); });
   $$('#v-steps [data-r]').forEach(c => c.onchange = () => { DB.real[s.id + ':' + c.dataset.r] = c.checked; if (c.checked) markToday('real:' + s.id); save(); });
   window.scrollTo(0, 0);
 }
