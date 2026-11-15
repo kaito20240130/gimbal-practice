@@ -437,6 +437,18 @@ renderPlan();
 let W=null;
 function openWalk(){ $('#walk').classList.add('on'); unlockAudio(); if(!S.ok) enableSensors(); if(!W) W=initWalk(); W.start(); }
 $('#wBack').onclick=()=>{ $('#walk').classList.remove('on'); W&&W.stop(); };
+/* ブラウザの「戻る」＝ひとつ上の階層へ（結果 → 練習中 → 説明 → タブ → ホーム） */
+function goUp(){
+  const on=id=>{ const el=$('#'+id); return el&&el.classList.contains('on'); };
+  if(on('result')){ $('#resClose').click(); return true; }
+  if(on('run')){ $('#rBack').click(); return true; }
+  if(on('brief')){ $('#brief').classList.remove('on'); return true; }
+  if(on('walk')){ $('#wBack').click(); return true; }
+  const cur=($$('#tabbar button').find(b=>b.classList.contains('on'))||{}).dataset; if(cur&&cur.tab&&cur.tab!=='home'){ tab('home'); return true; }
+  return false;
+}
+history.replaceState({nav:'root'},''); history.pushState({nav:'guard'},'');
+window.addEventListener('popstate',()=>{ if(goUp()) history.pushState({nav:'guard'},''); else history.back(); });
 function initWalk(){
   const canvas=$('#wcanvas'); const renderer=new THREE.WebGLRenderer({canvas,antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.outputColorSpace=THREE.SRGBColorSpace;
   const scene=new THREE.Scene(); scene.background=new THREE.Color(0xbfd6ea); scene.fog=new THREE.Fog(0xbfd6ea,60,260);

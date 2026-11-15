@@ -16,9 +16,9 @@ export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const LIGHTS = {
   window: { name: '窓（レース越し）', short: '窓', w: 1.0, h: 1.2, def: 1.4, kelvin: 6000, note: '大きくやわらかい。家でいちばん手に入る光' },
   sun:    { name: '窓（直射日光）', short: '直射', w: 0, h: 0, def: 3, kelvin: 5200, directional: true, note: '太陽は遠くて小さいので、影がくっきり' },
-  v1:     { name: 'V1（そのまま）', short: 'V1', w: 0.075, h: 0.075, def: 0.9, kelvin: 5600, flash: true, note: 'Godox V1の丸い発光部（直径約7.5cm）。小さいので影がくっきり' },
-  v1soft: { name: 'V1＋ソフトボックス60cm', short: 'V1＋ソフト60', w: 0.6, h: 0.6, def: 0.9, kelvin: 5600, flash: true, note: 'お持ちのGodox SGUV6060（60×60cm、S2ブラケット）。発光面が60cmになり影がやわらかい' },
-  v1bounce:{ name: 'V1 天井バウンス', short: 'バウンス', w: 1.4, h: 1.4, def: 1.6, kelvin: 5600, flash: true, note: 'V1を天井に向けて光らせる。天井が大きな光源になり、上からやわらかく当たる' },
+  v1:     { name: 'V1（そのまま）', short: 'V1', w: 0.075, h: 0.075, def: 0.9, kelvin: 5600, flash: true, base: 4, note: 'Godox V1の丸い発光部（直径約7.5cm）。小さいので影がくっきり' },
+  v1soft: { name: 'V1＋ソフトボックス60cm', short: 'V1＋ソフト60', w: 0.6, h: 0.6, def: 0.9, kelvin: 5600, flash: true, base: 2, note: 'お持ちのGodox SGUV6060（60×60cm、S2ブラケット）。発光面が60cmになり影がやわらかい' },
+  v1bounce:{ name: 'V1 天井バウンス', short: 'バウンス', w: 1.4, h: 1.4, def: 1.6, kelvin: 5600, flash: true, base: 1, note: 'V1を天井に向けて光らせる。天井が大きな光源になり、上からやわらかく当たる' },
   led:    { name: 'LEDライト（そのまま）', short: 'LED', w: 0.07, h: 0.07, def: 0.8, kelvin: 5600, note: '小さいので影が硬い' },
   softbox:{ name: 'ソフトボックス 60cm', short: 'ソフト', w: 0.6, h: 0.6, def: 0.9, kelvin: 5600, note: 'LEDに箱と布をかぶせて大きくした光' },
   strip:  { name: 'ストリップ 30×120cm', short: 'ストリップ', w: 0.3, h: 1.2, def: 0.9, kelvin: 5600, note: '細長いソフトボックス。ツヤのある物に細長い光を写す' },

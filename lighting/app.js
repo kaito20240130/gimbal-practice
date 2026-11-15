@@ -218,7 +218,7 @@ function renderTools() {
     h += `<div class="ctl"><label>種類</label>${opts('lType', Object.entries(LIGHTS).map(([k, v]) => [k, v.name]), l.type, okType)}</div><div class="mute" style="margin-top:-2px">${esc(LIGHTS[l.type].note)}</div>`;
     h += slider('lEl', '高さ（角度）', l.el, 0, 85, 1, v => `${v}°`, okPos);
     h += slider('lDist', '距離', l.dist, 0.25, 3.2, 0.05, v => `${(+v).toFixed(2)}m`, okDist);
-    h += slider('lPow', LIGHTS[l.type].flash ? '出力（V1の設定）' : '強さ', l.pow, -3, 3, 1 / 3, v => powFmt(l.type, +v), okDist);
+    const T = LIGHTS[l.type]; h += slider('lPow', T.flash ? '出力（V1の設定・目安）' : '強さ', l.pow, T.flash ? -(8 - T.base) : -3, T.flash ? T.base : 3, 1 / 3, v => powFmt(l.type, +v), okDist);
     if (!okPos) h += `<div class="lock">🔒 このお題では、ライトの位置は決まっています</div>`;
     else if (!okDist) h += `<div class="lock">🔒 このお題で動かせるのは向きと高さだけ（配置図でドラッグ）</div>`;
     if (!ST.tools) h += which === 'fill' ? `<button class="ghost sm" id="lDel" style="margin-top:6px">補助ライトを外す</button>` : (!s.fill ? `<button class="ghost sm" id="lAdd" style="margin-top:6px">＋ 補助ライトを足す</button>` : '');
@@ -243,7 +243,7 @@ function renderTools() {
     h += `<div class="ctl"><label>部屋</label>${opts('room', Object.entries(ROOMS).map(([k, v]) => [k, v.name]), s.room, okRoom)}</div>`;
   } else if (ST.tab === 'cam') {
     const okCam = !ST.tools;
-    h += slider('cEv', '露出', s.cam.ev, -2, 2, 1 / 3, v => `${v > 0 ? '+' : ''}${(+v).toFixed(1)}段`, can('cam.ev'));
+    h += slider('cEv', '露出（α7C II・ISO100・1/160秒のとき）', s.cam.ev, -2, 2, 1 / 3, v => evFmt(+v), can('cam.ev'));
     h += `<div class="ctl"><label>カメラの高さ</label>${opts('cEl', [[8, '真横'], [30, '斜め上'], [55, '高め'], [88, '真上']], s.cam.el, okCam)}</div>`;
     h += slider('cF', '焦点距離（被写体の大きさは同じまま）', s.cam.focal, 24, 70, 1, v => `${v}mm`, okCam);
     if (okCam) {
@@ -276,12 +276,15 @@ function bindTools() {
 }
 function powFmt(type, v) {
   if (!LIGHTS[type].flash) return `${v > 0 ? '+' : ''}${v.toFixed(1)}段`;
-  const st = Math.round(v * 3) / 3; const full = 3 - st; const n = Math.floor(full + 1e-6), f = Math.round((full - n) * 3);
-  return `1/${2 ** n}${f ? ' -' + (f === 1 ? '0.3' : '0.7') : ''}（${st > 0 ? '+' : ''}${st.toFixed(1)}段）`;
+  const st = Math.round(v * 3) / 3; const full = Math.max(0, LIGHTS[type].base - st); const n = Math.floor(full + 1e-6), f = Math.round((full - n) * 3);
+  const frac = n === 0 ? '1/1' : `1/${2 ** n}`;
+  return f ? `${frac} −${f === 1 ? '0.3' : '0.7'}` : frac;
 }
+const FST = ['16', '14', '13', '11', '10', '9', '8', '7.1', '6.3', '5.6', '5', '4.5', '4'];
+function evFmt(v) { const i = clamp(Math.round(v * 3) + 6, 0, 12); return `f/${FST[i]}（${v > 0 ? '+' : ''}${v.toFixed(1)}段）`; }
 function fmtOf(id, v) {
   if (id === 'lPow') { const l = ST.setup[ST.sel.k === 'fill' && ST.setup.fill ? 'fill' : 'key']; return powFmt(l.type, v); }
-  return { lEl: `${v}°`, lDist: `${v.toFixed(2)}m`, lPow: `${v > 0 ? '+' : ''}${v.toFixed(1)}段`, rDist: `${v.toFixed(2)}m`, rYaw: `${v > 0 ? '+' : ''}${v}°`, bDist: `${v.toFixed(2)}m`, cEv: `${v > 0 ? '+' : ''}${v.toFixed(1)}段`, cF: `${v}mm` }[id] || v;
+  return { lEl: `${v}°`, lDist: `${v.toFixed(2)}m`, lPow: `${v > 0 ? '+' : ''}${v.toFixed(1)}段`, rDist: `${v.toFixed(2)}m`, rYaw: `${v > 0 ? '+' : ''}${v}°`, bDist: `${v.toFixed(2)}m`, cEv: evFmt(v), cF: `${v}mm` }[id] || v;
 }
 
 /* ================= 下のボタン ================= */
@@ -607,17 +610,18 @@ function renderHome() {
   <div class="plan">${plan.map((p, i) => `<button class="drill ${p.done ? 'done' : ''}" data-i="${i}"><span class="no">${p.done ? '✓' : i + 1}</span><span><b><span class="tag ${p.tag}">${p.tagN}</span>${esc(p.t)}</b><small>${esc(p.d)}</small></span><span class="mute">${p.min}分</span></button>`).join('')}</div>
   <button class="big" id="hStart" style="margin-top:12px">プランを通しで始める</button>
   <h2>自由に触る</h2>
-  <div class="row"><button class="ghost" id="hFree">自由ラボ</button><button class="ghost" id="hPhone">スマホが反射板</button><button class="ghost" id="hSteps">ステップ一覧</button></div>
+  <div class="row"><button class="ghost" id="hFree">自由ラボ</button><button class="ghost" id="hPhone">スマホが反射板</button><button class="ghost" id="hSteps">ステップ一覧</button><button class="ghost" id="hGear">機材の準備と設定</button></div>
   <div class="card" style="font-size:13px"><b>家で実物で確かめる（任意）</b><br><span class="mute">いまのステップ「${esc(cur.title)}」の実物練習：${esc(cur.real.items)}。手順はステップのページにあります。</span></div>`;
   $$('#v-home .drill').forEach(b => b.onclick = () => { planQueue = []; plan[+b.dataset.i].go(); });
   $('#hStart').onclick = () => { const rest = plan.filter(p => !p.done); if (!rest.length) { flashHome('今日のプランは全部終わりました。おつかれさまでした！'); return; } planQueue = rest.slice(1).map(p => p.go); rest[0].go(); };
   $('#hFree').onclick = () => { planQueue = []; openStudio({ mode: 'free', title: '自由ラボ', setup: defaultSetup(), brief: '<span class="mute">配置図でライトや反射板をドラッグ。下のタブで種類・高さ・背景・カメラを変えられます。</span>' }); };
   $('#hPhone').onclick = () => { planQueue = []; startPhone(0); };
   $('#hSteps').onclick = () => tab('steps');
+  $('#hGear').onclick = () => { tab('guide'); setTimeout(() => { const el = $('#gearSetup'); if (el) el.scrollIntoView(); }, 30); };
 }
 function flashHome(msg) { const el = document.createElement('div'); el.className = 'why'; el.textContent = msg; $('#v-home').prepend(el); setTimeout(() => el.remove(), 3000); }
 function renderSteps() {
-  const cur = currentStep();
+  CUR_STEP = null; const cur = currentStep();
   $('#v-steps').innerHTML = `<h1>ステップ</h1><div class="mute">おすすめは上から順。どこからでも始められます。</div>` + STEPS.map(s => {
     if (s.soon) return `<div class="stepcard soon"><span class="chip">${s.lv}</span> <b>${esc(s.title)}</b><div class="mute">第3段階で追加予定</div></div>`;
     const p = stepProgress(s);
@@ -625,8 +629,9 @@ function renderSteps() {
   }).join('');
   $$('#v-steps .stepcard[data-id]').forEach(b => b.onclick = () => openStep(b.dataset.id));
 }
+let CUR_STEP = null;
 function openStep(id) {
-  tab('steps'); const s = stepOf(id); DB.visited[id] = true; save();
+  tab('steps'); CUR_STEP = id; const s = stepOf(id); DB.visited[id] = true; save();
   const sc = t => { const b = DB.best[t.id]; return b ? `<span class="score" style="color:${b.pass ? 'var(--good)' : 'var(--warn)'}">${b.score}</span>` : '<span class="mute">未</span>'; };
   $('#v-steps').innerHTML = `<div class="top"><a href="#" id="stBack">‹ ステップ一覧</a><span class="chip a">${s.lv}</span></div>
   <h1>${esc(s.title)}</h1>
@@ -676,11 +681,46 @@ function renderGuide() {
   <tr><td>失敗直し</td><td>言葉から原因を探す・少ない手数</td><td>撮影現場での修正を早く終える</td></tr>
   <tr><td>スマホが反射板</td><td>被写体を見ながら角度を探す動き</td><td>レフ板持ち・自分で角度を合わせるとき</td></tr>
   <tr><td>家で実物で確かめる</td><td>3Dと実物の違い</td><td>機材の扱い、実物ならではのクセ</td></tr></table>
+  <h2 id="gearSetup">機材の準備と設定（手持ちの機材用）</h2>
+  <div class="mute">α7C II ＋ X3 Pro S（カメラの上）→ 無線 → V1（スタンドM＋S2ブラケット＋ソフトボックス60cm）</div>
+  <h3>1. 組み立て</h3>
+  <ol class="steps">
+   <li><b>スタンドMを立てる</b><small>脚を広く開いて安定させる。ソフトボックスは風を受けやすいので、重しがあると安心。</small></li>
+   <li><b>S2ブラケットを付ける</b><small>スタンドの先にS2ブラケットを差し込んで固定。</small></li>
+   <li><b>ソフトボックスを開いてBowensマウントに付ける</b><small>布（2枚付属）を張る。2枚重ねるほどやわらかく、少し暗くなる。</small></li>
+   <li><b>V1をS2ブラケットに付ける</b><small>発光部をソフトボックスの奥（正面）にまっすぐ向ける。横を向いていると光がムラになる。</small></li>
+  </ol>
+  <h3>2. V1 と X3 Pro をつなぐ</h3>
+  <ol class="steps">
+   <li><b>V1を「無線で受ける側」にする</b><small>X3 Proと同じチャンネル（CH）にそろえ、グループはAにする。操作の詳細はV1の説明書で確認。</small></li>
+   <li><b>X3 Pro Sをα7C IIのシューに付ける</b><small>グループAを「M（マニュアル）」にする。TTL（自動）だと毎回明るさが変わり、光の練習にならない。</small></li>
+   <li><b>出力は 1/4 から</b><small>3Dの「V1＋ソフトボックス60cm」の出力スライダーと同じ数字。1/3段ずつ動かす。</small></li>
+   <li><b>スマホから調整する</b><small>X3 ProはBluetoothで「Godox Flash」アプリにつながる。カメラを三脚に据えたまま出力を変えられる。</small></li>
+  </ol>
+  <h3>3. α7C II の設定（物撮りの基本）</h3>
+  <table class="m"><tr><th>項目</th><th>設定</th><th>理由</th></tr>
+  <tr><td>撮影モード</td><td>M（マニュアル）</td><td>明るさを出力と絞りだけで決めるため</td></tr>
+  <tr><td>シャッター</td><td>1/160秒</td><td>α7C IIのストロボ同調はフルサイズで1/160秒まで。部屋の電気も写りにくくなる</td></tr>
+  <tr><td>シャッター方式</td><td>電子シャッターにしない</td><td>電子シャッターではストロボが光らない</td></tr>
+  <tr><td>ISO</td><td>100</td><td>ノイズを減らす。明るさはストロボで足す</td></tr>
+  <tr><td>絞り</td><td>f/8 前後</td><td>箱全体にピントが合う。3Dの露出スライダーの f/値と対応</td></tr>
+  <tr><td>ホワイトバランス</td><td>太陽光（または 5500K）</td><td>オートだと写真ごとに色が変わる</td></tr>
+  <tr><td>画質</td><td>RAW＋JPEG</td><td>あとで色と明るさを直せる</td></tr>
+  <tr><td>表示</td><td>ゼブラ・ヒストグラムを出す</td><td>撮った写真の白飛びを確認する</td></tr></table>
+  <h3>4. 試し撮りの手順</h3>
+  <ol class="steps">
+   <li><b>出力1/4・f/8で1枚撮る</b><small>3Dで練習した配置にスタンドを置いてから。</small></li>
+   <li><b>明るさだけを合わせる</b><small>暗ければ出力を上げる、明るければ下げる（1/3段ずつ）。白い商品はゼブラが出ない所まで。</small></li>
+   <li><b>次に影側を見る</b><small>反射板を置いて1枚。ストロボの光は撮るまで見えないので、1つ動かしたら1枚。</small></li>
+   <li><b>同じ配置を記録する</b><small>スタンドの位置・高さ・出力をメモ。X3 Proは設定を保存して呼び出せる。</small></li>
+  </ol>
+  <p class="mute">出力の数字は3Dの計算からの目安です。実際の明るさはソフトボックスの布の枚数や部屋で変わるので、試し撮りで合わせてください。</p>
   <h2>手持ちの機材で撮るとき</h2>
   <table class="m"><tr><th>機材</th><th>3Dでは</th><th>本番のコツ</th></tr>
   <tr><td>Godox V1</td><td>ライトの種類「V1（そのまま）」「V1 天井バウンス」</td><td>光は撮るまで見えない。1つ動かすたびに1枚撮って確認。モデリングランプは弱く黄色い（3200K）ので向きの目安だけに。</td></tr>
   <tr><td>ソフトボックス 60×60cm（SGUV6060）</td><td>「V1＋ソフトボックス60cm」</td><td>やわらかさは距離で決まる。50cm前後まで寄せるととてもやわらか、1.5m以上離すと硬め。</td></tr>
-  <tr><td>送信機 Godox X3 Pro（ソニー用）</td><td>ライトの「出力」スライダー（1/1〜1/64）</td><td>まずはTTLではなくM（マニュアル）で。出力は1/3段ずつ動かせるので3Dと同じ感覚で使える。距離を2倍にしたら2段上げる。Bluetoothでスマホの「Godox Flash」アプリからも出力を変えられるので、カメラを三脚に据えたまま調整できる。</td></tr>
+  <tr><td>送信機 Godox X3 Pro（ソニー用）</td><td>ライトの「出力」スライダー（1/1〜1/256）</td><td>まずはTTLではなくM（マニュアル）で。出力は1/3段ずつ動かせるので3Dと同じ感覚で使える。距離を2倍にしたら2段上げる。Bluetoothでスマホの「Godox Flash」アプリからも出力を変えられるので、カメラを三脚に据えたまま調整できる。</td></tr>
+  <tr><td>α7C II</td><td>カメラタブの「露出」（f/値で表示）</td><td>ISO100・1/160秒・f/8が基準。3Dで露出を+1段にした所は、本番では絞りを1段開けるか出力を1段上げる。</td></tr>
   <tr><td>ライトスタンドM</td><td>ライトの「高さ（角度）」と「距離」</td><td>高さは被写体から見た角度で考える。斜め上30〜45°が基本。</td></tr></table>
   <p class="mute">ストロボは一瞬しか光らないので、部屋の電気の色はほとんど写りません（シャッター速度を上げるほど消える）。窓の光と混ぜるときは、窓の光は普通に写る点に注意。</p>
   <h2>この練習の作りについて</h2>
@@ -694,5 +734,21 @@ let resetArm = 0; function confirmReset() { if (Date.now() - resetArm < 4000) re
 function tab(name) { $$('.view').forEach(v => v.classList.remove('on')); $$('#tabbar button').forEach(b => b.classList.toggle('on', b.dataset.tab === name)); $('#v-' + name).classList.add('on'); if (name === 'home') renderHome(); if (name === 'steps') renderSteps(); if (name === 'quiz' && !QZ) renderQuizHome(); if (name === 'guide') renderGuide(); window.scrollTo(0, 0); }
 $$('#tabbar button').forEach(b => b.onclick = () => { if (b.dataset.tab === 'quiz') QZ = null; tab(b.dataset.tab); });
 function renderAll() { renderHome(); }
+
+/* ================= ブラウザの「戻る」＝ひとつ上の階層へ ================= */
+// 表示中のいちばん上の層を閉じる。閉じるものがなければ false
+function goUp() {
+  if ($('#sheet').classList.contains('on')) { closeSheet(); return true; }
+  if (ST.open) { closeStudio(); return true; }
+  const curTab = ($$('#tabbar button').find(b => b.classList.contains('on')) || {}).dataset?.tab || 'home';
+  if (curTab === 'steps' && CUR_STEP) { renderSteps(); window.scrollTo(0, 0); return true; }
+  if (curTab !== 'home') { QZ = null; tab('home'); return true; }
+  return false;
+}
+history.replaceState({ nav: 'root' }, ''); history.pushState({ nav: 'guard' }, '');
+window.addEventListener('popstate', () => {
+  if (goUp()) history.pushState({ nav: 'guard' }, '');
+  else location.replace('index.html'); // ホームでさらに戻る → 練習ラボのトップへ
+});
 renderHome();
 window.__lab = { ST, DB, STEPS, startMatch, startFix, startLab, startPhone, startQuiz, openStudio, tab, openStep };

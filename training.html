@@ -1179,6 +1179,9 @@ function go(i){ cur=i; const s=S[i]; curLv=s.lv; stepT=0; resetWorld(); s.setup&
   const n=S.filter((x,j)=>x.lv===s.lv&&j<=i).length, tot=S.filter(x=>x.lv===s.lv).length; document.getElementById('bbTitle').innerHTML=`<b style="background:${LV[s.lv][1]}">${LV[s.lv][0]} ${n}/${tot}</b>${s.title}`; }
 document.getElementById('bbPrev').onclick=()=>go(Math.max(0,cur-1)); document.getElementById('bbNext').onclick=()=>go(Math.min(S.length-1,cur+1));
 document.getElementById('bSize').onclick=()=>stageEl.classList.toggle('big');
+/* ブラウザの「戻る」：拡大表示を閉じる → 練習ラボのトップへ */
+history.replaceState({nav:'root'},''); history.pushState({nav:'guard'},'');
+window.addEventListener('popstate',()=>{ if(stageEl.classList.contains('big')){ stageEl.classList.remove('big'); history.pushState({nav:'guard'},''); } else location.replace('index.html'); });
 window.addEventListener('keydown',e=>{ if(e.target.closest&&e.target.closest('input,textarea'))return; if(e.key==='ArrowRight')go(Math.min(S.length-1,cur+1)); if(e.key==='ArrowLeft')go(Math.max(0,cur-1)); if(e.key===' '){ e.preventDefault(); document.getElementById('bPlay').click(); } });
 let insetOn=false; let rdt=.016; let autoBig=false;
 let playing=true; document.getElementById('bPlay').onclick=e=>{ playing=!playing; e.target.textContent=playing?'❚❚ 一時停止':'▶ 再生'; };
