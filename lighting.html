@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1013">
+<title>ライティング練習ラボ — 反射板やライトがなくても、光を読む目を鍛える</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1013;--panel:#17191e;--panel2:#1e2128;--line:#2b2f38;--text:#e9e7e2;--mute:#9aa0aa;--accent:#f5b83d;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--pink:#fb7185;--blue:#60a5fa;--key:#f5b83d;--fill:#60a5fa}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:"Noto Sans JP",system-ui,sans-serif;line-height:1.6}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent)}
+.view{display:none;padding:calc(14px + env(safe-area-inset-top)) 16px calc(92px + env(safe-area-inset-bottom));max-width:680px;margin:0 auto}
+.view.on{display:block}
+h1{font-size:20px;margin:2px 0;font-weight:900} h2{font-size:16px;margin:22px 0 8px} h3{font-size:14.5px;margin:14px 0 6px}
+.mute{color:var(--mute);font-size:12.5px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+.big{display:block;width:100%;font-size:16px;font-weight:900;padding:13px;border-radius:12px;border:0;background:var(--accent);color:#111}
+.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-weight:700;padding:9px 13px;border-radius:10px}
+.ghost.sm{padding:5px 10px;font-size:13px}
+.why{background:#151b25;border:1px solid #26344a;border-radius:12px;padding:12px 14px;font-size:13.5px;margin-top:10px}
+.why b{color:#93c5fd}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sp{justify-content:space-between}
+.chip{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--panel2);border:1px solid var(--line)}
+.chip.g{color:var(--good);border-color:#1f6f53}.chip.a{color:var(--accent);border-color:#6b5320}.chip.b{color:var(--blue);border-color:#284a77}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.top a{font-size:13px;text-decoration:none}
+.plan{display:grid;gap:8px;margin-top:8px}
+.drill{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;width:100%}
+.drill .no{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:var(--panel2);border:1px solid var(--line)}
+.drill.done .no{background:var(--good);color:#111;border-color:var(--good)}
+.drill b{font-size:15px;display:block}.drill small{display:block;color:var(--mute);font-size:12px;line-height:1.45}
+.drill .tag{display:inline-block;font-size:10.5px;font-weight:900;color:#111;background:var(--accent);border-radius:4px;padding:0 5px;margin-right:4px}
+.drill .tag.r{background:var(--blue)}.drill .tag.q{background:var(--pink)}.drill .tag.f{background:var(--good)}
+.score{font-size:18px;font-weight:900;min-width:40px;text-align:right}
+ul.l{padding-left:20px;margin:6px 0} ul.l li{margin:4px 0;font-size:14px}
+ol.steps{counter-reset:s;padding:0;margin:8px 0;list-style:none}
+ol.steps li{counter-increment:s;position:relative;padding:7px 0 7px 34px;font-size:14px;border-bottom:1px solid var(--line)}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:8px;width:24px;height:24px;border-radius:50%;background:var(--panel2);display:grid;place-items:center;font-size:12px;font-weight:900}
+ol.steps li small{display:block;color:var(--mute);font-size:12.5px}
+table.m{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px} table.m td,table.m th{border-bottom:1px solid var(--line);padding:7px 4px;text-align:left;vertical-align:top} table.m th{color:var(--mute);font-weight:500}
+.stepcard{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:8px 0}
+.stepcard b{font-size:15px}.stepcard.cur{border-color:var(--accent)}
+.stepcard .bar{height:5px;border-radius:3px;background:var(--panel2);margin-top:8px;overflow:hidden}.stepcard .bar i{display:block;height:100%;background:var(--good)}
+.stepcard.soon{opacity:.5}
+#tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(15,16,19,.97);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:30}
+#tabbar button{flex:1;background:none;border:0;padding:9px 0 7px;font-size:11px;color:var(--mute)}
+#tabbar button i{display:block;font-style:normal;font-size:20px}
+#tabbar button.on{color:var(--accent)}
+.check{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--good);flex:none}
+
+/* ---------- studio ---------- */
+#studio{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column}
+#studio.on{display:flex}
+.stbar{flex:none;display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 10px 6px}
+.stbar b{flex:1;font-size:14.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xbtn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;width:38px;height:34px;font-size:18px;line-height:1;flex:none}
+#briefBox{flex:none;font-size:12.5px;padding:0 12px 6px;line-height:1.45;color:#d6d3cc;max-height:22dvh;overflow:auto}
+#briefBox:empty{display:none}
+#briefBox .cl{color:#fde68a}
+#photoArea{flex:none;display:flex;justify-content:center;background:#000;position:relative}
+#photoWrap{position:relative;height:min(46dvh,118vw);aspect-ratio:4/5;max-width:100%}
+#cv{width:100%;height:100%;display:block;touch-action:none}
+#meters{position:absolute;left:6px;top:6px;display:flex;flex-wrap:wrap;gap:3px;max-width:62%;pointer-events:none}
+#meters span{font-size:11px;font-weight:700;background:#000a;border-radius:6px;padding:1px 6px;font-variant-numeric:tabular-nums;width:max-content}
+#meters span.w{color:#fca5a5}
+#hist{position:absolute;left:6px;bottom:6px;width:84px;height:30px;background:#000a;border-radius:5px;pointer-events:none}
+#prog{position:absolute;left:0;right:0;bottom:0;height:2px}
+#prog i{display:block;height:100%;background:var(--accent);width:0;transition:width .1s}
+#ovBtns{position:absolute;right:6px;bottom:6px;display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+#ovBtns button{font-size:11.5px;font-weight:700;background:#000b;border:1px solid #fff3;border-radius:8px;padding:4px 8px;user-select:none;-webkit-user-select:none;touch-action:none}
+#ovBtns button.on{border-color:var(--accent);color:var(--accent)}
+#targetBox{position:absolute;right:6px;top:6px;width:27%;border:2px solid var(--accent);border-radius:6px;overflow:hidden;background:#000;display:none}
+#targetBox.on{display:block}
+#targetBox img{display:block;width:100%}
+#targetBox small{position:absolute;left:0;right:0;bottom:0;font-size:10px;font-weight:900;text-align:center;background:#000a;color:var(--accent)}
+#swapImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;pointer-events:none}
+#swapImg.on{display:block}
+#swapLabel{position:absolute;left:50%;top:8px;transform:translateX(-50%);font-size:12px;font-weight:900;background:var(--accent);color:#111;border-radius:6px;padding:1px 8px;display:none}
+#swapLabel.on{display:block}
+#lower{flex:1;overflow:auto;padding:6px 12px 14px;-webkit-overflow-scrolling:touch}
+#planWrap{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-top:4px}
+#plan{display:block;width:100%;height:min(34dvh,92vw);touch-action:none;user-select:none;-webkit-user-select:none}
+#planHint{position:absolute;left:8px;top:6px;font-size:11px;color:var(--mute);pointer-events:none}
+.ttabs{display:flex;gap:4px;margin:8px 0 4px;overflow-x:auto}
+.ttabs button{flex:none;font-size:13px;font-weight:700;padding:6px 11px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);color:var(--mute)}
+.ttabs button.on{color:#111;background:var(--accent);border-color:var(--accent)}
+.tpanel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.ctl{margin:8px 0}
+.ctl label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mute)}
+.ctl label b{color:var(--text);font-variant-numeric:tabular-nums}
+.ctl input[type=range]{width:100%;accent-color:var(--accent);height:28px}
+.opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.opts button{font-size:12.5px;padding:6px 10px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);color:var(--text)}
+.opts button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+.opts button:disabled{opacity:.35}
+.lock{font-size:12px;color:var(--mute);padding:6px 0}
+#actbar{flex:none;display:flex;gap:8px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}
+#actbar button{flex:1}
+#actbar .big{padding:11px;font-size:15px}
+#actbar .ghost{padding:10px 8px;font-size:13.5px}
+#stat{font-size:12px;color:var(--mute);text-align:center;padding:2px 0 0}
+/* phone reflector */
+#phoneHud{position:absolute;left:8px;right:8px;bottom:8px;display:none}
+#phoneHud.on{display:block}
+#studio.phone #hist,#studio.phone #ovBtns,#studio.phone #meters{display:none}
+.meter{position:relative;height:22px;border-radius:11px;background:#ffffff1f;border:1px solid #fff4;overflow:hidden}
+.meter .zone{position:absolute;top:0;bottom:0;background:#34d39955}
+.meter .needle{position:absolute;top:-2px;bottom:-2px;width:6px;border-radius:3px;background:#fff;left:0;transition:left .08s}
+.meterlab{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;margin-bottom:3px;text-shadow:0 1px 4px #000}
+#phoneMsg{position:absolute;left:0;right:0;top:38%;text-align:center;font-weight:900;font-size:20px;text-shadow:0 2px 10px #000;pointer-events:none;padding:0 14px}
+
+/* sheet */
+#sheet{position:fixed;inset:0;z-index:80;background:#000a;display:none;align-items:flex-end;justify-content:center}
+#sheet.on{display:flex}
+#sheet .in{background:var(--panel);border:1px solid var(--line);border-radius:18px 18px 0 0;width:100%;max-width:680px;max-height:88dvh;overflow:auto;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+#sheet h2{margin-top:0}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.cmp div{text-align:center;font-size:12px;color:var(--mute)}
+.cmp img,.cmp svg{width:100%;border-radius:8px;display:block;background:#000}
+.qimg{width:auto;max-width:100%;height:min(44dvh,420px);aspect-ratio:4/5;object-fit:cover;border-radius:10px;display:block;margin:8px auto;background:#000}
+.qopts{display:grid;gap:8px;margin-top:10px}
+.qopts button{text-align:left;padding:12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-weight:700}
+.qopts button.ok{border-color:var(--good);color:var(--good)}
+.qopts button.ng{border-color:var(--bad);color:var(--bad)}
+.qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.qgrid button{padding:4px;border-radius:10px;background:var(--panel2);border:2px solid var(--line)}
+.qgrid button img{width:100%;display:block;border-radius:6px}
+.qgrid button.ok{border-color:var(--good)}.qgrid button.ng{border-color:var(--bad)}
+.busy{display:flex;align-items:center;gap:10px;justify-content:center;padding:30px 0;color:var(--mute)}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:sp 0.9s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (min-width:920px){
+  #studio{display:none;flex-direction:row;flex-wrap:wrap}
+  #studio.on{display:grid;grid-template-columns:minmax(0,1fr) 440px;grid-template-rows:auto auto 1fr auto}
+  .stbar{grid-column:1 / 3}
+  #briefBox{grid-column:1 / 3}
+  #photoArea{grid-column:1;grid-row:3 / 5;align-items:center}
+  #photoWrap{height:min(78dvh,100%);}
+  #lower{grid-column:2;grid-row:3}
+  #actbar{grid-column:2;grid-row:4}
+}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+
+<section class="view on" id="v-home"></section>
+<section class="view" id="v-steps"></section>
+<section class="view" id="v-quiz"></section>
+<section class="view" id="v-guide"></section>
+
+<div id="studio">
+  <div class="stbar"><button class="xbtn" id="stClose" aria-label="閉じる">×</button><b id="stTitle">スタジオ</b><span class="chip a" id="stMode">自由</span></div>
+  <div id="briefBox"></div>
+  <div id="photoArea"><div id="photoWrap">
+    <canvas id="cv"></canvas>
+    <img id="swapImg" alt="">
+    <div id="swapLabel">見本</div>
+    <div id="meters"></div>
+    <canvas id="hist" width="168" height="60"></canvas>
+    <div id="targetBox"><img id="targetImg" alt="見本"><small>見本（長押しで大きく）</small></div>
+    <div id="ovBtns"><button id="bBefore">前と比べる</button><button id="bZebra">ゼブラ</button><button id="bView">3Dで見る</button></div>
+    <div id="phoneMsg"></div>
+    <div id="phoneHud"><div class="meterlab"><span>影側が暗い</span><span id="phoneVal">--</span><span>明るい</span></div><div class="meter"><div class="zone" id="phoneZone"></div><div class="needle" id="phoneNeedle"></div></div></div>
+    <div id="prog"><i></i></div>
+  </div></div>
+  <div id="lower">
+    <div id="planWrap"><svg id="plan" viewBox="-1.55 -1.5 3.1 3.05"></svg><div id="planHint">上から見た配置図（ドラッグで動かす）</div></div>
+    <div class="ttabs" id="ttabs"></div>
+    <div class="tpanel" id="tpanel"></div>
+  </div>
+  <div id="actbar"></div>
+</div>
+
+<div id="sheet"><div class="in" id="sheetIn"></div></div>
+
+<nav id="tabbar">
+  <button data-tab="home" class="on"><i>🏠</i>ホーム</button>
+  <button data-tab="steps"><i>📚</i>ステップ</button>
+  <button data-tab="quiz"><i>👁</i>クイズ</button>
+  <button data-tab="guide"><i>📋</i>本番の手順</button>
+</nav>
+
+<script type="module" src="lighting/app.js"></script>
+</body>
+</html>

@@ -108,8 +108,10 @@ a{color:var(--accent)}
 
 <!-- ================= HOME ================= -->
 <section class="view on" id="v-home">
+  <div class="row" style="gap:6px;margin-bottom:8px"><span class="chip" style="color:#111;background:var(--accent);border-color:var(--accent)">🎥 ジンバル練習</span><a href="lighting.html" class="chip" style="text-decoration:none;color:var(--text)">💡 ライティング練習（物撮り）</a></div>
   <div class="row" style="justify-content:space-between"><h1>ジンバル練習ラボ</h1><a href="training.html" class="chip" style="text-decoration:none;color:var(--accent);border-color:var(--accent)">📘 3Dトレーニング</a></div>
-  <div class="count"><span class="mute">囲町いけばな神輿まつり（11/14 13:00）まで</span><b id="countdown">--</b></div>
+  <a href="lighting.html" class="card" style="display:block;text-decoration:none;color:var(--text);border-color:#6b5320"><b>💡 新メニュー：ライティング練習ラボ</b><br><span class="mute">反射板やライトがなくても、3Dのスタジオで物撮りの光を練習できます。</span></a>
+  <div class="mute" style="margin-top:4px">記録：囲町いけばな神輿まつり（2026/11/14）の練習に使ったページです。3Dトレーニングの「11/14 本番（記録）」タブに当日の流れが残っています。</div>
 
   <div class="why">
     <b>この練習の目的</b><br>
@@ -269,7 +271,7 @@ try{ const o=JSON.parse(localStorage.getItem(OK)||'{}'); for(const k in o){ cons
 ['optVoice','optMetro','optBpm','optCam'].forEach(id=>$('#'+id).addEventListener('change',()=>{ const o={}; ['optVoice','optMetro','optBpm','optCam'].forEach(k=>{ const el=$('#'+k); o[k]=el.type==='checkbox'?el.checked:el.value; }); try{ localStorage.setItem(OK,JSON.stringify(o)); }catch(e){} }));
 
 /* ============== COUNTDOWN ============== */
-function tick(){ const t=new Date('2026-11-14T13:00:00+09:00')-new Date(); const el=$('#countdown'); if(t<=0){ el.textContent='本番中・終了'; return; } const h=Math.floor(t/3600e3), m=Math.floor(t%3600e3/60e3); el.textContent=`${h}時間${m}分`; }
+function tick(){ const t=new Date('2026-11-14T13:00:00+09:00')-new Date(); const el=$('#countdown'); if(!el) return; if(t<=0){ el.textContent='本番中・終了'; return; } const h=Math.floor(t/3600e3), m=Math.floor(t%3600e3/60e3); el.textContent=`${h}時間${m}分`; }
 tick(); setInterval(tick,30e3);
 
 /* ============== DRILLS（目的から設計） ============== */
