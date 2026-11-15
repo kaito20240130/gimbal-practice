@@ -765,6 +765,12 @@ export function measure(img) {
     const Y = 0.2126 * LUT[px[i * 4]] + 0.7152 * LUT[px[i * 4 + 1]] + 0.0722 * LUT[px[i * 4 + 2]];
     if (mask[i] && nb.some(j => !mask[j])) { eY += Y; ne++; } else if (!mask[i] && nb.some(j => mask[j])) { oY += Y; no++; }
   }
+  // 実物チェックと同じ測り方（被写体を囲む四角の中の明るさの分布と、左右の明るさの差）
+  let bx0 = w, bx1 = 0, by0 = h, by1 = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (mask[(h - 1 - y) * w + x]) { bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x); by0 = Math.min(by0, y); by1 = Math.max(by1, y); }
+  const boxY = []; let bl = 0, nbl = 0, br = 0, nbr = 0; const xm = (bx0 + bx1) / 2;
+  for (let y = by0; y <= by1; y++) for (let x = bx0; x <= bx1; x++) { const i = (h - 1 - y) * w + x; const Y = 0.2126 * LUT[px[i * 4]] + 0.7152 * LUT[px[i * 4 + 1]] + 0.0722 * LUT[px[i * 4 + 2]]; boxY.push(Y); if (x < xm) { bl += Y; nbl++; } else { br += Y; nbr++; } }
+  boxY.sort((a, b) => a - b);
   let hiY, loY;
   if (nl > nObj * 0.04 && ns > nObj * 0.04) { hiY = lit / nl; loY = sh / ns; }
   else { hiY = q(sorted, 0.9); loY = q(sorted, 0.12); }
@@ -772,6 +778,7 @@ export function measure(img) {
     contrast: Math.max(0, Math.log2((hiY + 0.003) / (loY + 0.003))),
     clip: nObj ? clip / nObj * 100 : 0, crush: nObj ? crush / nObj * 100 : 0,
     hiPct: pct(hiY), loPct: pct(loY), midPct: pct(q(sorted, 0.5)), bgPct: pct(q(bgY, 0.5)), hist,
+    boxContrast: boxY.length ? Math.log2((q(boxY, 0.9) + 0.003) / (q(boxY, 0.1) + 0.003)) : 0, boxLR: Math.log2((bl / Math.max(nbl, 1) + 0.003) / (br / Math.max(nbr, 1) + 0.003)),
     spread: Math.log2((q(sorted, 0.95) + 0.003) / (q(sorted, 0.08) + 0.003)), edgePct: pct(ne ? eY / ne : 0), outPct: pct(no ? oY / no : 0),
   };
 }

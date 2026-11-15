@@ -129,8 +129,8 @@ export const STEPS = [
     },
     tasks: [
       { id: 's3a', kind: 'match', title: '影側の文字まで読める', brief: 'EC用の白背景。影側の側面の文字もはっきり読めるように、影を明るく起こしてください。',
-        start: S({ room: 'dark', key: { type: 'softbox', az: -90, el: 30, dist: 0.8, pow: 0 } }), target: S({ room: 'dark', key: { type: 'softbox', az: -90, el: 30, dist: 0.8, pow: 0 }, refl: [{ type: 'white', az: 90, dist: 0.3, size: 'm' }] }),
-        think: '影側がメインの半分くらい（1段差）。反射板は影側の真横、被写体のすぐ近く。' },
+        start: S({ room: 'dark', key: { type: 'softbox', az: -90, el: 30, dist: 0.8, pow: 0 } }), target: S({ room: 'dark', key: { type: 'softbox', az: -90, el: 30, dist: 0.8, pow: 0 }, refl: [{ type: 'white', az: 90, dist: 0.45, size: 'm' }] }),
+        think: '影側がメインの半分くらい（約1段差）。反射板は影側の真横、被写体から40〜50cm。近づけるほど影は明るくなる。' },
       { id: 's3b', kind: 'match', title: '影は少し残す', brief: '影は少し残して、立体感も欲しい。でも真っ暗にはしない。',
         start: S({ room: 'dark', key: { type: 'softbox', az: -90, el: 30, dist: 0.8, pow: 0 }, refl: [{ type: 'white', az: 90, dist: 0.25, size: 'l' }] }), target: S({ room: 'dark', key: { type: 'softbox', az: -90, el: 30, dist: 0.8, pow: 0 }, refl: [{ type: 'white', az: 100, dist: 0.7, size: 'm' }] }),
         think: '効かせすぎたら、反射板を離すか小さくする。影の濃さは「反射板の距離」で微調整するのが本番でも一番速い。' },

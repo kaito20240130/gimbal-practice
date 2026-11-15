@@ -119,6 +119,7 @@ const R = d => 1.45 * d / (d + 0.7), Rinv = r => 0.7 * r / (1.45 - Math.min(r, 1
 const D2R = Math.PI / 180;
 const hpos = (az, dh) => [R(dh) * Math.sin(az * D2R), R(dh) * Math.cos(az * D2R)];
 function planSVG(s, { sel = null, interactive = false } = {}) {
+  const live = interactive && studio && studio.keyPose && JSON.stringify(studio.setup.key) === JSON.stringify(s.key);
   const P = []; const keyC = '#f5b83d', fillC = '#60a5fa';
   [0.3, 0.6, 1, 2].forEach(d => { P.push(`<circle cx="0" cy="0" r="${R(d)}" fill="none" stroke="#2b2f38" stroke-width="0.008" stroke-dasharray="0.03 0.03"/>`); P.push(`<text x="${R(d) * 0.707 + 0.02}" y="${-R(d) * 0.707}" font-size="0.07" fill="#5b616c">${d}m</text>`); });
   const yb = -R(s.bg.dist);
@@ -139,7 +140,8 @@ function planSVG(s, { sel = null, interactive = false } = {}) {
   light(s.key, keyC, 'メイン', 'key'); light(s.fill, fillC, '補助', 'fill');
   s.refl.forEach((r, i) => {
     const [x, y] = hpos(r.az, r.dist); let ang = Math.atan2(-y, -x) / D2R + 90;
-    if (studio && studio.keyPose) { try { const p = studio._reflPose(r); ang = Math.atan2(p.n.z, p.n.x) / D2R + 90; } catch (e) { } }
+    if (live) { try { const p = studio._reflPose(r); ang = Math.atan2(p.n.z, p.n.x) / D2R + 90; } catch (e) { } }
+    else if (s.key) { const kx = Math.sin(s.key.az * D2R), kz = Math.cos(s.key.az * D2R); const tx = -x / Math.hypot(x, y), tz = -y / Math.hypot(x, y); const rx = kx - x / 1.4 + tx, rz = kz - y / 1.4 + tz; if (r.type !== 'black') ang = Math.atan2(rz, rx) / D2R + 90; } // 見本の図：メインライトと被写体の間に向ける（おおよそ）
     const S = REFL_SIZE[r.size || 'm']; const len = clamp(S.w * 0.5, 0.12, 0.5);
     const col = { white: '#f2f2ee', silver: '#b8bec8', gold: '#d9b36a', black: '#0a0a0a' }[r.type];
     if (sel === 'refl' + i) P.push(`<circle cx="${x}" cy="${y}" r="0.14" fill="#fff" opacity="0.14"/>`);
@@ -492,12 +494,13 @@ function phoneTick() {
   const lo = 0.3, hi = 3.6; $('#phoneNeedle').style.left = `calc(${(1 - (clamp(c, lo, hi) - lo) / (hi - lo)) * 100}% - 3px)`;
   $('#phoneVal').textContent = `明暗差 ${c.toFixed(1)}段`;
   const inGoal = P.R.goal === 'zone' ? Math.abs(c - P.goal) <= 0.15 : c <= P.goal;
-  P.hold = inGoal ? P.hold + 1 / 60 : 0;
+  const dt = Math.min(0.1, (now - (P.lastT || now)) / 1000); P.lastT = now;
+  P.hold = inGoal ? P.hold + dt : 0;
   $('#phoneMsg').textContent = inGoal ? `そのまま… ${Math.max(0, 2 - P.hold).toFixed(1)}` : '';
   if (P.hold >= 2 && !P.done) {
     P.done = true; P.running = false; const t = (now - P.t0) / 1000 - 2;
     const res = { id: P.R.id, t: Math.max(0, t) }; (ST.phoneResults = ST.phoneResults || []).push(res);
-    const prev = DB.phone[P.R.id]; if (!prev || res.t < prev.t) DB.phone[P.R.id] = { t: res.t, date: today() }; markToday('phone:' + P.R.id); save();
+    const prev = DB.phone[P.R.id]; if (!prev || res.t < prev.t) DB.phone[P.R.id] = { t: res.t, date: today() }; markToday('phone:' + P.R.id); if (P.round >= PHONE_ROUNDS.length - 1) markToday('phone'); save();
     $('#phoneMsg').textContent = `OK！ ${res.t.toFixed(1)}秒`;
     const last = P.round >= PHONE_ROUNDS.length - 1;
     setTimeout(() => sheet(`<h2>${esc(P.R.title)}：${res.t.toFixed(1)}秒</h2>
@@ -598,7 +601,7 @@ function renderReal() {
   <button class="big" id="rcGo" style="margin-top:10px" ${RC.img ? '' : 'disabled'}>3. 測る</button>
   <div id="rcOut"></div>
   <h2>撮るときのコツ</h2><ul class="l"><li>カメラはM・ISO100・1/160秒・f/8、ホワイトバランスは太陽光で固定。</li><li>JPEGで撮った写真をそのまま使う（加工した写真は測れません）。</li><li>被写体が画面の真ん中あたりに、ある程度大きく写るように。</li></ul>`;
-  $('#rcFile').onchange = e => { const f = e.target.files[0]; if (!f) return; const url = URL.createObjectURL(f); const im = new Image(); im.onload = () => { RC.img = im; RC.box = null; RC.res = null; drawRC(); $('#rcGo').disabled = false; $('#rcOut').innerHTML = ''; }; im.src = url; };
+  $('#rcFile').onchange = e => { const f = e.target.files[0]; if (!f) return; if (RC.url) URL.revokeObjectURL(RC.url); const url = RC.url = URL.createObjectURL(f); const im = new Image(); im.onload = () => { RC.img = im; RC.box = null; RC.res = null; drawRC(); $('#rcGo').disabled = false; $('#rcOut').innerHTML = ''; }; im.src = url; };
   $$('#rcBg button').forEach(b => b.onclick = () => { RC.bg = b.dataset.v; $$('#rcBg button').forEach(x => x.classList.toggle('on', x === b)); });
   $('#rcTarget').onchange = e => RC.target = e.target.value;
   $('#rcGo').onclick = () => runRC();
@@ -646,18 +649,18 @@ async function runRC() {
     ensureStudio(); const t = realSteps.flatMap(s => s.tasks).find(x => x.id === RC.target);
     $('#rcOut').innerHTML = `<div class="busy"><div class="spin"></div>見本を撮影しています…</div>`; await frame2();
     const T = studio.shoot(t.target, { w: 200, h: 250, samples: 24, url: true }); const tm = T.m;
-    const az = t.target.key.az; const tside = Math.abs(az) < 25 || Math.abs(az) > 150 ? null : az < 0 ? '左' : '右';
-    const d1 = Math.abs(tm.contrast - m.contrast), d2 = Math.abs(tm.bgPct - m.bgPct) / 25, d3 = tside && side && tside !== side ? 1 : 0;
+    const tside = tm.boxLR > 0.35 ? '左' : tm.boxLR < -0.35 ? '右' : null; const tc = tm.boxContrast; // 実物と同じ測り方（囲んだ四角の中）
+    const d1 = Math.abs(tc - m.contrast), d2 = Math.abs(tm.bgPct - m.bgPct) / 25, d3 = tside && side && tside !== side ? 1 : 0;
     const score = Math.round(100 * Math.exp(-(0.8 * d1 + d2 + d3)));
     cmp = `<h2>見本との比べっこ：${score}点</h2><div class="cmp"><div>3Dの見本<img src="${T.url}"></div><div>あなたの写真<img src="${$('#rcCv').toDataURL('image/jpeg', 0.8)}"></div></div>
-      <div class="mrow"><span>明暗差</span><b>見本 ${tm.contrast.toFixed(1)}段 / 実物 ${m.contrast.toFixed(1)}段</b></div>
+      <div class="mrow"><span>明暗差（囲んだ四角の中）</span><b>見本 ${tc.toFixed(1)}段 / 実物 ${m.contrast.toFixed(1)}段</b></div>
       <div class="mrow"><span>背景</span><b>見本 ${tm.bgPct}% / 実物 ${m.bgPct}%</b></div>
       <div class="mrow"><span>光の来る側</span><b>見本 ${tside || '正面か後ろ'} / 実物 ${side || 'はっきりしない'}</b></div>
       <p class="mute">3Dと実物は数値がぴったりは一致しません（3Dの限界）。向きと差の大きさが近ければ、3Dで覚えたことが実物でもできています。</p>`;
-    for (let i = adv.length - 1; i >= 0; i--) { if (adv[i][0] === '背景' && Math.abs(tm.bgPct - m.bgPct) < 10) adv.splice(i, 1); if (adv[i] && adv[i][0] === '影' && Math.abs(tm.contrast - m.contrast) < 0.5) adv.splice(i, 1); } // 見本どおりなら言わない
+    for (let i = adv.length - 1; i >= 0; i--) { if (adv[i][0] === '背景' && Math.abs(tm.bgPct - m.bgPct) < 10) adv.splice(i, 1); if (adv[i] && (adv[i][0] === '影' || adv[i][0] === '立体感') && Math.abs(tc - m.contrast) < 0.5) adv.splice(i, 1); } // 見本どおりなら言わない
     if (tside && side && tside !== side) adv.unshift(['光の向き', `見本は光が${tside}から来ていますが、あなたの写真は${side}側が明るいです。`]);
-    else if (tm.contrast - m.contrast > 0.5) adv.unshift(['影', '見本より影が薄いです。影側の白い紙を離すか、黒い紙に替えてください。']);
-    else if (m.contrast - tm.contrast > 0.5) adv.unshift(['影', '見本より影が濃いです。影側に白い紙を近づけてください。']);
+    else if (tc - m.contrast > 0.5) adv.unshift(['影', '見本より影が薄いです。影側の白い紙を離すか、黒い紙に替えてください。']);
+    else if (m.contrast - tc > 0.5) adv.unshift(['影', '見本より影が濃いです。影側に白い紙を近づけてください。']);
   }
   markToday('real'); save();
   $('#rcOut').innerHTML = `<h2>結果</h2>
@@ -671,22 +674,35 @@ async function runRC() {
 
 /* ================= ホーム・ステップ・手順 ================= */
 let planQueue = [];
-function todaysPlan() {
-  const cur = currentStep(); const done = doneToday(); const items = [];
-  items.push({ k: 'quiz', tag: 'q', tagN: 'クイズ', t: 'ウォームアップ：光の読み取り 5問', d: '写真から光の向き・大きさ・反射板を読む。見本合わせの「読む力」の土台', min: 3, go: () => { tab('quiz'); startQuiz(); } });
-  const curIdx = realSteps.indexOf(cur);
-  if (curIdx >= 2) items.push({ k: 'phone', tag: 'r', tagN: '手', t: 'スマホが反射板（3ラウンド）', d: '被写体を見ながら反射板の角度を探す動き。白と銀の違い', min: 3, go: () => startPhone(0) });
-  if (!DB.pred[cur.id]) items.push({ k: 'lab:' + cur.id, tag: '', tagN: '新', t: `実験：${cur.title}`, d: '予想 → 自分で動かして確かめる → 答え合わせ', min: 5, go: () => startLab(cur) });
+// 今日のプランは、その日の最初に決めたら1日変えない（終わった項目が消えたり入れ替わったりしないように）
+function planItem(k) {
+  const [kind, id] = k.split(':'); const stOf = tid => realSteps.find(s => s.tasks.some(t => t.id === tid) || s.fixes.some(f => f.id === tid));
+  if (kind === 'quiz') return { tag: 'q', tagN: 'クイズ', t: 'ウォームアップ：光の読み取り 5問', d: '写真から光の向き・大きさ・反射板を読む。見本合わせの「読む力」の土台', min: 3, go: () => { tab('quiz'); startQuiz(); } };
+  if (kind === 'phone') return { tag: 'r', tagN: '手', t: 'スマホが反射板（3ラウンド）', d: '被写体を見ながら反射板の角度を探す動き。白と銀の違い', min: 3, go: () => startPhone(0) };
+  if (kind === 'real') return { tag: 'r', tagN: '実物', t: '実物チェック（任意）', d: '家で撮った写真を測って、3Dの見本と比べる', min: 5, go: () => tab('real') };
+  if (kind === 'lab') { const st = stepOf(id); return st && { tag: '', tagN: '新', t: `実験：${st.title}`, d: '予想 → 自分で動かして確かめる → 答え合わせ', min: 5, go: () => startLab(st) }; }
+  if (kind === 'match' || kind === 'review') { const st = stOf(id); const t = st && st.tasks.find(x => x.id === id); return t && { tag: kind === 'review' ? 'r' : '', tagN: kind === 'review' ? '復習' : '見本', t: `見本合わせ：${t.title}`, d: kind === 'review' ? `${st.title}（間をあけて思い出す）` : st.title, min: kind === 'review' ? 4 : 5, go: () => startMatch(st, t), dk: 'match:' + id }; }
+  if (kind === 'fix') { const st = stOf(id); const f = st && st.fixes.find(x => x.id === id); return f && { tag: 'f', tagN: '直す', t: `失敗直し：${f.title}`, d: f.client, min: 3, go: () => startFix(st, f) }; }
+  return null;
+}
+function planKeys() {
+  const cur = currentStep(); const curIdx = realSteps.indexOf(cur); const K = ['quiz'];
+  if (curIdx >= 2) K.push('phone');
+  if (!DB.pred[cur.id]) K.push('lab:' + cur.id);
   const nextT = cur.tasks.find(t => !(DB.best[t.id] && DB.best[t.id].pass));
-  if (nextT) items.push({ k: 'match:' + nextT.id, tag: '', tagN: '見本', t: `見本合わせ：${nextT.title}`, d: cur.title, min: 5, go: () => startMatch(cur, nextT) });
-  // 復習：前のステップから、点数が低い／古いものを1つ
-  const past = realSteps.slice(0, curIdx).flatMap(s => s.tasks.map(t => ({ s, t, b: DB.best[t.id] })));
-  if (past.length) { past.sort((a, b) => (a.b ? a.b.score : 0) - (b.b ? b.b.score : 0) || ((a.b && a.b.date) || '').localeCompare((b.b && b.b.date) || '')); const r = past[0]; items.push({ k: 'match:' + r.t.id, tag: 'r', tagN: '復習', t: `見本合わせ：${r.t.title}`, d: `${r.s.title}（間をあけて思い出す）`, min: 4, go: () => startMatch(r.s, r.t) }); }
-  else if (nextT) { const t2 = cur.tasks.find(t => t !== nextT && !(DB.best[t.id] && DB.best[t.id].pass)); if (t2) items.push({ k: 'match:' + t2.id, tag: '', tagN: '見本', t: `見本合わせ：${t2.title}`, d: cur.title, min: 5, go: () => startMatch(cur, t2) }); }
-  const nextF = cur.fixes.find(f => !DB.fix[f.id]) || realSteps.slice(0, curIdx + 1).flatMap(s => s.fixes.map(f => ({ s, f }))).map(x => x.f).sort(() => Math.random() - 0.5)[0];
-  if (nextF) { const fs = realSteps.find(s => s.fixes.includes(nextF)); items.push({ k: 'fix:' + nextF.id, tag: 'f', tagN: '直す', t: `失敗直し：${nextF.title}`, d: nextF.client, min: 3, go: () => startFix(fs, nextF) }); }
-  if (DB.real && Object.keys(DB.real).some(k => DB.real[k])) items.push({ k: 'real', tag: 'r', tagN: '実物', t: '実物チェック（任意）', d: '家で撮った写真を測って、3Dの見本と比べる', min: 5, go: () => tab('real') });
-  return items.map(it => ({ ...it, done: !!done[it.k] }));
+  if (nextT) K.push('match:' + nextT.id);
+  const past = realSteps.slice(0, curIdx).flatMap(s => s.tasks.map(t => ({ t, b: DB.best[t.id] })));
+  if (past.length) { past.sort((a, b) => (a.b ? a.b.score : 0) - (b.b ? b.b.score : 0) || ((a.b && a.b.date) || '').localeCompare((b.b && b.b.date) || '')); K.push('review:' + past[0].t.id); }
+  else if (nextT) { const t2 = cur.tasks.find(t => t !== nextT && !(DB.best[t.id] && DB.best[t.id].pass)); if (t2) K.push('match:' + t2.id); }
+  const pool = realSteps.slice(0, curIdx + 1).flatMap(s => s.fixes); const nextF = cur.fixes.find(f => !DB.fix[f.id]) || (pool.length ? pool[[...today()].reduce((a, c) => a + c.charCodeAt(0), 0) % pool.length] : null);
+  if (nextF) K.push('fix:' + nextF.id);
+  if (Object.keys(DB.real).some(k => DB.real[k])) K.push('real');
+  return K;
+}
+function todaysPlan() {
+  doneToday(); if (!DB.today.plan) { DB.today.plan = planKeys(); save(); }
+  const done = DB.today.done;
+  return DB.today.plan.map(k => { const it = planItem(k); return it && { ...it, k, done: !!done[it.dk || k] }; }).filter(Boolean);
 }
 function renderHome() {
   const cur = currentStep(); const plan = todaysPlan(); const total = plan.reduce((a, b) => a + b.min, 0);
@@ -764,7 +780,7 @@ function renderGuide() {
   <tr><td>ヒストグラム</td><td>右端に山が張りついたら白飛び、左端なら黒つぶれ。</td></tr>
   <tr><td>影のふち</td><td>光源の大きさと距離が合っているか。</td></tr>
   <tr><td>影側の面</td><td>反射板が効いているか。文字や色が読めるか。</td></tr>
-  <tr><td>背景の明るさ</td><td>白背景なら 90%前後。グレーに濁ったら背景との距離を見直す。</td></tr></table>
+  <tr><td>背景の明るさ</td><td>白背景なら 85〜95%。グレーに濁ったら背景との距離を見直す。</td></tr></table>
   <h2>各メニューが本番で役立つ理由</h2>
   <table class="m"><tr><th>メニュー</th><th>鍛えるもの</th><th>本番では</th></tr>
   <tr><td>クイズ</td><td>写真から光を読む目</td><td>見本写真の再現、テスト撮影の見直し</td></tr>
