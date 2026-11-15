@@ -49,11 +49,11 @@ function undo() { if (!ST.undo.length) return; ST.changeBase = ST.lastURL; const
 
 function openStudio(opt) {
   ensureStudio();
-  Object.assign(ST, { open: true, startSetup: cloneSetup(opt.setup || defaultSetup()), mode: opt.mode || 'free', task: opt.task || null, step: opt.step || null, tools: opt.tools || null, undo: [], moves: 0, checks: 3, hintsUsed: 0, sel: { k: 'key' }, tab: 'light', target: null, targetBig: null, lastURL: null, beforeURL: null, pre: null, phone: null, fixChecks: 0 });
+  Object.assign(ST, { open: true, startSetup: cloneSetup(opt.setup || defaultSetup()), mode: opt.mode || 'free', task: opt.task || null, step: opt.step || null, tools: opt.tools || null, undo: [], moves: 0, checks: 3, hintsUsed: 0, sel: { k: 'key' }, tab: isMob() ? 'plan' : 'light', target: null, targetBig: null, lastURL: null, beforeURL: null, pre: null, phone: null, fixChecks: 0 });
   $('#studio').classList.add('on'); $('#studio').classList.toggle('phone', ST.mode === 'phone'); document.body.style.overflow = 'hidden';
   $('#stTitle').textContent = opt.title || 'スタジオ';
   $('#stMode').textContent = { free: '自由ラボ', match: '見本合わせ', fix: '失敗直し', phone: 'スマホが反射板', lab: '実験' }[ST.mode];
-  $('#briefBox').innerHTML = opt.brief || '';
+  $('#briefBox').innerHTML = opt.brief || ''; $('#briefBox').classList.toggle('fold', window.innerHeight < 1000 && ST.mode !== 'phone');
   $('#targetBox').classList.remove('on'); $('#phoneHud').classList.remove('on'); $('#phoneMsg').textContent = '';
   $('#lower').style.display = ''; studio.view = 'photo'; $('#bView').textContent = '3Dで見る'; $('#bView').classList.remove('on');
   studio.resize();
@@ -67,6 +67,11 @@ function closeStudio() {
   renderAll();
 }
 $('#stClose').onclick = () => closeStudio();
+// スマホでは配置図をタブの1つにする（下の領域を、開いているタブだけで広く使う）
+const isMob = () => window.innerWidth < 920;
+// お題の説明はタップで開閉（画面の小さいスマホでは最初は2行だけ）
+$('#briefBox').onclick = () => $('#briefBox').classList.toggle('fold');
+window.addEventListener('resize', () => { if (ST.open) renderTools(); });
 
 function loop() {
   if (!ST.open) { ST.loop = false; return; }
@@ -172,7 +177,7 @@ function staticPlan(s) { return `<svg viewBox="-1.55 -1.5 3.1 3.05" style="backg
     e.preventDefault(); svg.setPointerCapture(e.pointerId);
     drag = { h: best, x0: x, y0: y, moved: false };
     ST.sel = best.k === 'refl' ? { k: 'refl', i: best.i } : { k: best.k };
-    if (best.k === 'refl') ST.tab = 'refl'; else if (best.k === 'bg') ST.tab = 'bg'; else ST.tab = 'light';
+    if (!isMob()) { if (best.k === 'refl') ST.tab = 'refl'; else if (best.k === 'bg') ST.tab = 'bg'; else ST.tab = 'light'; }
     renderPlan(); renderTools();
   });
   let raf = false;
@@ -196,7 +201,7 @@ function staticPlan(s) { return `<svg viewBox="-1.55 -1.5 3.1 3.05" style="backg
 })();
 
 /* ================= 道具パネル ================= */
-const TABS = [['obj', '被写体'], ['light', 'ライト'], ['refl', '反射板'], ['bg', '背景・部屋'], ['cam', 'カメラ']];
+const TABS = [['plan', '配置図'], ['obj', '被写体'], ['light', 'ライト'], ['refl', '反射板'], ['bg', '背景'], ['cam', 'カメラ']];
 function tabAllowed(t) {
   if (!ST.tools) return true;
   if (t === 'light') return true;
@@ -204,14 +209,15 @@ function tabAllowed(t) {
   if (t === 'bg') return can('bg') || can('room');
   if (t === 'cam') return can('cam.ev');
   if (t === 'obj') return !ST.tools;
+  if (t === 'plan') return isMob();
   return false;
 }
 function renderTools() {
-  if (ST.mode === 'phone') { $('#ttabs').innerHTML = ''; $('#tpanel').innerHTML = phonePanel(); return; }
-  if (!tabAllowed(ST.tab)) ST.tab = 'light';
-  if (ST.tab === 'obj' && ST.tools) ST.tab = 'light';
+  if (ST.mode === 'phone') { $('#ttabs').innerHTML = ''; $('#lower').classList.remove('planTab'); $('#tpanel').innerHTML = phonePanel(); return; }
+  if (!tabAllowed(ST.tab)) ST.tab = isMob() ? 'plan' : 'light';
+  $('#lower').classList.toggle('mob', isMob()); $('#lower').classList.toggle('planTab', ST.tab === 'plan');
   $('#ttabs').innerHTML = TABS.filter(([t]) => tabAllowed(t)).map(([t, n]) => `<button data-t="${t}" class="${ST.tab === t ? 'on' : ''}">${n}</button>`).join('');
-  $$('#ttabs button').forEach(b => b.onclick = () => { ST.tab = b.dataset.t; renderTools(); });
+  $$('#ttabs button').forEach(b => b.onclick = () => { ST.tab = b.dataset.t; renderTools(); $('#tpanelWrap').scrollTop = 0; });
   const s = ST.setup; let h = '';
   const slider = (id, label, val, min, max, step, fmt, ok = true) => `<div class="ctl"><label>${label}<b id="${id}V">${fmt(val)}</b></label><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}" ${ok ? '' : 'disabled'}></div>`;
   const opts = (id, list, cur, ok = true) => `<div class="opts" id="${id}">${list.map(([v, n]) => `<button data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}" ${ok ? '' : 'disabled'}>${n}</button>`).join('')}</div>`;

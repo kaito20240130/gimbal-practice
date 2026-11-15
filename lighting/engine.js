@@ -371,10 +371,10 @@ function sweepGeometry(dist, R = 0.22, width = 1.8, height = 1.6, front = 0.9) {
 /* ---------------- シェーダー（蓄積と表示） ---------------- */
 const quadVS = 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }';
 const accumFS = `uniform sampler2D tPrev; uniform sampler2D tNew; uniform float w; varying vec2 vUv;
-void main(){ vec4 a=texture2D(tPrev,vUv); vec4 b=texture2D(tNew,vUv); gl_FragColor=mix(a,b,w); }`;
+void main(){ vec4 b=texture2D(tNew,vUv); if(w>0.999){ gl_FragColor=b; return; } vec4 a=texture2D(tPrev,vUv); if(any(isnan(a))||any(isinf(a))) a=b; gl_FragColor=mix(a,b,w); }`;
 const displayFS = `uniform sampler2D tAcc; uniform float uExp; uniform vec3 uWB; uniform float uZebra; uniform float uMask; varying vec2 vUv;
 vec3 l2s(vec3 c){ return mix(c*12.92, 1.055*pow(c,vec3(1./2.4))-0.055, step(vec3(0.0031308),c)); }
-void main(){ vec3 c=texture2D(tAcc,vUv).rgb*uExp*uWB; c=clamp(c,0.,1.); vec3 s=l2s(c);
+void main(){ vec3 c=texture2D(tAcc,vUv).rgb*uExp*uWB; if(any(isnan(c))) c=vec3(0.); c=clamp(c,0.,1.); vec3 s=l2s(c);
  if(uZebra>0.5){ float m=max(max(s.r,s.g),s.b); if(m>0.985){ float st=step(0.5,fract((gl_FragCoord.x+gl_FragCoord.y)/12.)); s=mix(s,vec3(st),0.55);} }
  gl_FragColor=vec4(s,1.); }`;
 
@@ -453,6 +453,7 @@ export class Studio {
     this.renderer.setSize(w, h, false);
     [this.rtS, this.rtA, this.rtB].forEach(t => t && t.dispose());
     this.rtS = this.mkRT(w, h); this.rtA = this.mkRT(w, h); this.rtB = this.mkRT(w, h);
+    for (const t of [this.rtS, this.rtA, this.rtB]) { this.renderer.setRenderTarget(t); this.renderer.setClearColor(0x000000, 1); this.renderer.clear(); } this.renderer.setRenderTarget(null);
     this.aspect = w / h; this.cam.aspect = this.aspect; this.setCam.aspect = this.aspect; this.cam.updateProjectionMatrix(); this.setCam.updateProjectionMatrix();
     this.reset();
   }
@@ -664,6 +665,7 @@ export class Studio {
     this.aspect = w / h; this.cam.aspect = this.aspect; this.cam.updateProjectionMatrix();
     this.apply(setup); this._updateEnv(); this.helpers.visible = false; this.camModel.visible = false;
     const S = this.mkRT(w, h), A = this.mkRT(w, h), B = this.mkRT(w, h);
+    for (const t of [S, A, B]) { this.renderer.setRenderTarget(t); this.renderer.setClearColor(0x000000, 1); this.renderer.clear(); }
     let a = A, b = B;
     for (let n = 0; n < N; n++) { this._renderSampleTo(S, a, b, n, this.cam); [a, b] = [b, a]; }
     const out = new THREE.WebGLRenderTarget(w, h);

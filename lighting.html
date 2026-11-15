@@ -60,11 +60,12 @@ table.m{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px} table
 .stbar{flex:none;display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 10px 6px}
 .stbar b{flex:1;font-size:14.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .xbtn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;width:38px;height:34px;font-size:18px;line-height:1;flex:none}
-#briefBox{flex:none;font-size:12.5px;padding:0 12px 6px;line-height:1.45;color:#d6d3cc;max-height:22dvh;overflow:auto}
+#briefBox{flex:none;font-size:12.5px;padding:0 12px 6px;line-height:1.45;color:#d6d3cc;max-height:22dvh;overflow:auto;cursor:pointer}
+#briefBox.fold{max-height:2.9em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 60%,transparent)}
 #briefBox:empty{display:none}
 #briefBox .cl{color:#fde68a}
 #photoArea{flex:none;display:flex;justify-content:center;background:#000;position:relative}
-#photoWrap{position:relative;height:min(46dvh,118vw);aspect-ratio:4/5;max-width:100%}
+#photoWrap{position:relative;height:min(40dvh,118vw);aspect-ratio:4/5;max-width:100%}
 #cv{width:100%;height:100%;display:block;touch-action:none}
 #meters{position:absolute;left:6px;top:6px;display:flex;flex-wrap:wrap;gap:3px;max-width:62%;pointer-events:none}
 #meters span{font-size:11px;font-weight:700;background:#000a;border-radius:6px;padding:1px 6px;font-variant-numeric:tabular-nums;width:max-content}
@@ -83,11 +84,17 @@ table.m{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px} table
 #swapImg.on{display:block}
 #swapLabel{position:absolute;left:50%;top:8px;transform:translateX(-50%);font-size:12px;font-weight:900;background:var(--accent);color:#111;border-radius:6px;padding:1px 8px;display:none}
 #swapLabel.on{display:block}
-#lower{flex:1;overflow:auto;padding:6px 12px 14px;-webkit-overflow-scrolling:touch}
-#planWrap{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-top:4px}
-#plan{display:block;width:100%;height:min(34dvh,92vw);touch-action:none;user-select:none;-webkit-user-select:none}
+#lower{flex:1;min-height:0;display:flex;flex-direction:column;padding:6px 12px 0}
+#tpanelWrap{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:14px;touch-action:pan-y}
+#planWrap{flex:none;position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-top:4px}
+/* スマホ：配置図はタブの1つ。開いているタブが下の領域いっぱいを使う */
+#lower.mob #planWrap{display:none}
+#lower.mob.planTab #planWrap{display:block;flex:1;min-height:0;margin-bottom:8px}
+#lower.mob.planTab #plan{height:100%}
+#lower.mob.planTab #tpanelWrap{display:none}
+#plan{display:block;width:100%;height:min(30dvh,92vw);touch-action:none;user-select:none;-webkit-user-select:none}
 #planHint{position:absolute;left:8px;top:6px;font-size:11px;color:var(--mute);pointer-events:none}
-.ttabs{display:flex;gap:4px;margin:8px 0 4px;overflow-x:auto}
+.ttabs{flex:none;display:flex;gap:4px;margin:6px 0 6px;overflow-x:auto}
 .ttabs button{flex:none;font-size:13px;font-weight:700;padding:6px 11px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);color:var(--mute)}
 .ttabs button.on{color:#111;background:var(--accent);border-color:var(--accent)}
 .tpanel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
@@ -185,9 +192,9 @@ details.why summary::-webkit-details-marker{display:none}
     <div id="prog"><i></i></div>
   </div></div>
   <div id="lower">
-    <div id="planWrap"><svg id="plan" viewBox="-1.55 -1.5 3.1 3.05"></svg><div id="planHint">上から見た配置図（ライト・反射板・背景をドラッグ）</div></div>
     <div class="ttabs" id="ttabs"></div>
-    <div class="tpanel" id="tpanel"></div>
+    <div id="planWrap"><svg id="plan" viewBox="-1.55 -1.5 3.1 3.05"></svg><div id="planHint">上から見た配置図（ドラッグで動かす）</div></div>
+    <div id="tpanelWrap"><div class="tpanel" id="tpanel"></div></div>
   </div>
   <div id="actbar"></div>
 </div>
