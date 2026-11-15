@@ -221,7 +221,7 @@ function renderTools() {
     const T = LIGHTS[l.type]; h += slider('lPow', T.flash ? '出力（V1の設定・目安）' : '強さ', l.pow, T.flash ? -(8 - T.base) : -3, T.flash ? T.base : 3, 1 / 3, v => powFmt(l.type, +v), okDist);
     if (!okPos) h += `<div class="lock">🔒 このお題では、ライトの位置は決まっています</div>`;
     else if (!okDist) h += `<div class="lock">🔒 このお題で動かせるのは向きと高さだけ（配置図でドラッグ）</div>`;
-    if (!ST.tools) h += which === 'fill' ? `<button class="ghost sm" id="lDel" style="margin-top:6px">補助ライトを外す</button>` : (!s.fill ? `<button class="ghost sm" id="lAdd" style="margin-top:6px">＋ 補助ライトを足す</button>` : '');
+    if (can('fill')) h += which === 'fill' ? `<button class="ghost sm" id="lDel" style="margin-top:6px">補助ライトを外す</button>` : (!s.fill ? `<button class="ghost sm" id="lAdd" style="margin-top:6px">＋ 補助ライトを足す</button>` : '');
   } else if (ST.tab === 'refl') {
     if (!s.refl.length) h += `<div class="mute">反射板はまだありません。</div>`;
     else {
@@ -510,7 +510,7 @@ function stopPhone() { ST.phone = null; $('#phoneHud').classList.remove('on'); }
 /* ================= クイズ ================= */
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const rnd = (a, b) => a + Math.random() * (b - a);
-function quizObjects() { const objs = new Set(); unlockedSteps().forEach(s => { objs.add(s.obj); s.tasks.forEach(t => objs.add(t.target.obj)); }); return [...objs].filter(o => !['icecoffee', 'juice'].includes(o)); }
+function quizObjects() { const objs = new Set(); unlockedSteps().forEach(s => { objs.add(s.obj); s.tasks.forEach(t => objs.add(t.target.obj)); }); return [...objs].filter(o => !['icecoffee', 'juice', 'phone', 'glassbottle', 'tumbler', 'ring'].includes(o)); }
 function quizTypes() { const u = new Set(unlockedSteps().map(s => s.id)); return QUIZ_TYPES.filter(q => u.has(q.from)); }
 function baseQ(obj) { return { ...defaultSetup(), obj, room: 'white', bg: { type: pick(['white', 'white', 'gray']), dist: 0.5 }, cam: { el: 30, focal: 50, ev: 0 }, key: { type: 'softbox', az: -60, el: 35, dist: 0.8, pow: 0 }, refl: [] }; }
 function makeQuestion(type) {
@@ -580,6 +580,95 @@ async function showQuiz() {
   });
 }
 
+
+/* ================= 実物チェック（撮った写真を測る） ================= */
+// 写真はこの端末の中だけで処理し、どこにも送らない。
+const RC = { img: null, box: null, bg: 'white', target: '', res: null };
+function renderReal() {
+  const tasks = realSteps.flatMap(st => st.tasks.map(t => [t.id, `${st.title}：${t.title}`]));
+  $('#v-real').innerHTML = `<h1>実物チェック</h1>
+  <div class="why"><b>なぜやる？</b><br>3Dで覚えたことが実物でも同じかを、数字で確かめます。撮った写真の「明暗差・白飛び・背景の明るさ・光の向き・色かぶり」を測って、次に直すことを1つ返します。写真はこの端末の中だけで処理し、どこにも送りません。</div>
+  <h2>1. 写真を選ぶ</h2>
+  <label class="big" style="text-align:center;display:block">📷 撮影する／写真を選ぶ<input type="file" id="rcFile" accept="image/*" capture="environment" style="display:none"></label>
+  <div class="row" style="margin-top:10px"><span class="mute">背景：</span><span class="opts" id="rcBg">${[['white', '白い紙'], ['black', '黒'], ['other', 'その他']].map(([v, n]) => `<button data-v="${v}" class="${RC.bg === v ? 'on' : ''}">${n}</button>`).join('')}</span></div>
+  <div class="ctl"><label>3Dの見本と比べる（任意）</label><select id="rcTarget" style="width:100%"><option value="">比べない</option>${tasks.map(([id, n]) => `<option value="${id}" ${RC.target === id ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div>
+  <h2>2. 被写体を指で囲む</h2>
+  <div class="mute">写真の上をドラッグして、被写体がちょうど入る四角を作ります。</div>
+  <div id="rcWrap"><canvas id="rcCv"></canvas><div id="rcBox"></div></div>
+  <button class="big" id="rcGo" style="margin-top:10px" ${RC.img ? '' : 'disabled'}>3. 測る</button>
+  <div id="rcOut"></div>
+  <h2>撮るときのコツ</h2><ul class="l"><li>カメラはM・ISO100・1/160秒・f/8、ホワイトバランスは太陽光で固定。</li><li>JPEGで撮った写真をそのまま使う（加工した写真は測れません）。</li><li>被写体が画面の真ん中あたりに、ある程度大きく写るように。</li></ul>`;
+  $('#rcFile').onchange = e => { const f = e.target.files[0]; if (!f) return; const url = URL.createObjectURL(f); const im = new Image(); im.onload = () => { RC.img = im; RC.box = null; RC.res = null; drawRC(); $('#rcGo').disabled = false; $('#rcOut').innerHTML = ''; }; im.src = url; };
+  $$('#rcBg button').forEach(b => b.onclick = () => { RC.bg = b.dataset.v; $$('#rcBg button').forEach(x => x.classList.toggle('on', x === b)); });
+  $('#rcTarget').onchange = e => RC.target = e.target.value;
+  $('#rcGo').onclick = () => runRC();
+  const wrap = $('#rcWrap'); let st = null;
+  const pos = e => { const r = $('#rcCv').getBoundingClientRect(); return [clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1)]; };
+  wrap.onpointerdown = e => { if (!RC.img) return; wrap.setPointerCapture(e.pointerId); st = pos(e); RC.box = [...st, ...st]; drawBox(); };
+  wrap.onpointermove = e => { if (!st) return; const p = pos(e); RC.box = [Math.min(st[0], p[0]), Math.min(st[1], p[1]), Math.max(st[0], p[0]), Math.max(st[1], p[1])]; drawBox(); };
+  wrap.onpointerup = () => { st = null; };
+  if (RC.img) drawRC();
+}
+function drawRC() { const c = $('#rcCv'); const im = RC.img; const W = Math.min(1200, im.naturalWidth); c.width = W; c.height = Math.round(W * im.naturalHeight / im.naturalWidth); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); drawBox(); }
+function drawBox() { const b = $('#rcBox'); if (!RC.box) { b.style.display = 'none'; return; } const [x0, y0, x1, y1] = RC.box; Object.assign(b.style, { display: 'block', left: x0 * 100 + '%', top: y0 * 100 + '%', width: (x1 - x0) * 100 + '%', height: (y1 - y0) * 100 + '%' }); }
+function measurePhoto() {
+  const im = RC.img; const W = 320, H = Math.round(W * im.naturalHeight / im.naturalWidth);
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.drawImage(im, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data;
+  let [x0, y0, x1, y1] = RC.box && (RC.box[2] - RC.box[0]) > 0.04 && (RC.box[3] - RC.box[1]) > 0.04 ? RC.box : [0.3, 0.25, 0.7, 0.85];
+  const X0 = Math.floor(x0 * W), X1 = Math.ceil(x1 * W), Y0 = Math.floor(y0 * H), Y1 = Math.ceil(y1 * H), XM = (X0 + X1) / 2;
+  const s2l = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const L = new Float32Array(256).map((_, i) => s2l(i));
+  const inY = [], bg = [], bgRGB = [0, 0, 0]; let clip = 0, n = 0, left = 0, nl = 0, right = 0, nr = 0, nb = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = (y * W + x) * 4, r = d[i], gg = d[i + 1], b = d[i + 2]; const Y = 0.2126 * L[r] + 0.7152 * L[gg] + 0.0722 * L[b];
+    if (x >= X0 && x < X1 && y >= Y0 && y < Y1) { inY.push(Y); n++; if (Math.max(r, gg, b) >= 250) clip++; if (x < XM) { left += Y; nl++; } else { right += Y; nr++; } }
+    else if (y < H * 0.3 || (y < Y0)) { bg.push(Y); bgRGB[0] += L[r]; bgRGB[1] += L[gg]; bgRGB[2] += L[b]; nb++; }
+  }
+  inY.sort((a, b) => a - b); bg.sort((a, b) => a - b);
+  const q = (a, p) => a.length ? a[Math.min(a.length - 1, Math.floor(p * a.length))] : 0;
+  const pct = Y => Math.round(100 * (Y <= 0.0031308 ? Y * 12.92 : 1.055 * Math.pow(Y, 1 / 2.4) - 0.055));
+  const lr = Math.log2((left / Math.max(nl, 1) + 0.003) / (right / Math.max(nr, 1) + 0.003));
+  const rb = nb ? (bgRGB[0] + 1e-4) / (bgRGB[2] + 1e-4) : 1;
+  return { contrast: Math.log2((q(inY, 0.9) + 0.003) / (q(inY, 0.1) + 0.003)), clip: n ? clip / n * 100 : 0, midPct: pct(q(inY, 0.5)), bgPct: pct(q(bg, 0.5)), lr, rb };
+}
+async function runRC() {
+  if (!RC.img) return; const m = measurePhoto(); const adv = [];
+  const side = m.lr > 0.35 ? '左' : m.lr < -0.35 ? '右' : null;
+  if (m.clip > 2) adv.push(['白飛び', `被写体の${m.clip.toFixed(0)}%が真っ白です。V1の出力を1/3〜2/3段下げるか、絞りを1/3〜2/3段絞ってください。`]);
+  if (RC.bg === 'white' && m.bgPct < 82) adv.push(['背景', `白い背景が${m.bgPct}%でグレーに写っています。被写体を背景に近づけるか、光を背景側に回してください。`]);
+  if (RC.bg === 'black' && m.bgPct > 12) adv.push(['背景', `黒い背景が${m.bgPct}%で浮いています。背景を被写体から離すか、部屋を暗くしてください。`]);
+  if (m.contrast > 3) adv.push(['影', `明暗差が約${m.contrast.toFixed(1)}段と大きく、影が重いです。影側に白い紙を近づけてください。`]);
+  if (m.contrast < 0.8 && !m.clip) adv.push(['立体感', `明暗差が約${m.contrast.toFixed(1)}段しかなく、のっぺりしています。光を横〜斜め後ろへ回すか、影側に黒い紙を立ててください。`]);
+  if (RC.bg !== 'black' && m.rb > 1.15) adv.push(['色', '背景が黄色っぽく写っています。ホワイトバランスを「太陽光」に固定し、部屋の電気を消してください。']);
+  if (RC.bg !== 'black' && m.rb < 0.87) adv.push(['色', '背景が青っぽく写っています。ホワイトバランスを「太陽光」（またはストロボ）に固定してください。']);
+  let cmp = '';
+  if (RC.target) {
+    ensureStudio(); const t = realSteps.flatMap(s => s.tasks).find(x => x.id === RC.target);
+    $('#rcOut').innerHTML = `<div class="busy"><div class="spin"></div>見本を撮影しています…</div>`; await frame2();
+    const T = studio.shoot(t.target, { w: 200, h: 250, samples: 24, url: true }); const tm = T.m;
+    const az = t.target.key.az; const tside = Math.abs(az) < 25 || Math.abs(az) > 150 ? null : az < 0 ? '左' : '右';
+    const d1 = Math.abs(tm.contrast - m.contrast), d2 = Math.abs(tm.bgPct - m.bgPct) / 25, d3 = tside && side && tside !== side ? 1 : 0;
+    const score = Math.round(100 * Math.exp(-(0.8 * d1 + d2 + d3)));
+    cmp = `<h2>見本との比べっこ：${score}点</h2><div class="cmp"><div>3Dの見本<img src="${T.url}"></div><div>あなたの写真<img src="${$('#rcCv').toDataURL('image/jpeg', 0.8)}"></div></div>
+      <div class="mrow"><span>明暗差</span><b>見本 ${tm.contrast.toFixed(1)}段 / 実物 ${m.contrast.toFixed(1)}段</b></div>
+      <div class="mrow"><span>背景</span><b>見本 ${tm.bgPct}% / 実物 ${m.bgPct}%</b></div>
+      <div class="mrow"><span>光の来る側</span><b>見本 ${tside || '正面か後ろ'} / 実物 ${side || 'はっきりしない'}</b></div>
+      <p class="mute">3Dと実物は数値がぴったりは一致しません（3Dの限界）。向きと差の大きさが近ければ、3Dで覚えたことが実物でもできています。</p>`;
+    for (let i = adv.length - 1; i >= 0; i--) { if (adv[i][0] === '背景' && Math.abs(tm.bgPct - m.bgPct) < 10) adv.splice(i, 1); if (adv[i] && adv[i][0] === '影' && Math.abs(tm.contrast - m.contrast) < 0.5) adv.splice(i, 1); } // 見本どおりなら言わない
+    if (tside && side && tside !== side) adv.unshift(['光の向き', `見本は光が${tside}から来ていますが、あなたの写真は${side}側が明るいです。`]);
+    else if (tm.contrast - m.contrast > 0.5) adv.unshift(['影', '見本より影が薄いです。影側の白い紙を離すか、黒い紙に替えてください。']);
+    else if (m.contrast - tm.contrast > 0.5) adv.unshift(['影', '見本より影が濃いです。影側に白い紙を近づけてください。']);
+  }
+  markToday('real'); save();
+  $('#rcOut').innerHTML = `<h2>結果</h2>
+   <div class="mrow"><span>明暗差（被写体の中）</span><b>約${m.contrast.toFixed(1)}段</b></div>
+   <div class="mrow"><span>白飛び（被写体の中）</span><b>${m.clip.toFixed(1)}%</b></div>
+   <div class="mrow"><span>背景の明るさ</span><b>${m.bgPct}%</b></div>
+   <div class="mrow"><span>明るい側</span><b>${side || 'はっきりしない（正面か後ろからの光）'}</b></div>
+   <h3>次に直すこと</h3>${adv.length ? `<div class="adv"><b>${esc(adv[0][0])}</b>：${esc(adv[0][1])}</div>${adv.length > 1 ? `<details><summary class="mute">ほかに気になる点（${adv.length - 1}）</summary>${adv.slice(1).map(a => `<div class="adv"><b>${esc(a[0])}</b>：${esc(a[1])}</div>`).join('')}</details>` : ''}` : '<div class="adv">大きな問題は見つかりませんでした。3Dの見本と比べて、狙いどおりか確認しましょう。</div>'}
+   <p class="mute">直すのは1回に1つだけ。直したらもう一度撮って測ると、どれが効いたかがはっきりします。被写体を囲んだ四角には背景も少し入るので、数値は目安です。</p>${cmp}`;
+}
+
 /* ================= ホーム・ステップ・手順 ================= */
 let planQueue = [];
 function todaysPlan() {
@@ -596,6 +685,7 @@ function todaysPlan() {
   else if (nextT) { const t2 = cur.tasks.find(t => t !== nextT && !(DB.best[t.id] && DB.best[t.id].pass)); if (t2) items.push({ k: 'match:' + t2.id, tag: '', tagN: '見本', t: `見本合わせ：${t2.title}`, d: cur.title, min: 5, go: () => startMatch(cur, t2) }); }
   const nextF = cur.fixes.find(f => !DB.fix[f.id]) || realSteps.slice(0, curIdx + 1).flatMap(s => s.fixes.map(f => ({ s, f }))).map(x => x.f).sort(() => Math.random() - 0.5)[0];
   if (nextF) { const fs = realSteps.find(s => s.fixes.includes(nextF)); items.push({ k: 'fix:' + nextF.id, tag: 'f', tagN: '直す', t: `失敗直し：${nextF.title}`, d: nextF.client, min: 3, go: () => startFix(fs, nextF) }); }
+  if (DB.real && Object.keys(DB.real).some(k => DB.real[k])) items.push({ k: 'real', tag: 'r', tagN: '実物', t: '実物チェック（任意）', d: '家で撮った写真を測って、3Dの見本と比べる', min: 5, go: () => tab('real') });
   return items.map(it => ({ ...it, done: !!done[it.k] }));
 }
 function renderHome() {
@@ -610,13 +700,14 @@ function renderHome() {
   <div class="plan">${plan.map((p, i) => `<button class="drill ${p.done ? 'done' : ''}" data-i="${i}"><span class="no">${p.done ? '✓' : i + 1}</span><span><b><span class="tag ${p.tag}">${p.tagN}</span>${esc(p.t)}</b><small>${esc(p.d)}</small></span><span class="mute">${p.min}分</span></button>`).join('')}</div>
   <button class="big" id="hStart" style="margin-top:12px">プランを通しで始める</button>
   <h2>自由に触る</h2>
-  <div class="row"><button class="ghost" id="hFree">自由ラボ</button><button class="ghost" id="hPhone">スマホが反射板</button><button class="ghost" id="hSteps">ステップ一覧</button><button class="ghost" id="hGear">機材の準備と設定</button></div>
+  <div class="row"><button class="ghost" id="hFree">自由ラボ</button><button class="ghost" id="hPhone">スマホが反射板</button><button class="ghost" id="hSteps">ステップ一覧</button><button class="ghost" id="hGear">機材の準備と設定</button><button class="ghost" id="hReal">📷 実物チェック</button></div>
   <div class="card" style="font-size:13px"><b>家で実物で確かめる（任意）</b><br><span class="mute">いまのステップ「${esc(cur.title)}」の実物練習：${esc(cur.real.items)}。手順はステップのページにあります。</span></div>`;
   $$('#v-home .drill').forEach(b => b.onclick = () => { planQueue = []; plan[+b.dataset.i].go(); });
   $('#hStart').onclick = () => { const rest = plan.filter(p => !p.done); if (!rest.length) { flashHome('今日のプランは全部終わりました。おつかれさまでした！'); return; } planQueue = rest.slice(1).map(p => p.go); rest[0].go(); };
   $('#hFree').onclick = () => { planQueue = []; openStudio({ mode: 'free', title: '自由ラボ', setup: defaultSetup(), brief: '<span class="mute">配置図でライトや反射板をドラッグ。下のタブで種類・高さ・背景・カメラを変えられます。</span>' }); };
   $('#hPhone').onclick = () => { planQueue = []; startPhone(0); };
   $('#hSteps').onclick = () => tab('steps');
+  $('#hReal').onclick = () => tab('real');
   $('#hGear').onclick = () => { tab('guide'); setTimeout(() => { const el = $('#gearSetup'); if (el) el.scrollIntoView(); }, 30); };
 }
 function flashHome(msg) { const el = document.createElement('div'); el.className = 'why'; el.textContent = msg; $('#v-home').prepend(el); setTimeout(() => el.remove(), 3000); }
@@ -645,8 +736,9 @@ function openStep(id) {
   <div class="plan">${s.fixes.map((f, i) => `<button class="drill ${DB.fix[f.id] ? 'done' : ''}" data-f="${i}"><span class="no">${DB.fix[f.id] ? '✓' : i + 1}</span><span><b>${esc(f.title)}</b><small>${esc(f.client)}</small></span><span class="mute">${DB.fix[f.id] ? DB.fix[f.id].moves + '手' : ''}</span></button>`).join('')}</div>
   <h2>4. 家で実物で確かめる（任意・5分）</h2>
   <div class="card"><div class="mute">用意するもの：${esc(s.real.items)}</div>${s.real.how.map((h, i) => `<label class="check"><input type="checkbox" data-r="${i}" ${DB.real[s.id + ':' + i] ? 'checked' : ''}><span>${esc(h)}</span></label>`).join('')}
-  <div class="mute" style="margin-top:8px">3Dで分かったことが実物でも同じかを確かめる時間です。違ったところがあれば、それが実物ならではのポイントです。</div></div>`;
+  <div class="mute" style="margin-top:8px">3Dで分かったことが実物でも同じかを確かめる時間です。違ったところがあれば、それが実物ならではのポイントです。</div><button class="ghost sm" id="sReal" style="margin-top:8px">📷 撮った写真を実物チェックで測る</button></div>`;
   $('#stBack').onclick = e => { e.preventDefault(); renderSteps(); };
+  $('#sReal').onclick = () => { RC.target = s.tasks[0] ? s.tasks[0].id : ''; tab('real'); };
   $('#sLab').onclick = () => { planQueue = []; startLab(s); };
   $$('#v-steps [data-t]').forEach(b => b.onclick = () => { planQueue = []; startMatch(s, s.tasks[+b.dataset.t]); });
   $$('#v-steps [data-f]').forEach(b => b.onclick = () => { planQueue = []; startFix(s, s.fixes[+b.dataset.f]); });
@@ -731,7 +823,7 @@ function renderGuide() {
 }
 let resetArm = 0; function confirmReset() { if (Date.now() - resetArm < 4000) return true; resetArm = Date.now(); $('#gReset').textContent = 'もう一度押すと消えます'; return false; }
 
-function tab(name) { $$('.view').forEach(v => v.classList.remove('on')); $$('#tabbar button').forEach(b => b.classList.toggle('on', b.dataset.tab === name)); $('#v-' + name).classList.add('on'); if (name === 'home') renderHome(); if (name === 'steps') renderSteps(); if (name === 'quiz' && !QZ) renderQuizHome(); if (name === 'guide') renderGuide(); window.scrollTo(0, 0); }
+function tab(name) { $$('.view').forEach(v => v.classList.remove('on')); $$('#tabbar button').forEach(b => b.classList.toggle('on', b.dataset.tab === name)); $('#v-' + name).classList.add('on'); if (name === 'home') renderHome(); if (name === 'steps') renderSteps(); if (name === 'quiz' && !QZ) renderQuizHome(); if (name === 'guide') renderGuide(); if (name === 'real') renderReal(); window.scrollTo(0, 0); }
 $$('#tabbar button').forEach(b => b.onclick = () => { if (b.dataset.tab === 'quiz') QZ = null; tab(b.dataset.tab); });
 function renderAll() { renderHome(); }
 

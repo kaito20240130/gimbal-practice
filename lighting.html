@@ -135,6 +135,12 @@ table.m{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px} table
 .busy{display:flex;align-items:center;gap:10px;justify-content:center;padding:30px 0;color:var(--mute)}
 .spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:sp 0.9s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+#rcWrap{position:relative;margin-top:10px;touch-action:none;user-select:none;-webkit-user-select:none}
+#rcCv{width:100%;display:block;border-radius:10px;background:#000}
+#rcBox{position:absolute;border:2px dashed var(--accent);background:#f5b83d22;pointer-events:none;display:none}
+.mrow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.mrow b{font-variant-numeric:tabular-nums}
+.adv{background:#1b1f14;border:1px solid #3d4a22;border-radius:10px;padding:9px 12px;margin:6px 0;font-size:13.5px}
 @media (min-width:920px){
   #studio{display:none;flex-direction:row;flex-wrap:wrap}
   #studio.on{display:grid;grid-template-columns:minmax(0,1fr) 440px;grid-template-rows:auto auto 1fr auto}
@@ -154,6 +160,7 @@ table.m{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px} table
 <section class="view" id="v-steps"></section>
 <section class="view" id="v-quiz"></section>
 <section class="view" id="v-guide"></section>
+<section class="view" id="v-real"></section>
 
 <div id="studio">
   <div class="stbar"><button class="xbtn" id="stClose" aria-label="閉じる">×</button><b id="stTitle">スタジオ</b><span class="chip a" id="stMode">自由</span></div>
@@ -184,6 +191,7 @@ table.m{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px} table
   <button data-tab="home" class="on"><i>🏠</i>ホーム</button>
   <button data-tab="steps"><i>📚</i>ステップ</button>
   <button data-tab="quiz"><i>👁</i>クイズ</button>
+  <button data-tab="real"><i>📷</i>実物チェック</button>
   <button data-tab="guide"><i>📋</i>本番の手順</button>
 </nav>
 

@@ -54,6 +54,12 @@ export const OBJECTS = {
   orange:    { name: 'オレンジ', group: '食品' },
   icecoffee: { name: 'アイスコーヒー', group: 'ドリンク' },
   juice:     { name: 'オレンジジュース', group: 'ドリンク' },
+  phone:     { name: 'スマホ', group: 'ガジェット' },
+  earbuds:   { name: 'イヤホンケース', group: 'ガジェット' },
+  bottle:    { name: '化粧品ボトル', group: '光沢' },
+  glassbottle:{ name: 'ガラス瓶（空）', group: 'ガラス' },
+  tumbler:   { name: 'ステンレスタンブラー', group: '金属' },
+  ring:      { name: '指輪', group: '金属' },
 };
 
 export function defaultSetup() {
@@ -94,6 +100,27 @@ function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 10139
 
 /* ---------------- 被写体 ---------------- */
 function std(o) { return new THREE.MeshStandardMaterial(o); }
+// ツヤのある物の材質：映り込み（鏡面）は「光源の形も写る景色」だけから、拡散光は「光源を含まない景色」から取る。
+// こうすると、ライトの形がそのままハイライトの形になり、明るさも二重に足されない。
+export const SPEC_MATS = new Set();
+function patchSpec(m) {
+  m.userData.spec = true; m.userData.uniforms = { envMapDiffuse: { value: null } };
+  m.onBeforeCompile = sh => {
+    sh.uniforms.envMapDiffuse = m.userData.uniforms.envMapDiffuse;
+    sh.fragmentShader = 'uniform sampler2D envMapDiffuse;\n' + sh.fragmentShader
+      .replace('#include <lights_fragment_maps>', `#include <lights_fragment_maps>
+#if defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )
+  { vec3 wn = inverseTransformDirection( geometryNormal, viewMatrix ); iblIrradiance = PI * textureCubeUV( envMapDiffuse, wn, 1.0 ).rgb * envMapIntensity; }
+#endif`)
+      .replace('#include <aomap_fragment>', `reflectedLight.directSpecular = vec3( 0.0 );
+#ifdef USE_CLEARCOAT
+  clearcoatSpecularDirect = vec3( 0.0 );
+#endif
+#include <aomap_fragment>`);
+  };
+  m.customProgramCacheKey = () => 'spec';
+  SPEC_MATS.add(m); return m;
+}
 function phys(o) { return new THREE.MeshPhysicalMaterial(o); }
 
 function labelTex(bg, ink, sub, big = 'LUMEN') {
@@ -233,7 +260,7 @@ function makeGlassDrink(kind) {
   const g = new THREE.Group();
   const H = 0.13, R0 = 0.032, R1 = 0.038, T = 0.0025;
   const prof = [new THREE.Vector2(0, 0), new THREE.Vector2(R0, 0), new THREE.Vector2(R1, H), new THREE.Vector2(R1 - T, H), new THREE.Vector2(R0 - T, 0.008), new THREE.Vector2(0, 0.008)];
-  const gm = phys({ color: '#000000', roughness: 0.04, metalness: 0, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, specularIntensity: 1, envMapIntensity: 1.6 }); gm.userData.spec = true; // 薄いガラス：映り込みだけを足す
+  const gm = patchSpec(phys({ color: '#000000', roughness: 0.04, metalness: 0, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, specularIntensity: 1, envMapIntensity: 1.6 })); // 薄いガラス：映り込みだけを足す
   const glass = new THREE.Mesh(new THREE.LatheGeometry(prof, 96), gm); glass.renderOrder = 2;
   g.add(glass);
   const lh = kind === 'icecoffee' ? 0.095 : 0.1;
@@ -241,15 +268,70 @@ function makeGlassDrink(kind) {
   const liquid = kind === 'icecoffee'
     ? phys({ color: '#d9a06c', transmission: 1, roughness: 0.06, thickness: 0.06, ior: 1.34, attenuationColor: new THREE.Color('#8a4210'), attenuationDistance: 0.02 })
     : phys({ color: '#ffe2b8', transmission: 1, roughness: 0.06, thickness: 0.06, ior: 1.34, attenuationColor: new THREE.Color('#ffb54a'), attenuationDistance: 0.05 });
-  liquid.userData.spec = true;
+  patchSpec(liquid);
   g.add(new THREE.Mesh(lgeo, liquid));
   if (kind === 'icecoffee') {
-    const r = rng(3); for (let i = 0; i < 4; i++) { const im = phys({ color: '#2a2a2a', roughness: 0.12, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }); im.userData.spec = true; const ice = new THREE.Mesh(new RoundedBoxGeometry(0.022, 0.02, 0.022, 2, 0.004), im); ice.position.set((r() - 0.5) * 0.03, lh - 0.012 + i * 0.006 - 0.01 * (i % 2), (r() - 0.5) * 0.03); ice.rotation.set(r(), r(), r()); g.add(ice); }
+    const r = rng(3); for (let i = 0; i < 4; i++) { const im = patchSpec(phys({ color: '#2a2a2a', roughness: 0.12, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); const ice = new THREE.Mesh(new RoundedBoxGeometry(0.022, 0.02, 0.022, 2, 0.004), im); ice.position.set((r() - 0.5) * 0.03, lh - 0.012 + i * 0.006 - 0.01 * (i % 2), (r() - 0.5) * 0.03); ice.rotation.set(r(), r(), r()); g.add(ice); }
     const milk = new THREE.Mesh(new THREE.CylinderGeometry(R0 - T - 0.0006, R0 - T - 0.0006, 0.012, 64), phys({ color: '#e9dcc8', roughness: 0.5 })); milk.position.y = 0.016; g.add(milk);
   } else {
     const slice = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.004, 48), phys({ color: '#ffb546', roughness: 0.35, sheen: 0.4 })); slice.position.set(R1 - 0.004, H - 0.008, 0.004); slice.rotation.set(Math.PI / 2, 0.25, 0); g.add(slice);
   }
   return finish(g, { r: 0.075, cy: H / 2, h: H });
+}
+
+/* ---- 上級：写り込みが主役の被写体（周りの景色＝光源・反射板・黒い板が表面に写る） ---- */
+const specMat = o => { const m = phys(o); m.userData.spec = true; return patchSpec(m); };
+function makePhone() {
+  const g = new THREE.Group(); const W = 0.072, H = 0.152, T = 0.008;
+  const body = new THREE.Mesh(new RoundedBoxGeometry(W, H, T, 4, 0.006), specMat({ color: '#8a8d92', metalness: 1, roughness: 0.32 }));
+  const screen = new THREE.Mesh(new RoundedBoxGeometry(W - 0.003, H - 0.003, 0.0006, 3, 0.0003), specMat({ color: '#030304', roughness: 0.04, clearcoat: 1, clearcoatRoughness: 0.02, specularIntensity: 1 }));
+  screen.position.z = T / 2;
+  const cam = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.002, 24), specMat({ color: '#111', roughness: 0.1, metalness: 0.5 })); cam.rotation.x = Math.PI / 2; cam.position.set(-0.022, 0.06, -T / 2 - 0.001);
+  const ph = new THREE.Group(); ph.add(body, screen, cam);
+  ph.rotation.x = -0.32; ph.position.set(0, H / 2 * Math.cos(0.32) + 0.002, -0.01); // 少し後ろに傾けて立てる
+  const stand = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.012, 0.03), std({ color: '#2a2a2a', roughness: 0.6 })); stand.position.set(0, 0.006, 0.012);
+  g.add(ph, stand); g.rotation.y = -0.35;
+  return finish(g, { r: 0.1, cy: 0.072, h: 0.145 });
+}
+function makeEarbuds() {
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(new RoundedBoxGeometry(0.06, 0.05, 0.024, 8, 0.0115), specMat({ color: '#ececea', roughness: 0.32, clearcoat: 0.9, clearcoatRoughness: 0.08 }));
+  m.position.y = 0.025; g.add(m);
+  const led = new THREE.Mesh(new THREE.CircleGeometry(0.0012, 16), new THREE.MeshBasicMaterial({ color: '#3a3' })); led.position.set(0, 0.03, 0.0121); g.add(led);
+  g.rotation.y = -0.4;
+  return finish(g, { r: 0.04, cy: 0.025, h: 0.05 });
+}
+function makeBottle() {
+  const g = new THREE.Group(); const pts = [];
+  const prof = [[0, 0], [0.026, 0], [0.03, 0.006], [0.031, 0.02], [0.031, 0.1], [0.028, 0.112], [0.016, 0.118], [0.012, 0.124]];
+  prof.forEach(([r, y]) => pts.push(new THREE.Vector2(r, y)));
+  const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 96), specMat({ color: '#1f2b3d', roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.03 }));
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.04, 64), specMat({ color: '#d8b56d', metalness: 1, roughness: 0.18 })); cap.position.y = 0.144;
+  const label = new THREE.Mesh(new THREE.CylinderGeometry(0.0312, 0.0312, 0.035, 96, 1, true, -0.7, 1.4), std({ map: canvasTex(256, 128, (c, w, h) => { c.fillStyle = '#1f2b3d'; c.fillRect(0, 0, w, h); c.fillStyle = '#d9d4c7'; c.font = '700 44px Helvetica, Arial'; c.textAlign = 'center'; c.fillText('ROSÉ', w / 2, 70); c.font = '20px Helvetica, Arial'; c.fillText('body milk', w / 2, 100); }), roughness: 0.5, transparent: true }));
+  label.position.y = 0.06; label.rotation.y = Math.PI / 2 + 0.0;
+  g.add(body, cap, label); g.rotation.y = -0.2;
+  return finish(g, { r: 0.085, cy: 0.082, h: 0.164 });
+}
+function makeGlassBottle() {
+  const g = new THREE.Group(); const o = [[0.0, 0], [0.03, 0], [0.032, 0.004], [0.032, 0.09], [0.028, 0.11], [0.012, 0.135], [0.011, 0.165], [0.013, 0.168]];
+  const T = 0.0025; const pts = o.map(([r, y]) => new THREE.Vector2(r, y));
+  const inner = [...o].reverse().filter(([r]) => r > 0.005).map(([r, y]) => new THREE.Vector2(Math.max(r - T, 0.001), Math.min(Math.max(y, 0.006), 0.168)));
+  const geo = new THREE.LatheGeometry([...pts, ...inner, new THREE.Vector2(0.0, 0.006)], 96);
+  const m = new THREE.Mesh(geo, specMat({ color: '#f4fbf6', transmission: 1, roughness: 0.02, thickness: 0.006, ior: 1.5, attenuationColor: new THREE.Color('#d9efe2'), attenuationDistance: 0.05, specularIntensity: 1, side: THREE.DoubleSide }));
+  g.add(m);
+  return finish(g, { r: 0.088, cy: 0.084, h: 0.168 });
+}
+function makeTumbler() {
+  const g = new THREE.Group(); const pts = [[0, 0], [0.031, 0], [0.034, 0.004], [0.036, 0.13], [0.0365, 0.135], [0.033, 0.135], [0.033, 0.01], [0, 0.01]].map(([r, y]) => new THREE.Vector2(r, y));
+  const m = new THREE.Mesh(new THREE.LatheGeometry(pts, 128), specMat({ color: '#e6e8ea', metalness: 1, roughness: 0.12 })); g.add(m);
+  const r = makeRingMesh(); r.position.set(0.07, 0.0026, 0.05); r.rotation.set(-Math.PI / 2 + 0.05, 0, 0); g.add(r);
+  return finish(g, { r: 0.09, cy: 0.068, h: 0.136 });
+}
+function makeRingMesh() { return new THREE.Mesh(new THREE.TorusGeometry(0.0105, 0.0026, 32, 96), specMat({ color: '#e9c46a', metalness: 1, roughness: 0.08 })); }
+function makeRing() {
+  const g = new THREE.Group(); const r = makeRingMesh(); r.rotation.set(-0.25, 0.4, 0); r.position.y = 0.0128; g.add(r);
+  const r2 = makeRingMesh(); r2.material = specMat({ color: '#d9dadc', metalness: 1, roughness: 0.08 }); r2.rotation.set(-Math.PI / 2, 0, 0); r2.position.set(0.024, 0.0026, 0.012); g.add(r2);
+  return finish(g, { r: 0.032, cy: 0.012, h: 0.025 });
 }
 export function makeObject(id) {
   switch (id) {
@@ -261,12 +343,18 @@ export function makeObject(id) {
     case 'apple': return makeApple();
     case 'orange': return makeOrange();
     case 'icecoffee': case 'juice': return makeGlassDrink(id);
+    case 'phone': return makePhone();
+    case 'earbuds': return makeEarbuds();
+    case 'bottle': return makeBottle();
+    case 'glassbottle': return makeGlassBottle();
+    case 'tumbler': return makeTumbler();
+    case 'ring': return makeRing();
   }
   return makeBox('box_white');
 }
 
 /* ---------------- 背景（ホリゾント） ---------------- */
-function sweepGeometry(dist, R = 0.22, width = 3.2, height = 1.8, front = 2.2) {
+function sweepGeometry(dist, R = 0.22, width = 1.8, height = 1.6, front = 0.9) { // 撮影台の大きさ（幅1.8m・手前0.9m）
   const prof = [];
   prof.push([front, 0]);
   const zc = -dist + R;
@@ -336,15 +424,15 @@ export class Studio {
     const sun = new THREE.DirectionalLight(0xffffff, 1); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); const sc = sun.shadow.camera; sc.left = -1; sc.right = 1; sc.top = 1; sc.bottom = -1; sc.near = 0.1; sc.far = 12; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.001; this.scene.add(sun); this.scene.add(sun.target);
     this.keySun = sun; this.fillSun = sun.clone(); this.fillSun.castShadow = false; this.scene.add(this.fillSun); this.scene.add(this.fillSun.target);
     this.panelGeo = new THREE.PlaneGeometry(1, 1);
-    this.keyPanel = new THREE.Mesh(this.panelGeo, new THREE.MeshBasicMaterial({ color: '#fff', side: THREE.DoubleSide })); this.keyPanel.layers.set(1); this.helpers.add(this.keyPanel);
-    this.fillPanel = this.keyPanel.clone(); this.fillPanel.material = this.keyPanel.material.clone(); this.helpers.add(this.fillPanel);
+    this.keyPanel = new THREE.Mesh(this.panelGeo, new THREE.MeshBasicMaterial({ color: '#fff', side: THREE.DoubleSide })); this.keyPanel.layers.set(0); this.scene.add(this.keyPanel);
+    this.fillPanel = this.keyPanel.clone(); this.fillPanel.material = this.keyPanel.material.clone(); this.scene.add(this.fillPanel);
     // 環境マップ（照り返し）
     this.pmrem = new THREE.PMREMGenerator(this.renderer);
     this.envScene = new THREE.Scene();
     this.envRoom = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 16), new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: '#000' })); this.envScene.add(this.envRoom);
     this.envCeil = new THREE.Mesh(new THREE.CircleGeometry(0.6, 32), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); this.envCeil.rotation.x = Math.PI / 2; this.envScene.add(this.envCeil);
-    this.envTable = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); this.envTable.rotation.x = -Math.PI / 2; this.envScene.add(this.envTable);
-    this.envBg = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.8), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); this.envScene.add(this.envBg);
+    this.envTable = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); this.envTable.rotation.x = -Math.PI / 2; this.envScene.add(this.envTable);
+    this.envBg = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.6), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); this.envScene.add(this.envBg);
     this.envPanels = new THREE.Group(); this.envScene.add(this.envPanels);
     this.envRT = null;
   }
@@ -452,7 +540,7 @@ export class Studio {
       spot.visible = true; spot.color.copy(col); spot.intensity = p.I; spot.target.position.copy(this.center); spot.target.updateMatrixWorld();
       spot.angle = (l.type === 'led' || l.type === 'v1') ? 0.75 : l.type === 'v1bounce' ? 1.3 : 1.05; spot.penumbra = (l.type === 'led' || l.type === 'v1') ? 0.4 : 0.6;
       panel.visible = true; panel.position.copy(p.pos); panel.lookAt(this.center); panel.scale.set(p.w, p.h, 1);
-      panel.material.color.setRGB(1, 1, 1);
+      const Lp = Math.min(40, p.I / Math.max(p.w * p.h, 1e-4)); panel.material.color.copy(col).multiplyScalar(Lp); // 発光面（写真に入れば白く写る）
     }
     const pose = { ...p, col, l };
     if (isKey) this.keyPose = pose; else this.fillPose = pose;
@@ -508,13 +596,13 @@ export class Studio {
     const tCol = new THREE.Color(bg.color).convertSRGBToLinear();
     const aT = s.bg.type === 'wood' ? 0.3 : bg.albedo;
     const LT = 0.35 * aT * Et / Math.PI + Lw * aT; this.envTable.material.color.setRGB(LT, LT, LT).multiply(s.bg.type === 'wood' ? new THREE.Color(1, 0.75, 0.5) : new THREE.Color(1, 1, 1));
-    this.envTable.position.set(0, -c.y, 0);
+    this.envTable.scale.set(1.8, s.bg.dist + 0.9, 1); this.envTable.position.set(0, -c.y, (0.9 - s.bg.dist) / 2); // 撮影台の範囲だけ
     // 背景
     const bgPt = new THREE.Vector3(0, 0.35, -s.bg.dist); const bgN = new THREE.Vector3(0, 0, 1);
     const Eb = this._E(this.keyPose, bgPt, bgN) + this._E(this.fillPose, bgPt, bgN);
     const aB = s.bg.type === 'wood' ? bg.wall : bg.albedo;
     const Lb = aB * Eb / Math.PI + Lw * aB; this.envBg.material.color.setRGB(Lb, Lb, Lb);
-    this.envBg.position.set(0, 0.9 - c.y, -s.bg.dist);
+    this.envBg.position.set(0, 0.8 - c.y, -s.bg.dist);
     // 光源パネルと反射板
     while (this.envPanels.children.length) this.envPanels.children.pop();
     const addPanel = (pos, n, w, h, col) => { const m = new THREE.Mesh(this.panelGeo, new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide })); m.position.copy(pos).sub(c); m.lookAt(m.position.clone().add(n)); m.scale.set(w, h, 1); this.envPanels.add(m); };
@@ -527,7 +615,7 @@ export class Studio {
       const L = lp.I / (lp.w * lp.h); addPanel(lp.pos, lp.n, lp.w, lp.h, lp.col.clone().multiplyScalar(L));
     }
     const old2 = this.envSpecRT; this.envSpecRT = this.pmrem.fromScene(this.envScene, 0, 0.01, 20); if (old2) old2.dispose();
-    this.obj.traverse(m => { if (m.isMesh && !Array.isArray(m.material) && m.material.userData.spec) { m.material.envMap = this.envSpecRT.texture; m.material.needsUpdate = true; } });
+    this.obj.traverse(m => { if (m.isMesh && !Array.isArray(m.material) && m.material.userData.spec) { if (m.material.envMap !== this.envSpecRT.texture) { m.material.envMap = this.envSpecRT.texture; m.material.needsUpdate = true; } m.material.userData.uniforms.envMapDiffuse.value = this.envRT.texture; } });
     // 接地の影（環境光が床で遮られる分）
     this.envDirty = false;
   }
@@ -670,6 +758,13 @@ export function measure(img) {
     const ks = [...objK].sort((a, b) => a - b); const kmax = Math.max(8, ks[Math.floor(ks.length * 0.95)]);
     for (let i = 0; i < nObj; i++) { if (objK[i] > 0.4 * kmax) { lit += objY[i]; nl++; } else if (objK[i] < 0.06 * kmax) { sh += objY[i]; ns++; } }
   }
+  // ガラスの縁：被写体のふちの明るさと、そのすぐ外の背景の明るさ
+  let eY = 0, ne = 0, oY = 0, no = 0;
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const i = (h - 1 - y) * w + x; const nb = [i - 1, i + 1, i - w, i + w];
+    const Y = 0.2126 * LUT[px[i * 4]] + 0.7152 * LUT[px[i * 4 + 1]] + 0.0722 * LUT[px[i * 4 + 2]];
+    if (mask[i] && nb.some(j => !mask[j])) { eY += Y; ne++; } else if (!mask[i] && nb.some(j => mask[j])) { oY += Y; no++; }
+  }
   let hiY, loY;
   if (nl > nObj * 0.04 && ns > nObj * 0.04) { hiY = lit / nl; loY = sh / ns; }
   else { hiY = q(sorted, 0.9); loY = q(sorted, 0.12); }
@@ -677,6 +772,7 @@ export function measure(img) {
     contrast: Math.max(0, Math.log2((hiY + 0.003) / (loY + 0.003))),
     clip: nObj ? clip / nObj * 100 : 0, crush: nObj ? crush / nObj * 100 : 0,
     hiPct: pct(hiY), loPct: pct(loY), midPct: pct(q(sorted, 0.5)), bgPct: pct(q(bgY, 0.5)), hist,
+    spread: Math.log2((q(sorted, 0.95) + 0.003) / (q(sorted, 0.08) + 0.003)), edgePct: pct(ne ? eY / ne : 0), outPct: pct(no ? oY / no : 0),
   };
 }
 export function toURL(img) {
