@@ -1,6 +1,6 @@
 // ライティング練習ラボ — 画面と練習モード
-import { Studio, LIGHTS, REFL, REFL_SIZE, BGS, ROOMS, OBJECTS, defaultSetup, cloneSetup, compare, clamp } from './engine.js';
-import { STEPS, WORKFLOW, LIMITS, QUIZ_TYPES, PHONE_ROUNDS } from './lessons.js';
+import { Studio, LIGHTS, REFL, REFL_SIZE, BGS, ROOMS, OBJECTS, defaultSetup, cloneSetup, compare, clamp } from './engine.js?v=20261115d';
+import { STEPS, WORKFLOW, LIMITS, QUIZ_TYPES, PHONE_ROUNDS } from './lessons.js?v=20261115d';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
